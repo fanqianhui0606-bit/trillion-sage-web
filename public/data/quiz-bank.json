@@ -1,0 +1,1339 @@
+{
+  "version": "2.0",
+  "meta": {
+    "title": "专业数理素质测验（模拟题库 v2）",
+    "objectiveQuestionCount": 30,
+    "objectiveHabitsCount": 15,
+    "objectiveAbilityCount": 15,
+    "subjectiveQuestionCount": 5,
+    "objectiveSubjectiveScoreRatio": [
+      0.7,
+      0.3
+    ],
+    "objectiveHabitsAbilityRatio": [
+      0.5,
+      0.5
+    ],
+    "objectiveDimensionOrder": [
+      "抽象",
+      "操作",
+      "记忆",
+      "空间",
+      "整理",
+      "观察",
+      "执行",
+      "好奇",
+      "计算",
+      "推导",
+      "自主",
+      "联想",
+      "构建",
+      "自学"
+    ],
+    "subjectiveDimensions": [
+      {
+        "id": "interest_ambition",
+        "label": "理想/抱负导向",
+        "axis": "ideal"
+      },
+      {
+        "id": "practical_benefit",
+        "label": "实际/利益导向",
+        "axis": "practical"
+      }
+    ],
+    "objectiveMaxPerDimensionTarget": 10,
+    "subjectiveMaxPerDimensionTarget": 10,
+    "notes": [
+      "客观题分思维习惯（objectiveTrack=habits）与能力自检（ability）各 15 题，计分权重各占客观一半后再与主观合成。",
+      "题型仅为 single 、multi 或 boolean；无开放题。",
+      "主观题两维可同时得分，用于计算「实际/利益」取向比例并与专业 l2_value_pragmatism 对齐参与推荐（见 rankMajorsWithQuizBlend）。",
+      "各题 options 尽量分散到多个素质维度，避免单一维度与总分完全共线。",
+      "【变更记录 2026-05】题干/题序/选项若已调整，则 calibration/ 下三位专家（A/B/C）自评与按旧题序生成的匹配对照不再适用于新题库；复测请重新收集专家作答或按新题 id 重标。"
+    ],
+    "objectiveScoring": {
+      "normalizeByAchievableMax": true,
+      "normalizedCap": 5,
+      "perTrackNormalizeThenBlend": true,
+      "description": "客观：habits/ability 两轨分别按各维 maxScores 合计归一化到 1–5，再按 50%-50% 合成用户客观向量。"
+    }
+  },
+  "questions": [
+    {
+      "id": "OH0",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "boolean",
+      "displayDimensions": [ 
+"观察"      
+      ],
+      "stem": "此次测验共有40道题，我会仔细阅读此次测验的题干、编号、选项，不夸大、不过谦，诚实准确地回答所有题目。",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "观察": 0  }
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": {"观察": 0  }
+         }
+      ],
+      "maxScores": {  "观察": 0  }
+},
+
+
+    {
+      "id": "OH01",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "抽象", "记忆", "空间", "观察"
+      ],
+      "stem": "你去一个陌生场馆看演出要找座位，你更依赖？",
+      "options": [
+        { "id": "A",
+          "text": "平面图与区域编号",
+          "scores": { "空间": 4, "抽象": 1, "观察": 1 }
+         },
+        { "id": "B",
+          "text": "记住入口到座位的转弯顺序",
+          "scores": { "记忆": 3, "空间": 2, "观察": 1 }
+         },
+        { "id": "C",
+          "text": "问工作人员最短路线",
+          "scores": { "执行": 4, "观察": 1, "记忆": 1 }
+         },
+        { "id": "D",
+          "text": "边走边在脑内思考要走的路径",
+          "scores": { "空间": 3, "推导": 3 }
+         }
+      ],
+      "maxScores": { "空间": 4, "抽象": 1, "记忆": 3, "执行": 4, "观察": 1, "推导": 3 }
+},
+
+
+ {
+      "id": "OH02",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "boolean",
+      "displayDimensions": [
+        "推导", "操作", "整理", "执行"
+      ],
+      "stem": "你更同意：做事前先在脑子里预演一遍步骤。",
+      "options": [
+        { "id": "T",
+          "text": "同意",
+          "scores": { "推导": 2, "整理": 2 }
+         },
+        { "id": "F",
+          "text": "不太同意",
+          "scores": { "执行": 1, "操作": 3 }
+         }
+      ],
+      "maxScores": { "推导": 2, "整理": 2, "执行": 1, "操作": 3 }
+    },
+
+
+    {
+      "id": "OH03",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "操作", "整理", "观察", "执行"
+      ],
+      "stem": "尝试做一道新菜，旁边有菜谱，你更可能？",
+      "options": [
+        { "id": "A",
+          "text": "先通读一遍步骤后，根据记忆动手",
+          "scores": { "整理": 2, "执行": 2 , "记忆": 2}
+         },
+        { "id": "B",
+          "text": "不看菜谱直接做，过程参考菜谱调整步骤",
+          "scores": { "操作": 3, "观察": 2 , "执行": 1}
+         },
+        { "id": "C",
+          "text": "严格按照菜谱做菜，甚至用量具按克数操作",
+          "scores": { "计算": 3, "执行": 3}
+         },
+        { "id": "D",
+          "text": "只抓菜谱中关键几步，其余自由发挥",
+          "scores": { "自主": 3, "操作": 3 }
+         }
+      ],
+      "maxScores": { "整理": 2, "执行": 3, "操作": 3, "观察": 2, "计算": 3, "自主": 3 }
+},
+
+   
+
+    {
+      "id": "OH04",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "推导", "操作", "空间", "整理","观察", "好奇"
+      ],
+      "stem": "拼复杂拼图，你通常从哪开始？",
+      "options": [
+        { "id": "A",
+          "text": "先拼边和角",
+          "scores": { "空间": 2, "整理": 1, "推导": 2 }
+         },
+        { "id": "B",
+          "text": "先找颜色最醒目的块",
+          "scores": { "观察": 4, "好奇": 1 }
+         },
+        { "id": "C",
+          "text": "脑内想象成品再反推",
+          "scores": { "推导": 2, "空间": 3 }
+         },
+        { "id": "D",
+          "text": "拿到哪块试哪块",
+          "scores": { "操作": 4, "联想": 1 }
+         }
+      ],
+      "maxScores": { "空间": 3, "整理": 1, "观察": 4, "好奇": 1, "操作": 4, "推导": 2 }
+},
+
+
+   {
+      "id": "OH05",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "boolean",
+      "displayDimensions": [
+        "整理", "观察", "执行", "好奇"
+      ],
+      "stem": "遇到矛盾信息时，你习惯先记下来再核对。",
+      "options": [
+        { "id": "T",
+          "text": "同意",
+          "scores": { "观察": 2, "整理": 1 }
+         },
+        { "id": "F",
+          "text": "不太同意",
+          "scores": { "好奇": 1, "执行": 2 }
+         }
+      ],
+      "maxScores": { "观察": 2, "整理": 1, "好奇": 1, "执行": 2 }
+},
+
+
+    {
+      "id": "OH06",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "抽象", "好奇", "整理", "执行", "联想"
+      ],
+      "stem": "-读科普遇到陌生符号，你会？",
+      "options": [
+        { "id": "A",
+          "text": "弄清符号含义",
+          "scores": { "抽象": 3, "好奇": 2 }
+         },
+        { "id": "B",
+          "text": "和生活里的例子类比",
+          "scores": { "联想": 3 }
+         },
+        { "id": "C",
+          "text": "不管含义，先继续阅读",
+          "scores": { "好奇": 1 }
+         },
+        { "id": "D",
+          "text": "抄定义到便签备查，回头再理解",
+          "scores": { "执行": 3, "整理": 2 }
+         }
+      ],
+      "maxScores": { "抽象": 3, "联想": 3, "好奇": 2, "执行": 3, "整理": 2 }
+},
+
+
+    {
+      "id": "OH07",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "整理", "观察", "执行", "推导", "构建"
+      ],
+      "stem": "小组作业分工时，你更倾向？",
+      "options": [
+        { "id": "A",
+          "text": "按步骤拆成可交付块",
+          "scores": { "整理": 3, "构建": 2 , "执行": 2}
+         },
+        { "id": "B",
+          "text": "先讨论各自擅长再定",
+          "scores": { "观察": 2, "构建": 1,"推导": 2, "整理": 2 }
+         },
+        { "id": "C",
+          "text": "认领最难的一块单啃",
+          "scores": { "执行": 6 }
+         },
+        { "id": "D",
+          "text": "轮流当协调人推进",
+          "scores": { "执行": 4, "整理": 1 }
+         }
+      ],
+      "maxScores": { "整理": 3, "构建": 2, "观察": 2, "推导": 2, "执行": 6 }
+},
+
+    
+    {
+      "id": "OH08",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "记忆", "整理", "执行", "好奇"
+      ],
+      "stem": "做数学题没法解决时，你倾向？",
+      "options": [
+        { "id": "A",
+          "text": "把已知条件全写出来",
+          "scores": { "整理": 3, "推导": 2 }
+         },
+        { "id": "B",
+          "text": "换成0，1，-1等数字试算",
+          "scores": { "执行": 3, "计算": 2 }
+         },
+        { "id": "C",
+          "text": "找类似题型但更简单的题目寻找思路",
+          "scores": { "执行": 2 , "推导": 2 , "联想": 1  }
+         },
+        { "id": "D",
+          "text": "看答案学习解题方式",
+          "scores": { "执行": 4 }
+         }
+      ],
+      "maxScores": { "整理": 3, "推导": 2, "计算":2, "执行": 3 }
+},
+
+ 
+ {
+      "id": "OH09",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "boolean",
+      "displayDimensions": [
+        "抽象", "推导", "执行", "好奇", "操作", "自主"
+      ],
+      "stem": "回顾自己经历的重大事情，你习惯先思考背后为何、如何发生的，而不是怎样避免发生负面/增加发生正面事情",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "抽象": 2, "推导": 2, "好奇": 1 }
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": { "操作": 2, "执行": 1, "自主": 1}
+         }
+      ],
+      "maxScores": { "抽象": 2, "操作": 2, "好奇": 1, "执行": 1, "推导": 2, "自主": 1 }
+},
+
+
+  
+
+   
+
+
+    {
+      "id": "OH10",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "操作", "记忆", "整理", "执行"
+      ],
+      "stem": "双十一满减规则很复杂，这次你有特别多想买的东西，以下几种方式你更倾向那种？",
+      "options": [
+        { "id": "A",
+          "text": "拉表：把门槛、折扣、运费分开算",
+          "scores": { "联想": 5, "记忆": 3 }
+         },
+        { "id": "B",
+          "text": "先抽象成“买多少最划算”的模型",
+          "scores": { "记忆": 5, "操作": 2 }
+         },
+        { "id": "C",
+          "text": "直接买按照自己的需要购买只考虑最基础的满减规则",
+          "scores": { "执行": 4, "推导": 2 }
+         },
+        { "id": "D",
+          "text": "直接租一个满减计算器，一键算出最优解",
+          "scores": { "构建": 4, "整理": 3 }
+         }
+      ],
+      "maxScores": { "联想": 5, "记忆": 5, "操作": 2, "执行": 4, "推导": 2, "构建": 4, "整理": 3 }
+},
+
+
+    {
+      "id": "OH12",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "观察", "好奇", "计算", "执行", "推导", "联想"
+      ],
+      "stem": "路过奶茶店排队很长，你会更常出现哪种想法？",
+      "options": [
+        { "id": "A",
+          "text": "观察店员动线，猜哪里是瓶颈",
+          "scores": { "观察": 3, "好奇": 1, "推导": 2 }
+         },
+        { "id": "B",
+          "text": "观察排队人数和速度，估算还要等几分钟",
+          "scores": { "计算": 3, "执行": 1, "观察": 2 }
+         },
+        { "id": "C",
+          "text": "直接换一家",
+          "scores": { "执行": 6 }
+         },
+        { "id": "D",
+          "text": "猜测是哪款奶茶这么火爆",
+          "scores": { "好奇": 3, "联想": 3 }
+         }
+      ],
+      "maxScores": { "联想": 3, "执行": 6, "好奇": 3, "推导": 2, "观察": 3, "计算": 3 }
+},
+
+
+    {
+      "id": "S13",
+      "section": "subjective",
+      "area": "S",
+      "type": "single",
+      "displayDimensions": [
+        "interest_ambition", "practical_benefit"
+      ],
+      "stem": "「学得更深」和「早点拿到可见成果」之间，你更偏向？",
+      "options": [
+        { "id": "A",
+          "text": "更深一点，慢一点也行",
+          "scores": { "interest_ambition": 3 }
+         },
+        { "id": "B",
+          "text": "可见成果优先，再补深度",
+          "scores": { "practical_benefit": 3 }
+         },
+        { "id": "C",
+          "text": "分阶段切换",
+          "scores": { "interest_ambition": 1, "practical_benefit": 2 }
+         },
+        { "id": "D",
+          "text": "并行两个小目标",
+          "scores": { "interest_ambition": 1.5, "practical_benefit": 1.5 }
+         }
+      ],
+      "maxScores": { "interest_ambition": 3, "practical_benefit": 3 }
+    },
+
+
+    {
+      "id": "S14",
+      "section": "subjective",
+      "area": "S",
+      "type": "single",
+      "displayDimensions": [
+        "interest_ambition", "practical_benefit"
+      ],
+      "stem": "别人问将来想做什么，你更舒服的回答？",
+      "options": [
+        { "id": "A",
+          "text": "讲想解决或创造什么的画面",
+          "scores": { "interest_ambition": 3 }
+         },
+        { "id": "B",
+          "text": "讲行业岗位城市节奏",
+          "scores": { "practical_benefit": 3 }
+         },
+        { "id": "C",
+          "text": "先兴趣再补一句现实",
+          "scores": { "interest_ambition": 1.5, "practical_benefit": 1.5 }
+         }
+      ],
+      "maxScores": { "interest_ambition": 3, "practical_benefit": 3 }
+},
+
+
+
+
+
+
+
+
+
+
+
+
+  {
+      "id": "S15",
+      "section": "subjective",
+      "area": "S",
+      "type": "boolean",
+      "displayDimensions": [
+        "interest_ambition", "practical_benefit"
+      ],
+      "stem": "填志愿时你优先考虑的是贴合长期兴趣与想象的生活而不是就业与收入预期的稳定性。",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "interest_ambition": 2 }
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": { "practical_benefit": 2 }
+         }
+      ],
+      "maxScores": { "interest_ambition": 2, "practical_benefit": 2 }
+    },
+
+
+
+ {
+      "id": "OH16",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "观察", "推导", "整理", "执行", "自主", "操作", "抽象"
+      ],
+      "stem": "“你想出去旅游，朋友提议可以使用AI出方案，你认为？",
+      "options": [
+        { "id": "A",
+          "text": "AI给方案很便捷，没有要求可以直接使用",
+          "scores": { "执行": 2, "操作": 1  }
+         },
+        { "id": "B",
+          "text": "AI给的方案是普适化的，不一定能完全满足你和朋友的需求",
+          "scores": { "推导": 3, "观察": 3 }
+         },
+        { "id": "C",
+          "text": "AI给的信息可能有无效、过时和错误的信息，需要你们一一核对",
+          "scores": { "观察": 3, "推导": 1, "整理": 2}
+         },
+        { "id": "D",
+          "text": "AI出的方案可以给你们很好的参考，让你们利用设计出自己的方案",
+          "scores": { "自主": 3, "操作": 2 , "观察": 1   }
+         },
+        { "id": "E",
+          "text": "AI包含全部人类上传的信息，以往搜集信息的成本转化为筛选信息的成本",
+          "scores": { "抽象": 3, "推导": 2 , "观察": 1   }
+         }
+
+      ],
+      "maxScores": {  "抽象": 3, "操作": 2, "整理": 2, "自主": 3, "推导": 6 , "观察": 5, "执行": 2 }
+},
+
+
+
+ {
+      "id": "OH17",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "抽象", "推导", "整理", "计算", "好奇", "空间"
+      ],
+      "stem": "“一个装着碗筷的柜子被突然推倒”，面对这句描述，你最关注的是",
+      "options": [
+        { "id": "A",
+          "text": "脑内模拟演练了具体什么样的柜子以及如何倒下来的具体过程",
+          "scores": { "空间": 3, "抽象": 1}
+         },
+        { "id": "B",
+          "text": "估算需要多大的力气柜子才会倒下",
+          "scores": { "计算": 2, "抽象": 1, "推导": 1 }
+         },
+        { "id": "C",
+          "text": "思考是什么原因让人推倒柜子",
+          "scores": { "好奇": 2, "推导": 2  }
+         },
+        { "id": "D",
+          "text": "计算柜子倒下后的损失",
+          "scores": { "计算": 2, "整理": 1  }
+         }
+      ],
+      "maxScores": {  "抽象": 1, "空间": 3, "整理": 1, "好奇": 2, "推导": 2 , "计算": 2 }
+},
+
+
+
+    {
+      "id": "OH18",
+      "section": "objective",
+      "objectiveTrack": "habits",
+      "area": "H",
+      "type": "single",
+      "displayDimensions": [
+        "构建", "抽象", "整理", "执行", "记忆", "好奇", "自学"
+
+      ],
+      "stem": "听长篇讲解时，你更易？",
+      "options": [
+        { "id": "A",
+          "text": "边听边画结构图",
+          "scores": { "构建": 4, "抽象": 3 }
+         },
+        { "id": "B",
+          "text": "记关键词，回头补全",
+          "scores": { "记忆": 4, "整理": 3 }
+         },
+        { "id": "C",
+          "text": "打断提问，当场澄清",
+          "scores": { "自主": 2, "执行": 3 , "好奇": 2 }
+         },
+        { "id": "D",
+          "text": "录音课后整理",
+          "scores": { "执行": 3, "整理": 3 , "自学": 1 }
+         }
+      ],
+      "maxScores": { "构建": 4, "抽象": 3, "记忆": 4, "整理": 3, "好奇": 2, "执行": 3, "自主": 2 , "自学": 1 }
+},
+
+
+
+
+    {
+      "id": "OA19",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "操作"
+      ],
+      "stem": "对于电脑/手机的操作类游戏，或乐高、模型拼装等手工爱好，或是玩卡丁车、无人机等操作类爱好，我——",
+      "options": [
+        { "id": "A",
+          "text": "我喜欢且擅长",
+          "scores": { "操作": 3 }
+         },
+        { "id": "B",
+          "text": "相对喜欢且相对擅长",
+          "scores": { "操作": 2 }
+         },
+        { "id": "C",
+          "text": "一般般",
+          "scores": { "操作": 1 }
+         },
+        { "id": "D",
+          "text": "无感，不喜欢玩",
+          "scores": { "操作": 0 }
+         }
+      ],
+      "maxScores": { "操作": 3 }
+},
+
+
+    {
+      "id": "OA20",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "联想", "抽象"
+      ],
+      "stem": "对于动画、漫画等二次元作品，或奇幻、科幻等虚拟影视作品，或是具有架空类的世界观桌游游戏，我——",
+      "options": [
+        { "id": "A",
+          "text": "非常喜欢且沉浸",
+          "scores": { "联想": 3, "抽象": 3 }
+         },
+        { "id": "B",
+          "text": "比较喜欢",
+          "scores": { "联想": 2, "抽象": 2 }
+         },
+        { "id": "C",
+          "text": "一般般",
+          "scores": { "联想": 1, "抽象": 1 }
+         },
+        { "id": "D",
+          "text": "无感，不喜欢",
+          "scores": { "联想": 0, "抽象": 0 }
+         }
+      ],
+      "maxScores": { "联想": 3, "抽象": 3 }
+},
+
+
+
+
+
+
+
+
+
+
+
+
+
+ {
+      "id": "OA21",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "boolean",
+      "displayDimensions": [
+        "空间"
+      ],
+      "stem": "你在陌生城市中可以独自使用地图找到想去的地方吗？",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "空间": 3 }
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": { "空间": 0 }
+         }
+      ],
+      "maxScores": { "空间": 3 }
+},
+
+
+
+
+    {
+      "id": "OA22",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "自学", "自主"
+      ],
+      "stem": "平时学习书本中的知识，你是听老师讲课居多还是自学居多？",
+      "options": [
+        { "id": "A",
+          "text": "基本靠自学",
+          "scores": { "自学": 5, "自主": 3}
+         },
+        { "id": "B",
+          "text": "一半靠自学，一半听老师讲课",
+          "scores": { "自学": 3, "自主": 2 }
+         },
+        { "id": "C",
+          "text": "听课为主，偶尔自学为辅",
+          "scores": { "自学": 2, "自主": 1}
+         },
+        { "id": "D",
+          "text": "一定要听课才能理解梳理知识",
+          "scores": { "自学": 1, "自主": 0 }
+         }
+      ],
+      "maxScores": { "自学": 5, "自主": 3 }
+},
+
+
+
+    {
+      "id": "OA23",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "抽象"
+      ],
+      "stem": "我对于“质数”、“动量”、“极限”、“微分”等抽象概念的理解速度是——",
+      "options": [
+        { "id": "A",
+          "text": "听完概念的讲解后可以很快地理解",
+          "scores": { "抽象": 5 }
+         },
+        { "id": "B",
+          "text": "可以通过例子的讲解和展示来理解",
+          "scores": { "抽象": 4 }
+         },
+        { "id": "C",
+          "text": "需要在习题的练习中、实验的操作中逐渐理解",
+          "scores": { "抽象": 3 }
+         },
+        { "id": "D",
+          "text": "理解很困难，只能靠死记硬背",
+          "scores": { "抽象": 2 }
+         }
+      ],
+      "maxScores": { "抽象": 5 }
+},
+
+
+    {
+      "id": "OA24",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "空间", "联想"
+      ],
+      "stem": "一个杨桃上插着一颗海星，对于这个场景，我能想象出：",
+      "options": [
+        { "id": "A",
+          "text": "海星和杨桃所有可能位置关系",
+          "scores": { "空间": 5, "联想": 3 }
+         },
+        { "id": "B",
+          "text": "海星插在杨桃上的几种可能场景",
+          "scores": { "空间": 3, "联想": 2 }
+         },
+        { "id": "C",
+          "text": "海星插在杨桃上的大概场景",
+          "scores": { "空间": 2, "联想": 1 }
+         },
+        { "id": "D",
+          "text": "不太能想象出来",
+          "scores": { "空间": 1, "联想": 0 }
+         }
+      ],
+      "maxScores": { "空间": 5, "联想": 3 }
+},
+
+
+    {
+      "id": "OA25",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "操作", "执行"
+      ],
+      "stem": "对于学校计算机课上布置的编程任务，或是科学实验任务，我能：",
+      "options": [
+        { "id": "A",
+          "text": "很顺利地快速完成任务",
+          "scores": { "操作": 5}
+         },
+        { "id": "B",
+          "text": "需要多看几遍步骤，琢磨会儿完成",
+          "scores": { "操作": 3 }
+         },
+        { "id": "C",
+          "text": "多操作试验几次完成",
+          "scores": { "操作": 4 }
+         },
+        { "id": "D",
+          "text": "需要有人在傍边帮助指导才能完成",
+          "scores": { "操作": 2 }
+         }
+      ],
+      "maxScores": { "操作": 5 }
+},
+
+
+
+    {
+      "id": "OA26",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "计算", "推导"
+      ],
+      "stem": "对于数学和物理试卷中的计算量较大的题目，我通常是",
+      "options": [
+        { "id": "A",
+          "text": "比较快速准确地做完，通常达到接近满分",
+          "scores": { "计算": 5, "推导": 3 }
+         },
+        { "id": "B",
+          "text": "能顺利地做出，但偶尔有粗心大意",
+          "scores": { "计算": 4, "推导": 2 }
+         },
+        { "id": "C",
+          "text": "能多次尝试至中间步骤正确，但不一定能算出正确结果",
+          "scores": { "计算": 3, "推导": 1 }
+         },
+        { "id": "D",
+          "text": "比较难能算出正确结果",
+          "scores": { "计算": 1, "推导": 0 }
+         }
+      ],
+      "maxScores": { "计算": 5, "推导": 2 }
+},
+
+
+
+    {
+      "id": "OA27",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "记忆"
+      ],
+      "stem": "对于老师要求课堂上背诵课文的任务，我通常是",
+      "options": [
+        { "id": "A",
+          "text": "全班前几个背出来的",
+          "scores": { "记忆": 5 }
+         },
+        { "id": "B",
+          "text": "全班前一半能背出来的",
+          "scores": { "记忆": 3 }
+         },
+        { "id": "C",
+          "text": "全班后一半背出来的",
+          "scores": { "记忆": 2 }
+         },
+        { "id": "D",
+          "text": "比较缓慢，多次重复才能背完",
+          "scores": { "记忆": 1 }
+         }
+      ],
+      "maxScores": { "记忆": 5 }
+},
+
+
+
+
+
+    {
+      "id": "S28",
+      "section": "subjective",
+      "area": "S",
+      "type": "single",
+      "displayDimensions": [
+        "interest_ambition", "practical_benefit"
+      ],
+      "stem": "社团/竞赛会占用时间，你为什么坚持参加？",
+      "options": [
+        { "id": "A",
+          "text": "这件事让我感觉像我自己",
+          "scores": { "interest_ambition": 3 }
+         },
+        { "id": "B",
+          "text": "对简历/升学路径更有用",
+          "scores": { "practical_benefit": 3 }
+         },
+        { "id": "C",
+          "text": "过程开心且队友靠谱",
+          "scores": { "interest_ambition": 2, "practical_benefit":1 }
+         },
+        { "id": "D",
+          "text": "师长建议先坚持看看",
+          "scores": { "interest_ambition": 1, "practical_benefit": 2 }
+         }
+      ],
+      "maxScores": { "interest_ambition": 3, "practical_benefit": 3 }
+},
+
+
+
+
+ {
+      "id": "S29",
+      "section": "subjective",
+      "area": "S",
+      "type": "boolean",
+      "displayDimensions": [
+        "interest_ambition", "practical_benefit"
+      ],
+      "stem": "遇到问题时你倾向思考如何解决问题，而不是先衡量解决问题的必要性",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "interest_ambition": 2 }
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": { "practical_benefit": 2 }
+         }
+      ],
+      "maxScores": { "interest_ambition": 2, "practical_benefit": 2 }
+    },
+
+
+
+
+
+
+
+
+
+
+    {
+      "id": "OA30",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "观察", "记忆"
+      ],
+      "stem": "（做到此题请勿往前翻）你是否注意到前面题目的编号少了一个？漏掉的编号在哪？",
+      "options": [
+        { "id": "A",
+          "text": "注意到了，是11题编号漏了",
+          "scores": { "观察": 5, "记忆": 2 }
+         },
+        { "id": "B",
+          "text": "注意到了，是整套题的前半段漏了一题",
+          "scores": { "观察": 3, "记忆": 1 }
+         },
+        { "id": "C",
+          "text": "注意到了，但忘记在哪儿",
+          "scores": { "观察": 2, "记忆": 0 }
+         },
+        { "id": "D",
+          "text": "有漏题吗？",
+          "scores": { "观察": 0, "记忆": 0 }
+         }
+      ],
+      "maxScores": { "观察": 5, "记忆": 2 }
+},
+
+
+    {
+      "id": "OA31",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "观察", "记忆", "整理"
+      ],
+      "stem": "（做到此题请勿往前翻）前面题目有选择题和判断题，我们按照了一定规律进行排列，你注意到",
+      "options": [
+        { "id": "A",
+          "text": "每出现n道选择题，就有一道判断题，n从1开始是递增数列",
+          "scores": { "观察": 5, "整理": 3, "记忆": 2 }
+         },
+        { "id": "B",
+          "text": "选择题和判断题穿插安排，越到后面判断题出现的频率越低",
+          "scores": { "观察": 3, "整理": 2, "记忆": 2 }
+         },
+        { "id": "C",
+          "text": "选择题多，判断题少",
+          "scores": { "观察": 2, "整理": 1, "记忆": 1 }
+         },
+        { "id": "D",
+          "text": "只注意到两种题型都有",
+          "scores": { "观察": 1, "整理": 0, "记忆": 1 }
+         }
+      ],
+      "maxScores": { "观察": 5, "整理": 3, "记忆": 2 }
+},
+
+
+    {
+      "id": "OA32",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "整理", "观察", "构建", "推导"
+      ],
+      "stem": "（此道题目可以前翻）此测验每道题目前方都有不同的编号，共有OH、OA、S三种，通过前面的题目你可以总结归纳出？（请内心有答案后再选选项）",
+      "options": [
+        { "id": "A",
+          "text": "OH是考察数理思维习惯，OA是考察数理能力高低，S是考察价值取向",
+          "scores": { "整理": 5, "观察": 3, "推导": 3, "构建": 3 }
+         },
+        { "id": "B",
+          "text": "OH题是多向考量，OA题是单向考量，S题是二元考量",
+          "scores": { "整理": 3, "观察": 3, "推导": 3, "构建": 2 }
+         },
+        { "id": "C",
+          "text": "OH题选项彼此不互容，OA题和S题的选项是单一事物的高低程度排列",
+          "scores": { "整理": 2, "观察": 3, "推导": 2, "构建": 1 }
+         },
+        { "id": "D",
+          "text": "OH题数量与OA题目数量多，S题数量少",
+          "scores": { "整理": 1, "观察": 2, "推导": 1, "构建": 0 }
+         }
+      ],
+      "maxScores": { "整理": 5, "观察": 3, "推导": 3, "构建": 3 }
+},
+
+
+    {
+      "id": "OA33",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "计算", "推导"
+      ],
+      "stem": "（此道题目请勿后翻）现在告诉你此测验OH题目比OA题目少4题，OH题已全部出完，由此你可以推算出后面剩下几题应是：",
+      "options": [
+        { "id": "A",
+          "text": "1道S题和7道OA题",
+          "scores": { "计算": 3, "推导": 4 }
+         },
+        { "id": "B",
+          "text": "0道S题和8道OA题",
+          "scores": { "计算": 1, "推导": 1 }
+         },
+        { "id": "C",
+          "text": "1道S题和8道OA题",
+          "scores": { "计算": 1, "推导": 1 }
+         },
+        { "id": "D",
+          "text": "2道S题和7道OA题",
+          "scores":  { "计算": 1, "推导": 1 }
+         },
+        { "id": "E",
+          "text": "1道S题和6道OA题",
+          "scores": { "计算": 1, "推导": 1 }
+         },
+        { "id": "F",
+          "text": "1道S题和8道OA题",
+          "scores": { "计算": 0, "推导": 0 }
+         }
+
+      ],
+      "maxScores": { "计算": 3, "推导": 4 }
+},
+
+
+    {
+      "id": "OA34",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "推导", "联想"
+      ],
+      "stem": "而下一题可以用以下哪道题做题干呢？",
+      "options": [
+        { "id": "A",
+          "text": "你有理想的大学专业和院校吗？",
+          "scores": { "推导": 0, "联想": 0}
+         },
+        { "id": "B",
+          "text": "你是否了解你的目标专业？",
+          "scores": { "推导": 0, "联想": 0 }
+         },
+        { "id": "C",
+          "text": "你在选择志愿专业时会考虑哪些方面？",
+          "scores": { "推导": 2, "联想":1 }
+         },
+        { "id": "D",
+          "text": "你是否希望了解更多其它大学专业",
+          "scores": { "推导": 0, "联想": 0 }
+         }
+      ],
+      "maxScores":  { "推导": 2, "联想": 1 }
+},
+
+
+    {
+      "id": "OA35",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "好奇", "自主", "执行", "观察"
+      ],
+      "stem": "现在我们处在科学技术快速且剧烈变革的时代，不仅技术层面有具身机器人、脑机接口的全新发展，科学领域中也伴随着球状闪电的成功制造、“时间晶体”的冻结等许多意想不到的突破，对于这些你的态度是？",
+      "options": [
+        { "id": "A",
+          "text": "很好奇未来时代发展的去向，并会主动去了解感兴趣的领域发展",
+          "scores": { "好奇": 5, "自主": 3, "观察": 2, "执行": 3 }
+         },
+        { "id": "B",
+          "text": "会比较好奇未来的发展和感兴趣的领域，但不会主动去查询相关咨询",
+          "scores": { "好奇": 3, "自主": 2, "观察": 1, "执行": 2 }
+         },
+        { "id": "C",
+          "text": "认为事物发展有一定的规律，就坐这个时代来临",
+          "scores": { "好奇": 2, "自主": 1, "观察": 1, "执行": 0 }
+         },
+        { "id": "D",
+          "text": "、无感，该咋咋地",
+          "scores": { "好奇": 1, "自主": 0, "观察": 0, "执行": 0 }
+         }
+      ],
+      "maxScores": { "好奇": 5, "自主": 3, "观察": 2, "执行": 3 }
+},
+
+
+    {
+      "id": "OA36",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "boolean",
+      "displayDimensions": [
+        "好奇"
+      ],
+      "stem": "现在告诉你，前面缺失编号的那一题是由于法律问题无法展示，听到这你会想知道具体原因吗？",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "好奇": 2 }
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": { "好奇": 0 }
+         }
+      ],
+      "maxScores": { "好奇": 2 }
+},
+
+
+    {
+      "id": "OA37",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "构建", "推导", "整理", "联想"
+      ],
+      "stem": "如果告诉你，此次对于数理素质的测验还可以更加完备，那增加以下哪个方面的考核你认为是补充到位且准确的呢？",
+      "options": [
+        { "id": "A",
+          "text": "对数理能力高低进行量化测试的客观题目，可以参考奥数题、生物竞赛题等",
+          "scores": { "构建": 4, "推导": 3, "整理": 3, "联想": 2 }
+         },
+        { "id": "B",
+          "text": "需输入考试成绩，作为数理素质能力高低的客观参考",
+          "scores": { "构建": 3, "推导": 2, "整理": 3, "联想": 1 }
+         },
+        { "id": "C",
+          "text": "学生对于不同学科的兴趣偏好，帮助判断学生对于数理思维习惯的偏好",
+          "scores": { "构建": 3, "推导": 1, "整理": 2, "联想": 2 }
+         },
+        { "id": "D",
+          "text": "再增加一些对数理能力自检题，让学生对自己的数理能力有更清晰的认识",
+          "scores": { "构建": 0, "推导": 1, "整理": 1, "联想": 0 }
+         }
+      ],
+      "maxScores": { "构建": 4, "推导": 3, "整理": 3, "联想": 2 }
+},
+
+
+ {
+      "id": "S38",
+      "section": "subjective",
+      "area": "S",
+      "type": "single",
+      "displayDimensions": [
+        "interest_ambition", "practical_benefit"
+      ],
+      "stem": "如果你大学经过一段时间学习发现自己并不喜欢自己目前的专业，对于转专业的想法你最可能？",
+"options": [
+        { "id": "A",
+          "text": "既然不喜欢，那就没必要勉强，立马开始着手准备转专业（本科内转或考研转）",
+          "scores": { "interest_ambition": 3 }
+         },
+        { "id": "B",
+          "text": "先看看我擅不擅长，如果擅长也可以继续学/从事不喜欢的行业，如果不擅长那还是准备转专业",
+          "scores": { "practical_benefit": 3 }
+         },
+        { "id": "C",
+          "text": " 前面已经有积累了，转专业肯定要比现在麻烦，不喜欢不代表不能扎根发展 ",
+          "scores": { "interest_ambition": 1, "practical_benefit": 2 }
+         },
+        { "id": "D",
+          "text": "毕业考公/家里帮衬/创业，学哪个专业都一样",
+          "scores": { "interest_ambition": 1.5, "practical_benefit": 1.5 }
+         }
+      ],
+      "maxScores": { "interest_ambition": 3, "practical_benefit": 3 }
+    },
+
+
+
+   {
+      "id": "OA39",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "boolean",
+      "displayDimensions": [
+        "自主", "执行", "操作"
+      ],
+      "stem": "面对你感兴趣的大学专业，你倾向主动找相关的专业人士了解而非独自在网络上搜索。",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "自主": 2 , "执行": 2}
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": { "操作": 2 , "执行": 1}
+         }
+      ],
+      "maxScores": { "自主": 2 , "执行": 2 , "操作": 2 }
+},
+
+
+
+    {
+      "id": "OA40",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "multi",
+      "displayDimensions": [
+        "好奇", "自主"
+      ],
+      "stem": "如果有985硕博学长亲自为你讲解答你感兴趣的专业相关咨询，包括这个专业大学学什么，就业方向，好不好考研/保研、考公/考编，该领域科学/行业的前沿发展如何，你希望包含以下哪些学科呢",
+      "options": [
+        { "id": "A",
+          "text": "A.数学：应用数学、金融数学、密码学等",
+          "scores": { "好奇": 0.1, "自主": 0.3 }
+         },
+        { "id": "B",
+          "text": "物理：量子计算、凝聚态物理、引力波探测、高能粒子等",
+          "scores": { "好奇": 0.1, "自主": 0.3 }
+         },
+        { "id": "C",
+          "text": "化学生物：生物技术、生物制药、基因工程等",
+          "scores": { "好奇": 0.1, "自主": 0.3 }
+         },
+        { "id": "D",
+          "text": "计算机：AI人工智能、大数据学科、网络信息工程等",
+          "scores": {"好奇": 0.1, "自主": 0.3 }
+         },
+        { "id": "E",
+          "text": "材料：材料物理、材料化学、半导体、新能源、磁性材料等",
+          "scores": {"好奇": 0.1, "自主": 0.3 }
+         },
+        { "id": "F",
+          "text": "芯片：电子信息、电路设计等",
+          "scores": {"好奇": 0.1, "自主": 0.3 }
+         },
+        { "id": "G",
+          "text": "没兴趣了解",
+          "scores": { "好奇": 0, "自主": 0 }
+         }
+      ],
+      "maxScores": { "好奇": 0.6, "自主": 1.8 }
+    }
+  ]
+}
+

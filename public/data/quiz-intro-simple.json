@@ -1,0 +1,12 @@
+{
+  "heading": "欢迎你，我的朋友！",
+  "lines": [
+    "这是一份由 <strong>985 理工硕博学长团</strong> 制作的「<strong>数理素质测验 · 体验版</strong>」。",
+    "我们将对你的 <strong>8 维</strong> 数理素质进行测验，",
+    "并参考 <strong>2026 年教育部最新本科专业目录</strong>，为你推荐 <strong>5 类</strong> 最匹配你的理工专业方向。",
+    { "spacer": true },
+    "全篇共有 <strong>18</strong> 道题目，做完约 <strong>5 分钟</strong>。"
+  ],
+  "closingLine": "一起来看看你的数理素质和匹配专业如何吧！",
+  "footerNote": "体验版推荐仅依据 8 维客观结果，仅供参考"
+}

@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "description": "主观意愿「实际/利益」维度按满分的 20% 为一档，共 5 档简评。仅用于结果展示，不参与二级专业推荐排序。",
+  "dimension": "practical_benefit",
+  "tierBasis": "practical_benefit 原始分 ÷ 该维主观题可达满分（各题 maxScores 合计）",
+  "tierWidthShare": 0.2,
+  "tiers": [
+    {
+      "tier": 1,
+      "practicalScoreShareMin": 0,
+      "practicalScoreShareMax": 0.2,
+      "label": "更偏向科研与升学探索",
+      "brief": "你的作答显示，你目前更在意问题本身是否值得投入、能否走向更深的理解与学术或创新路径，相对不那么优先「先就业、先拿可见成果」。在选专业时，可把「能否持续深造、做研究或参与长线项目」放在较前的位置；同时留一点余地了解就业面，避免信息过少。"
+    },
+    {
+      "tier": 2,
+      "practicalScoreShareMin": 0.2,
+      "practicalScoreShareMax": 0.4,
+      "label": "理想导向略强，兼顾现实",
+      "brief": "你整体仍偏「可以走向科研、升学」一侧，但已会考虑现实节奏与阶段性成果。适合关注基础扎实、门类较宽、将来既可读研也可就业的方向；建议提前了解典型升学与就业比例，避免只凭想象做选择。"
+    },
+    {
+      "tier": 3,
+      "practicalScoreShareMin": 0.4,
+      "practicalScoreShareMax": 0.6,
+      "label": "升学与应用并重",
+      "brief": "你在「面向就业、应用」与「走向科研、升学」之间较为均衡，既看重能力成长，也在意路径是否走得通。选专业时可同时比较：该方向的课程体系、实习/科研机会、以及毕业后的主流去向，按阶段灵活调整侧重点。"
+    },
+    {
+      "tier": 4,
+      "practicalScoreShareMin": 0.6,
+      "practicalScoreShareMax": 0.8,
+      "label": "应用导向略强，保留深造可能",
+      "brief": "你更常从就业、应用与可落地的成果出发考虑选择，同时并不排斥继续深造。可优先了解专业的行业对接、技能栈与岗位类型，再确认是否保留考研或跨方向进修的通道；避免只看短期热度。"
+    },
+    {
+      "tier": 5,
+      "practicalScoreShareMin": 0.8,
+      "practicalScoreShareMax": 1.01,
+      "label": "更偏向就业与应用落地",
+      "brief": "你的作答显示，你目前明显更关注就业、应用与可验证的成效，希望所学能较快对接岗位或项目。选专业时宜重点看就业率、实习、证书与产业需求；若仍考虑升学，建议选应用基础厚、转行面较宽的方向，并尽早规划备选路径。"
+    }
+  ]
+}

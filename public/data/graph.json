@@ -1,0 +1,506 @@
+{
+  "version": "auto-1.0",
+  "title": "素养框架 3D 图",
+  "description": "由 核心素质.md 自动解析生成。",
+  "levelColors": {
+    "1": "#2d7dd2",
+    "2": "#38a169",
+    "3": "#7c3aed",
+    "4": "#f59e0b"
+  },
+  "intensityDefault": 3,
+  "nodes": [
+    {
+      "id": "操作",
+      "title": "动手操作能力",
+      "level": 1,
+      "intensity": 3,
+      "position": [
+        1.193,
+        0.0,
+        2.478
+      ],
+      "definition": "对工具的使用能力，强调试验、玩耍与技术开发。"
+    },
+    {
+      "id": "好奇",
+      "title": "好奇心",
+      "level": 1,
+      "intensity": 3,
+      "position": [
+        0.0,
+        0.0,
+        -2.75
+      ],
+      "definition": "对世界探索的内在驱动，主动追问“为什么/还能怎样”，影响探索深度与持续性。"
+    },
+    {
+      "id": "执行",
+      "title": "执行力",
+      "level": 1,
+      "intensity": 3,
+      "position": [
+        2.15,
+        0.0,
+        -1.715
+      ],
+      "definition": "按目标推进并完成任务的能力，体现节奏控制与落实效率。"
+    },
+    {
+      "id": "抽象",
+      "title": "抽象概念理解",
+      "level": 1,
+      "intensity": 3,
+      "position": [
+        2.681,
+        0.0,
+        0.612
+      ],
+      "definition": "对抽象概念的理解能力，亦可将具体现象转化、提炼为概念、符号与模型的能力，是理解数理语言与建立统一框架的基础。"
+    },
+    {
+      "id": "整理",
+      "title": "整理归纳",
+      "level": 1,
+      "intensity": 3,
+      "position": [
+        -1.193,
+        0.0,
+        2.478
+      ],
+      "definition": "对信息进行分类、提炼与结构化表达的能力，帮助形成可复用知识单元。"
+    },
+    {
+      "id": "观察",
+      "title": "观察力",
+      "level": 1,
+      "intensity": 3,
+      "position": [
+        -2.681,
+        0.0,
+        0.612
+      ],
+      "definition": "捕捉细节、识别变化与发现异常的能力，是提出问题与验证判断的起点。"
+    },
+    {
+      "id": "记忆",
+      "title": "记忆力",
+      "level": 1,
+      "intensity": 3,
+      "position": [
+        -2.15,
+        0.0,
+        -1.715
+      ],
+      "definition": "纯粹记忆事物的能力，用于支撑计算、推理与迁移。"
+    },
+    {
+      "id": "空间",
+      "title": "空间想象",
+      "level": 2,
+      "intensity": 3,
+      "position": [
+        -0.49,
+        1.55,
+        2.145
+      ],
+      "definition": "在脑内进行几何形态、位置与关系变换的能力，用于图形与结构理解。"
+    },
+    {
+      "id": "联想",
+      "title": "联想能力",
+      "level": 2,
+      "intensity": 3,
+      "position": [
+        -2.145,
+        1.55,
+        -0.49
+      ],
+      "definition": "在不同知识域之间建立类比与映射的能力，帮助迁移与创新表达。"
+    },
+    {
+      "id": "计算",
+      "title": "计算能力",
+      "level": 2,
+      "intensity": 3,
+      "position": [
+        0.49,
+        1.55,
+        -2.145
+      ],
+      "definition": "基于规则与数量关系进行运算、估算与结果判断的能力。"
+    },
+    {
+      "id": "推导",
+      "title": "逻辑推导能力",
+      "level": 2,
+      "intensity": 3,
+      "position": [
+        2.145,
+        1.55,
+        0.49
+      ],
+      "definition": "依据前提进行有步骤论证并得到结论的能力，强调链条清晰与可解释。"
+    },
+    {
+      "id": "构建",
+      "title": "构建框架",
+      "level": 3,
+      "intensity": 3,
+      "position": [
+        0.345,
+        3.1,
+        1.305
+      ],
+      "definition": "组织为系统框架的能力，用于统筹策略与长期学习路径。"
+    },
+    {
+      "id": "自主",
+      "title": "自主探索能力",
+      "level": 3,
+      "intensity": 3,
+      "position": [
+        -0.345,
+        3.1,
+        -1.305
+      ],
+      "definition": "能够自主设定小目标或探索路径的能力。"
+    },
+    {
+      "id": "自学",
+      "title": "自学能力",
+      "level": 4,
+      "intensity": 3,
+      "position": [
+        0.0,
+        4.7,
+        0.0
+      ],
+      "definition": "在缺少外部指令时，仍可自我驱动完成“目标设定—资源筛选—实践验证—复盘迭代”的综合能力。"
+    }
+  ],
+  "edges": [
+    {
+      "from": "构建",
+      "to": "抽象",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "抽象概念理解【构建框架l】"
+    },
+    {
+      "from": "自学",
+      "to": "抽象",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "抽象概念理解【自学能力l】"
+    },
+    {
+      "from": "计算",
+      "to": "抽象",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "抽象概念理解【计算能力m】"
+    },
+    {
+      "from": "联想",
+      "to": "抽象",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "抽象概念理解【联想能力m】"
+    },
+    {
+      "from": "计算",
+      "to": "操作",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "动手操作能力【计算能力h】"
+    },
+    {
+      "from": "自学",
+      "to": "操作",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "动手操作能力【自学能力m】"
+    },
+    {
+      "from": "执行",
+      "to": "操作",
+      "relation": "peer",
+      "strength": "m",
+      "note": "动手操作能力{执行力m}"
+    },
+    {
+      "from": "自主",
+      "to": "执行",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "执行力【自主探索能力h】"
+    },
+    {
+      "from": "操作",
+      "to": "执行",
+      "relation": "peer",
+      "strength": "m",
+      "note": "执行力{动手操作能力m}"
+    },
+    {
+      "from": "构建",
+      "to": "整理",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "整理归纳【构建框架h】"
+    },
+    {
+      "from": "自学",
+      "to": "整理",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "整理归纳【自学能力h】"
+    },
+    {
+      "from": "记忆",
+      "to": "整理",
+      "relation": "peer",
+      "strength": "l",
+      "note": "整理归纳{记忆力l}"
+    },
+    {
+      "from": "计算",
+      "to": "记忆",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "记忆力【计算能力m】"
+    },
+    {
+      "from": "自学",
+      "to": "记忆",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "记忆力【自学能力m】"
+    },
+    {
+      "from": "整理",
+      "to": "记忆",
+      "relation": "peer",
+      "strength": "l",
+      "note": "记忆力{整理归纳l}"
+    },
+    {
+      "from": "联想",
+      "to": "观察",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "观察力【联想能力l】"
+    },
+    {
+      "from": "好奇",
+      "to": "观察",
+      "relation": "peer",
+      "strength": "m",
+      "note": "观察力{好奇心m}"
+    },
+    {
+      "from": "联想",
+      "to": "好奇",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "好奇心【联想能力m】"
+    },
+    {
+      "from": "观察",
+      "to": "好奇",
+      "relation": "peer",
+      "strength": "m",
+      "note": "好奇心{观察力m}"
+    },
+    {
+      "from": "抽象",
+      "to": "计算",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "计算能力【抽象概念理解m】"
+    },
+    {
+      "from": "操作",
+      "to": "计算",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "计算能力【动手操作能力h】"
+    },
+    {
+      "from": "记忆",
+      "to": "计算",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "计算能力【记忆力m】"
+    },
+    {
+      "from": "推导",
+      "to": "计算",
+      "relation": "peer",
+      "strength": "m",
+      "note": "计算能力{逻辑推导能力m}"
+    },
+    {
+      "from": "抽象",
+      "to": "推导",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "逻辑推导能力【抽象概念理解h】"
+    },
+    {
+      "from": "自学",
+      "to": "推导",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "逻辑推导能力【自学能力m】"
+    },
+    {
+      "from": "计算",
+      "to": "推导",
+      "relation": "peer",
+      "strength": "m",
+      "note": "逻辑推导能力{计算能力m}"
+    },
+    {
+      "from": "抽象",
+      "to": "空间",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "空间想象【抽象概念理解m】"
+    },
+    {
+      "from": "联想",
+      "to": "空间",
+      "relation": "peer",
+      "strength": "l",
+      "note": "空间想象{联想能力l}"
+    },
+    {
+      "from": "好奇",
+      "to": "联想",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "联想能力【好奇心m】"
+    },
+    {
+      "from": "观察",
+      "to": "联想",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "联想能力【观察力l】"
+    },
+    {
+      "from": "抽象",
+      "to": "联想",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "联想能力【抽象概念理解m】"
+    },
+    {
+      "from": "空间",
+      "to": "联想",
+      "relation": "peer",
+      "strength": "l",
+      "note": "联想能力{空间想象l}"
+    },
+    {
+      "from": "整理",
+      "to": "构建",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "构建框架【整理归纳h】"
+    },
+    {
+      "from": "推导",
+      "to": "构建",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "构建框架【逻辑推导能力h】"
+    },
+    {
+      "from": "抽象",
+      "to": "构建",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "构建框架【抽象概念理解l】"
+    },
+    {
+      "from": "自学",
+      "to": "构建",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "构建框架【自学能力h】"
+    },
+    {
+      "from": "好奇",
+      "to": "自主",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "自主探索能力【好奇心h】"
+    },
+    {
+      "from": "执行",
+      "to": "自主",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "自主探索能力【执行力h】"
+    },
+    {
+      "from": "自学",
+      "to": "自主",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "自主探索能力【自学能力l】"
+    },
+    {
+      "from": "抽象",
+      "to": "自学",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "自学能力【抽象概念理解l】"
+    },
+    {
+      "from": "整理",
+      "to": "自学",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "自学能力【整理归纳h】"
+    },
+    {
+      "from": "记忆",
+      "to": "自学",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "自学能力【记忆力m】"
+    },
+    {
+      "from": "操作",
+      "to": "自学",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "自学能力【动手操作能力m】"
+    },
+    {
+      "from": "自主",
+      "to": "自学",
+      "relation": "hierarchical",
+      "strength": "l",
+      "note": "自学能力【自主探索能力l】"
+    },
+    {
+      "from": "构建",
+      "to": "自学",
+      "relation": "hierarchical",
+      "strength": "h",
+      "note": "自学能力【构建框架h】"
+    },
+    {
+      "from": "推导",
+      "to": "自学",
+      "relation": "hierarchical",
+      "strength": "m",
+      "note": "自学能力【逻辑推导能力m】"
+    }
+  ]
+}

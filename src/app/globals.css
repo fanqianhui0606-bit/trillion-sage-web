@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-bridge-text antialiased;
+    font-family: "Songti SC", "SimSun", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/30 border border-white/[0.95] backdrop-blur-[12px] rounded-xl shadow-glass;
+  }
+}
+
+/* Watermark — complex fixed overlay, kept as minimal custom CSS */
+.bridge-watermark {
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transform: rotate(-32deg);
+}

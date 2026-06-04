@@ -1,0 +1,883 @@
+{
+  "version": "2.0",
+  "meta": {
+    "title": "数理素质测验（体验版）",
+    "edition": "simple",
+    "objectiveQuestionCount": 18,
+    "objectiveHabitsCount": 4,
+    "objectiveAbilityCount": 14,
+    "subjectiveQuestionCount": 0,
+    "objectiveDimensionOrder": [
+      "抽象",
+      "操作",
+      "空间",
+      "观察",
+      "执行",
+      "计算",
+      "推导",
+      "自主"
+    ],
+    "fullDimensionOrder": [
+      "抽象",
+      "操作",
+      "记忆",
+      "空间",
+      "整理",
+      "观察",
+      "执行",
+      "好奇",
+      "计算",
+      "推导",
+      "自主",
+      "联想",
+      "构建",
+      "自学"
+    ],
+    "lockedDimensions": [
+      "记忆",
+      "整理",
+      "联想",
+      "好奇",
+      "自学",
+      "构建"
+    ],
+    "notes": [
+      "题目共 18 道；仅对 8 维计分。",
+      "已从各题选项中移除记忆、整理、联想、好奇、自学、构建的维度分值（题目保留）。",
+      "题型仅为 single、multi 或 boolean；无主观意愿题。"
+    ],
+    "objectiveScoring": {
+      "normalizeByAchievableMax": true,
+      "normalizedCap": 5,
+      "perTrackNormalizeThenBlend": true
+    },
+    "catalogReference": {
+      "label": "本测验参考2026年4月教育部最新发出本科专业目录名单",
+      "links": [
+        {
+          "text": "教育部：普通高等学校本科专业目录（2026年）发布说明",
+          "url": "http://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202604/t20260428_1435016.html"
+        },
+        {
+          "text": "教育部：关于公布《普通高等学校本科专业目录（2026年）》的通知",
+          "url": "http://www.moe.gov.cn/srcsite/A08/moe_1034/s3882/202604/t20260427_1434931.html"
+        },
+        {
+          "text": "附件 PDF：普通高等学校本科专业目录（2026年）",
+          "url": "http://www.moe.gov.cn/srcsite/A08/moe_1034/s3882/202604/W020260427440749576927.pdf"
+        }
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "1",
+      "type": "boolean",
+      "displayDimensions": [
+        "观察"
+      ],
+      "stem": "此次测验共有18道题，我会仔细阅读此次测验的题干、编号、选项，不夸大、不过谦，诚实准确地回答所有题目。",
+      "options": [
+        {
+          "id": "T",
+          "text": "是",
+          "scores": {
+            "观察": 0
+          }
+        },
+        {
+          "id": "F",
+          "text": "否",
+          "scores": {
+            "观察": 0
+          }
+        }
+      ],
+      "maxScores": {
+        "观察": 0
+      },
+      "section": "objective",
+      "objectiveTrack": "habits"
+    },
+    {
+      "id": "2",
+      "type": "boolean",
+      "displayDimensions": [
+        "空间"
+      ],
+      "stem": "你在陌生城市中可以独自使用地图找到想去的地方吗？",
+      "options": [
+        {
+          "id": "T",
+          "text": "是",
+          "scores": {
+            "空间": 3
+          }
+        },
+        {
+          "id": "F",
+          "text": "否",
+          "scores": {
+            "空间": 0
+          }
+        }
+      ],
+      "maxScores": {
+        "空间": 3
+      },
+      "section": "objective",
+      "objectiveTrack": "habits"
+    },
+    {
+      "id": "3",
+      "type": "single",
+      "displayDimensions": [
+        "观察",
+        "计算",
+        "执行"
+      ],
+      "stem": "老师展示「某市近五年降水量」柱状图」。你更可能先注意到——",
+      "options": [
+        {
+          "id": "A",
+          "text": "先读清坐标轴单位、刻度起点",
+          "scores": {
+            "观察": 3,
+            "计算": 1
+          }
+        },
+        {
+          "id": "B",
+          "text": "整张图降水量的走向趋势",
+          "scores": {
+            "观察": 4
+          }
+        },
+        {
+          "id": "C",
+          "text": "降水量的最高点与最低点分别是多少",
+          "scores": {
+            "计算": 3,
+            "观察": 2
+          }
+        },
+        {
+          "id": "D",
+          "text": "觉得图表只是示意，不如等老师来讲解重点",
+          "scores": {
+            "执行": 3
+          }
+        }
+      ],
+      "maxScores": {
+        "观察": 4,
+        "计算": 3,
+        "执行": 3
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "4",
+      "type": "single",
+      "displayDimensions": [
+        "推导",
+        "抽象",
+        "执行"
+      ],
+      "stem": "假设“地球自转变慢一半”，你优先考虑——",
+      "options": [
+        {
+          "id": "A",
+          "text": "昼夜长短与日照时间如何变化，以及会怎样影响各地气候",
+          "scores": {
+            "推导": 3,
+            "执行": 2
+          }
+        },
+        {
+          "id": "B",
+          "text": "会给我们人体节律和社会运转造成怎样的影响",
+          "scores": {
+            "推导": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "如何才能让地球自传变慢一半",
+          "scores": {
+            "推导": 3,
+            "抽象": 2
+          }
+        },
+        {
+          "id": "D",
+          "text": "该假设的可靠性？",
+          "scores": {
+            "推导": 1,
+            "执行": 3,
+            "抽象": 1
+          }
+        }
+      ],
+      "maxScores": {
+        "推导": 3,
+        "执行": 3,
+        "抽象": 2
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "5",
+      "type": "single",
+      "displayDimensions": [
+        "抽象"
+      ],
+      "stem": "对于动画、漫画等二次元作品，或奇幻、科幻等虚拟影视作品，或是具有架空类的世界观桌游游戏，我——",
+      "options": [
+        {
+          "id": "A",
+          "text": "非常喜欢且沉浸",
+          "scores": {
+            "抽象": 3
+          }
+        },
+        {
+          "id": "B",
+          "text": "比较喜欢",
+          "scores": {
+            "抽象": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "一般般",
+          "scores": {
+            "抽象": 1
+          }
+        },
+        {
+          "id": "D",
+          "text": "无感，不喜欢",
+          "scores": {
+            "抽象": 0
+          }
+        }
+      ],
+      "maxScores": {
+        "抽象": 3
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "6",
+      "type": "single",
+      "displayDimensions": [
+        "执行",
+        "操作"
+      ],
+      "stem": "三人小组办校园义卖，你负责「方案设计」时更会——",
+      "options": [
+        {
+          "id": "A",
+          "text": "写清目标、流程、分工、时间表、预算与备选方案",
+          "scores": {
+            "执行": 1
+          }
+        },
+        {
+          "id": "B",
+          "text": "口头分工，当天边做边改",
+          "scores": {
+            "执行": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "等组长安排自己只跑腿",
+          "scores": {
+            "执行": 1
+          }
+        },
+        {
+          "id": "D",
+          "text": "只负责摆摊叫卖",
+          "scores": {
+            "操作": 2,
+            "执行": 1
+          }
+        }
+      ],
+      "maxScores": {
+        "执行": 2,
+        "操作": 2
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "7",
+      "type": "single",
+      "displayDimensions": [
+        "操作",
+        "执行"
+      ],
+      "stem": "对于学校计算机课上布置的编程任务，或是科学实验任务，你能：",
+      "options": [
+        {
+          "id": "A",
+          "text": "很顺利地快速完成任务",
+          "scores": {
+            "操作": 5
+          }
+        },
+        {
+          "id": "B",
+          "text": "需要多看几遍步骤，琢磨会儿完成",
+          "scores": {
+            "操作": 3
+          }
+        },
+        {
+          "id": "C",
+          "text": "多操作试验几次完成",
+          "scores": {
+            "操作": 4
+          }
+        },
+        {
+          "id": "D",
+          "text": "需要有人在傍边帮助指导才能完成",
+          "scores": {
+            "操作": 2
+          }
+        }
+      ],
+      "maxScores": {
+        "操作": 5
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "8",
+      "type": "single",
+      "displayDimensions": [
+        "抽象",
+        "观察",
+        "执行"
+      ],
+      "stem": "朋友用「像快递分拣中心」来解释细胞工作，你的第一反应更接近？",
+      "options": [
+        {
+          "id": "A",
+          "text": "在脑中把比喻和课本图示对照，看哪里贴切",
+          "scores": {
+            "抽象": 2,
+            "观察": 1
+          }
+        },
+        {
+          "id": "B",
+          "text": "觉得有趣，追问还有哪些类似比喻",
+          "scores": {}
+        },
+        {
+          "id": "C",
+          "text": "记住这个说法，考试可能用得上",
+          "scores": {
+            "执行": 1
+          }
+        },
+        {
+          "id": "D",
+          "text": "更相信教材定义，比喻仅供参考",
+          "scores": {
+            "抽象": 2
+          }
+        }
+      ],
+      "maxScores": {
+        "抽象": 2,
+        "观察": 1,
+        "执行": 1
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "9",
+      "type": "single",
+      "displayDimensions": [
+        "观察",
+        "计算",
+        "推导",
+        "执行"
+      ],
+      "stem": "手机流量突然用得很快，你更常会？",
+      "options": [
+        {
+          "id": "A",
+          "text": "查各 App 用量排行，看哪天异常",
+          "scores": {
+            "观察": 3,
+            "计算": 3
+          }
+        },
+        {
+          "id": "B",
+          "text": "回忆最近是否常看视频/下载",
+          "scores": {
+            "推导": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "直接关移动数据或换套餐",
+          "scores": {
+            "执行": 3
+          }
+        },
+        {
+          "id": "D",
+          "text": "等月底账单出来再说",
+          "scores": {
+            "执行": 1
+          }
+        }
+      ],
+      "maxScores": {
+        "观察": 3,
+        "计算": 3,
+        "推导": 2,
+        "执行": 3
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "10",
+      "type": "single",
+      "displayDimensions": [
+        "计算"
+      ],
+      "stem": "在估算（如购物凑单、时间规划、浓度配比）时，我的心算或笔算准确度——",
+      "options": [
+        {
+          "id": "A",
+          "text": "通常较快且很少出错",
+          "scores": {
+            "计算": 3
+          }
+        },
+        {
+          "id": "B",
+          "text": "多数情况够用，偶尔出错",
+          "scores": {
+            "计算": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "需要计算器才放心",
+          "scores": {
+            "计算": 1
+          }
+        },
+        {
+          "id": "D",
+          "text": "经常拿不准",
+          "scores": {
+            "计算": 0
+          }
+        }
+      ],
+      "maxScores": {
+        "计算": 3
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "11",
+      "type": "single",
+      "displayDimensions": [
+        "自主",
+        "执行",
+        "观察"
+      ],
+      "stem": "现在我们处在科学技术快速且剧烈变革的时代，不仅技术层面有具身机器人、脑机接口的全新发展，科学领域中也伴随着球状闪电的成功制造、“时间晶体”的冻结等许多意想不到的突破，对于这些你的态度是？",
+      "options": [
+        {
+          "id": "A",
+          "text": "很好奇未来时代发展的去向，并会主动去了解感兴趣的领域发展",
+          "scores": {
+            "自主": 3,
+            "观察": 2,
+            "执行": 3
+          }
+        },
+        {
+          "id": "B",
+          "text": "会比较好奇未来的发展和感兴趣的领域，但不会主动去查询相关咨询",
+          "scores": {
+            "自主": 2,
+            "观察": 1,
+            "执行": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "认为事物发展有一定的规律，就坐这个时代来临",
+          "scores": {
+            "自主": 1,
+            "观察": 1,
+            "执行": 0
+          }
+        },
+        {
+          "id": "D",
+          "text": "无感，该咋咋地",
+          "scores": {
+            "自主": 0,
+            "观察": 0,
+            "执行": 0
+          }
+        }
+      ],
+      "maxScores": {
+        "自主": 3,
+        "观察": 2,
+        "执行": 3
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "12",
+      "type": "boolean",
+      "displayDimensions": [
+        "执行",
+        "自主"
+      ],
+      "stem": "填志愿时你优先考虑的是贴合长期兴趣与想象的生活而不是就业与收入预期的稳定性。",
+      "options": [
+        {
+          "id": "T",
+          "text": "是",
+          "scores": {
+            "自主": 2
+          }
+        },
+        {
+          "id": "F",
+          "text": "否",
+          "scores": {
+            "执行": 2
+          }
+        }
+      ],
+      "maxScores": {
+        "自主": 2,
+        "执行": 2
+      },
+      "section": "objective",
+      "objectiveTrack": "habits"
+    },
+    {
+      "id": "13",
+      "type": "single",
+      "displayDimensions": [
+        "观察",
+        "执行",
+        "操作"
+      ],
+      "stem": "期末复习资料变多后，你更常怎样管理笔记本和试卷？",
+      "options": [
+        {
+          "id": "A",
+          "text": "按科目/日期分文件夹或活页，并贴标签",
+          "scores": {
+            "执行": 2,
+            "观察": 1
+          }
+        },
+        {
+          "id": "B",
+          "text": "用颜色区分重点，定期把错题单独装订",
+          "scores": {
+            "观察": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "全部堆在一起，用到再翻",
+          "scores": {
+            "执行": 2
+          }
+        },
+        {
+          "id": "D",
+          "text": "主要拍照存手机，很少物理整理",
+          "scores": {
+            "操作": 2
+          }
+        }
+      ],
+      "maxScores": {
+        "执行": 2,
+        "观察": 2,
+        "操作": 2
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "14",
+      "type": "single",
+      "displayDimensions": [
+        "观察",
+        "抽象",
+        "执行",
+        "推导"
+      ],
+      "stem": "听老师讲解实验现象时，你更常会？",
+      "options": [
+        {
+          "id": "A",
+          "text": "盯着演示装置，注意细节变化并记下异常",
+          "scores": {
+            "观察": 4
+          }
+        },
+        {
+          "id": "B",
+          "text": "先记结论和公式，细节回头再看",
+          "scores": {
+            "抽象": 1
+          }
+        },
+        {
+          "id": "C",
+          "text": "更关心这和考试题有什么关系",
+          "scores": {
+            "执行": 3,
+            "推导": 1
+          }
+        },
+        {
+          "id": "D",
+          "text": "若和自己预想不同，会立刻追问为什么",
+          "scores": {
+            "推导": 2,
+            "观察": 1
+          }
+        }
+      ],
+      "maxScores": {
+        "观察": 4,
+        "抽象": 1,
+        "执行": 3,
+        "推导": 2
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "15",
+      "type": "single",
+      "displayDimensions": [
+        "抽象",
+        "观察",
+        "执行"
+      ],
+      "stem": "朋友用「像快递分拣中心」来解释细胞工作，你的第一反应更接近？",
+      "options": [
+        {
+          "id": "A",
+          "text": "在脑中把比喻和课本图示对照，看哪里贴切",
+          "scores": {
+            "抽象": 2,
+            "观察": 1
+          }
+        },
+        {
+          "id": "B",
+          "text": "觉得有趣，追问还有哪些类似比喻",
+          "scores": {}
+        },
+        {
+          "id": "C",
+          "text": "记住这个说法，考试可能用得上",
+          "scores": {
+            "执行": 1
+          }
+        },
+        {
+          "id": "D",
+          "text": "更相信教材定义，比喻仅供参考",
+          "scores": {
+            "抽象": 2
+          }
+        }
+      ],
+      "maxScores": {
+        "抽象": 2,
+        "观察": 1,
+        "执行": 1
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "16",
+      "type": "single",
+      "displayDimensions": [
+        "观察",
+        "空间",
+        "执行"
+      ],
+      "stem": "第一次使用学校新实验楼，找指定实验室你更可能？",
+      "options": [
+        {
+          "id": "A",
+          "text": "先看楼层示意图和门牌，沿途核对编号",
+          "scores": {
+            "空间": 3,
+            "观察": 3
+          }
+        },
+        {
+          "id": "B",
+          "text": "跟着同学走，记住路线",
+          "scores": {
+            "空间": 2
+          }
+        },
+        {
+          "id": "C",
+          "text": "在群里问清房间号再导航",
+          "scores": {
+            "执行": 3,
+            "观察": 1
+          }
+        },
+        {
+          "id": "D",
+          "text": "到楼下再问值班台",
+          "scores": {
+            "执行": 2
+          }
+        }
+      ],
+      "maxScores": {
+        "空间": 3,
+        "观察": 3,
+        "执行": 3
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    },
+    {
+      "id": "17",
+      "type": "boolean",
+      "displayDimensions": [
+        "自主",
+        "执行",
+        "操作"
+      ],
+      "stem": "面对你感兴趣的大学专业，你倾向主动找相关的专业人士了解而非独自在网络上搜索。",
+      "options": [
+        {
+          "id": "T",
+          "text": "是",
+          "scores": {
+            "自主": 2,
+            "执行": 2
+          }
+        },
+        {
+          "id": "F",
+          "text": "否",
+          "scores": {
+            "操作": 2,
+            "执行": 1
+          }
+        }
+      ],
+      "maxScores": {
+        "自主": 2,
+        "执行": 2,
+        "操作": 2
+      },
+      "section": "objective",
+      "objectiveTrack": "habits"
+    },
+    {
+      "id": "18",
+      "type": "multi",
+      "displayDimensions": [
+        "自主"
+      ],
+      "stem": "如果有985硕博学长亲自为你讲解答你感兴趣的专业相关咨询，包括这个专业大学学什么，就业方向，好不好考研/保研、考公/考编，该领域科学/行业的前沿发展如何，你希望包含以下哪些学科呢",
+      "options": [
+        {
+          "id": "A",
+          "text": "A.数学：应用数学、金融数学、密码学等",
+          "scores": {
+            "自主": 0.3
+          }
+        },
+        {
+          "id": "B",
+          "text": "物理：量子计算、凝聚态物理、引力波探测、高能粒子等",
+          "scores": {
+            "自主": 0.3
+          }
+        },
+        {
+          "id": "C",
+          "text": "化学生物：生物技术、生物制药、基因工程等",
+          "scores": {
+            "自主": 0.3
+          }
+        },
+        {
+          "id": "D",
+          "text": "计算机：AI人工智能、大数据学科、网络信息工程等",
+          "scores": {
+            "自主": 0.3
+          }
+        },
+        {
+          "id": "E",
+          "text": "材料：材料物理、材料化学、半导体、新能源、磁性材料等",
+          "scores": {
+            "自主": 0.3
+          }
+        },
+        {
+          "id": "F",
+          "text": "芯片：电子信息、电路设计等",
+          "scores": {
+            "自主": 0.3
+          }
+        },
+        {
+          "id": "G",
+          "text": "没兴趣了解",
+          "scores": {
+            "自主": 0
+          }
+        }
+      ],
+      "maxScores": {
+        "自主": 0.3
+      },
+      "section": "objective",
+      "objectiveTrack": "ability"
+    }
+  ]
+}

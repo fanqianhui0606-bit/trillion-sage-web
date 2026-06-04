@@ -1,0 +1,55 @@
+{
+
+  "version": "2.1",
+
+  "description": "测验 v2：客观 30 题 + 主观 5 题。专业推荐仅依据客观数理素质；主观意愿仅展示价值导向 5 档简评。习惯轨:能力轨=0.20:0.80（第2次校准）。",
+
+  "activeQuestionIds": null,
+
+  "comment_activeQuestionIds": "若为 null 则启用题库中全部题目",
+
+  "shuffleWithinSection": false,
+
+  "shuffleOptions": false,
+
+  "quizBlend": {
+
+    "objectiveWeight": 1,
+
+    "subjectiveWeight": 0,
+
+    "comment": "专业推荐已停用主观混合；仅保留字段兼容。排序使用 rankMajorsForQuiz（纯客观余弦）。"
+
+  },
+
+  "valueOrientationTiers": "quiz/value_orientation_tiers.json",
+
+  "scoringCalibration": {
+
+    "objectiveWeight": 1,
+
+    "subjectiveWeight": 0,
+
+    "objectiveHabitsWeight": 0.2,
+
+    "objectiveAbilityWeight": 0.8,
+
+    "objectiveDimensionCap": 5,
+
+    "subjectiveDimensionCap": 5,
+
+    "useObjectivePerDimensionNormalize": true,
+
+    "comment": "客观向量：habits/ability 两轨归一化后合成；主观不参与专业推荐。",
+
+    "calibrationSource": "cal_results_pass2.json → 0.20:0.80（sum{δ}极小）"
+
+  },
+
+  "dimensionWeights": {},
+
+  "comment_dimensionWeights": "空对象表示各素质维度权重均为 1（与 match_config 一致可在后续合并）。"
+
+}
+
+

@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "description": "体验版：仅 8 维客观题，无主观意愿；专业推荐按 8 维余弦匹配全部二级专业。",
+  "activeQuestionIds": null,
+  "shuffleWithinSection": false,
+  "shuffleOptions": false,
+  "quizBlend": {
+    "objectiveWeight": 1,
+    "subjectiveWeight": 0
+  },
+  "valueOrientationTiers": "quiz/value_orientation_tiers.json",
+  "scoringCalibration": {
+    "objectiveWeight": 1,
+    "subjectiveWeight": 0,
+    "objectiveHabitsWeight": 0.2,
+    "objectiveAbilityWeight": 0.8,
+    "objectiveDimensionCap": 5,
+    "subjectiveDimensionCap": 5,
+    "useObjectivePerDimensionNormalize": true
+  },
+  "dimensionWeights": {}
+}

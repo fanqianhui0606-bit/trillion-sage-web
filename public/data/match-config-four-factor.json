@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "task": "专业版测验 · 四因子专业匹配（现行）",
+  "algorithm": "four_factor_weighted_blend",
+  "factorWeights": {
+    "valueOrientation": 1,
+    "interestOrientation": 2,
+    "thinkingHabits": 1,
+    "qualityAbility": 4,
+    "comment": "价值导向:兴趣导向:思维习惯:素质能力 = 1:2:1:4，合成前各因子均为 0–1"
+  },
+  "interestSubjects": ["数学", "物理", "化学", "生物", "计算机"],
+  "interestSubjectsComment": "与兴趣导向自评页一致；不含「工程」。二级专业 parents 仅映射此五门一级学科。",
+  "interestNormalization": {
+    "min": 1,
+    "max": 10,
+    "formula": "(score - min) / (max - min)"
+  },
+  "valueOrientationSource": "data/l2_value_pragmatism.json :: byLevel2Id",
+  "valueAlignFormula": "1 - |userPractical01 - majorPragmatism|",
+  "habitsSource": "测验 habits 轨归一化向量 vs 专业 profile 加权余弦",
+  "abilitySource": "测验 ability 轨归一化向量 vs 专业 profile 加权余弦",
+  "legacyReference": {
+    "function": "rankMajorsForQuiz",
+    "config": "models/match-recommend/match_config.json",
+    "description": "仅客观合成向量余弦，不含价值/兴趣/分轨；保留供对照"
+  }
+}

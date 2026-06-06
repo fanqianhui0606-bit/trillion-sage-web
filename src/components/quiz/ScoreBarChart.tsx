@@ -17,42 +17,44 @@ export default function ScoreBarChart({
   const maxScore = 5;
   const dims = displayDimensions ?? DIMENSION_ORDER;
   const lockedSet = new Set(lockedDimensions);
-  const colCount = dims.length;
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div
-        className="grid gap-1 items-end h-48 min-w-[650px]"
-        style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}
-      >
-        {dims.map((dim) => {
-          const isLocked = lockedSet.has(dim);
-          const val = isLocked ? 0 : (scores[dim] ?? 0);
-          const pct = isLocked ? 0 : (val / maxScore) * 100;
+    <div className="w-full space-y-4 py-2">
+      {dims.map((dim) => {
+        const isLocked = lockedSet.has(dim);
+        const val = isLocked ? 0 : (scores[dim] ?? 0);
+        const pct = isLocked ? 0 : (val / maxScore) * 100;
 
-          return (
-            <div
-              key={dim}
-              className={`flex flex-col items-center gap-1 ${isLocked ? "opacity-60" : ""}`}
-            >
-              <span className="text-[10px] text-bridge-muted whitespace-nowrap">
-                {isLocked ? lockedPlaceholder : val.toFixed(1)}
-              </span>
-              <div
-                className={`w-full max-w-[28px] rounded-t-sm origin-bottom transition-all duration-700 ${
-                  isLocked
-                    ? "bg-gray-300 h-1"
-                    : "bg-gradient-to-t from-bridge-blue to-bridge-blue-light animate-bar-grow"
-                }`}
-                style={{ height: isLocked ? "4px" : `${pct}%` }}
-              />
-              <span className="text-[10px] text-bridge-muted leading-tight text-center">
+        return (
+          <div key={dim} className="flex flex-col w-full">
+            {/* Header info */}
+            <div className="flex justify-between items-baseline mb-1">
+              <span className={`font-bold font-serif text-sm ${isLocked ? "text-slate-400" : "text-slate-800"}`}>
                 {dim}
               </span>
+              {isLocked ? (
+                <span className="text-xs font-semibold text-slate-400">
+                  {lockedPlaceholder}
+                </span>
+              ) : (
+                <span className="text-xs font-semibold font-mono text-slate-500">
+                  {val.toFixed(2)}/5
+                </span>
+              )}
             </div>
-          );
-        })}
-      </div>
+
+            {/* Horizontal progress bar */}
+            <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden relative">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ease-out origin-left ${
+                  isLocked ? "w-0" : "bg-gradient-to-r from-blue-400 to-[#2E75B6]"
+                }`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

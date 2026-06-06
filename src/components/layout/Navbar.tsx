@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const NAV_LINKS = [
   { href: "/#values", label: "关于我们" },
@@ -33,8 +34,16 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link
           href="/"
-          className="text-bridge-blue font-bold text-xl tracking-wider"
+          className="flex items-center gap-2 text-bridge-blue font-bold text-xl tracking-wider"
         >
+          <Image
+            src="/images/logo.png"
+            alt="千殊教育 logo"
+            width={32}
+            height={32}
+            className="object-contain rounded"
+            priority
+          />
           千殊教育
         </Link>
 

@@ -9,18 +9,22 @@ import type {
   MajorMatchResult,
   UserScores,
 } from "@/lib/types";
-import { computeObjectiveScores } from "@/lib/quiz-scoring";
-import { rankMajors } from "@/lib/cosine-similarity";
+import { computeObjectiveScores, accumulateRawScores, normalizeTrack } from "@/lib/quiz-scoring";
+import { rankMajors, rankMajorsFourFactor } from "@/lib/cosine-similarity";
 import { calculatePracticalShare } from "@/lib/value-orientation";
-import { DIMENSION_ORDER } from "@/lib/constants";
+import { DIMENSION_ORDER, DIMENSION_CAP } from "@/lib/constants";
 
 type Action =
   | { type: "DATA_LOADED"; bank: QuizBank; config: QuizConfig; wheel: WheelData; edition: string }
   | { type: "LOAD_ERROR"; error: string }
   | { type: "START_QUIZ" }
+  | { type: "START_QUIZ_WITH_USER"; userName: string; activationCode?: string }
   | { type: "NEXT_QUESTION" }
   | { type: "PREV_QUESTION" }
   | { type: "SET_ANSWER"; questionId: string; answer: string | string[] }
+  | { type: "ENTER_INTEREST" }
+  | { type: "SET_INTEREST"; subject: string; score: number }
+  | { type: "BACK_TO_QUIZ" }
   | { type: "SUBMIT" }
   | { type: "RESULT_READY"; scores: UserScores; matches: MajorMatchResult[] }
   | { type: "RESTORE"; saved: Partial<QuizState> };
@@ -72,7 +76,18 @@ function reducer(state: QuizState, action: Action): QuizState {
       return { ...state, phase: "loading", error: action.error };
 
     case "START_QUIZ":
-      return { ...state, phase: "answering", currentIndex: 0, answers: {} };
+      return { ...state, phase: "answering", currentIndex: 0, answers: {}, subjectInterest: undefined, userName: undefined, activationCode: undefined };
+
+    case "START_QUIZ_WITH_USER":
+      return {
+        ...state,
+        phase: "answering",
+        currentIndex: 0,
+        answers: {},
+        subjectInterest: undefined,
+        userName: action.userName,
+        activationCode: action.activationCode,
+      };
 
     case "NEXT_QUESTION": {
       const qs = state.bank?.questions.length ?? 0;
@@ -88,6 +103,35 @@ function reducer(state: QuizState, action: Action): QuizState {
       return {
         ...state,
         answers: { ...state.answers, [action.questionId]: action.answer },
+      };
+
+    case "ENTER_INTEREST":
+      return {
+        ...state,
+        phase: "interest",
+        subjectInterest: state.subjectInterest ?? {
+          "数学": 5,
+          "物理": 5,
+          "化学": 5,
+          "生物": 5,
+          "计算机": 5,
+        },
+      };
+
+    case "SET_INTEREST":
+      return {
+        ...state,
+        subjectInterest: {
+          ...(state.subjectInterest ?? { "数学": 5, "物理": 5, "化学": 5, "生物": 5, "计算机": 5 }),
+          [action.subject]: action.score,
+        },
+      };
+
+    case "BACK_TO_QUIZ":
+      return {
+        ...state,
+        phase: "answering",
+        currentIndex: (state.bank?.questions.length ?? 1) - 1,
       };
 
     case "SUBMIT":
@@ -129,12 +173,21 @@ export function useQuizState(editionOverride?: string) {
       const bankUrl = isSimp ? "/data/quiz-bank-simple.json" : "/data/quiz-bank.json";
       const configUrl = isSimp ? "/data/quiz-config-simple.json" : "/data/quiz-config.json";
 
-      const [bank, config, wheel] = await Promise.all([
+      const [bank, config, wheel, pragmatismDoc, fourFactorCfg] = await Promise.all([
         fetch(bankUrl).then((r) => r.json()),
         fetch(configUrl).then((r) => r.json()),
         fetch("/data/wheel-data.json").then((r) => r.json()),
+        fetch("/data/l2-value-pragmatism.json").then((r) => r.json()).catch(() => ({ byLevel2Id: {} })),
+        fetch("/data/match-config-four-factor.json").then((r) => r.json()).catch(() => ({})),
       ]);
-      dispatch({ type: "DATA_LOADED", bank, config, wheel, edition: ed });
+
+      const extendedConfig = {
+        ...config,
+        pragmatismByCode: pragmatismDoc.byLevel2Id,
+        fourFactorCfg: fourFactorCfg,
+      };
+
+      dispatch({ type: "DATA_LOADED", bank, config: extendedConfig, wheel, edition: ed });
     } catch (e) {
       dispatch({
         type: "LOAD_ERROR",
@@ -153,6 +206,9 @@ export function useQuizState(editionOverride?: string) {
       phase: state.phase,
       currentIndex: state.currentIndex,
       answers: state.answers,
+      subjectInterest: state.subjectInterest,
+      userName: state.userName,
+      activationCode: state.activationCode,
       edition: state.edition,
     };
     try {
@@ -160,7 +216,7 @@ export function useQuizState(editionOverride?: string) {
     } catch {
       // ignore quota errors
     }
-  }, [state.phase, state.currentIndex, state.answers, state.edition]);
+  }, [state.phase, state.currentIndex, state.answers, state.subjectInterest, state.userName, state.activationCode, state.edition]);
 
   // Restore from sessionStorage on mount
   useEffect(() => {
@@ -168,7 +224,7 @@ export function useQuizState(editionOverride?: string) {
       const raw = sessionStorage.getItem(storageKey(edition));
       if (raw) {
         const saved = JSON.parse(raw);
-        if (saved.phase === "answering" && saved.answers) {
+        if ((saved.phase === "answering" || saved.phase === "interest") && saved.answers) {
           dispatch({ type: "RESTORE", saved });
         }
       }
@@ -223,14 +279,49 @@ export function useQuizState(editionOverride?: string) {
           practicalShare,
           valueTier,
         },
+        subjectInterest: state.subjectInterest,
       };
 
-      const matches = rankMajors(
-        objectiveScores,
-        state.wheel!.level2,
-        state.config!.dimensionWeights,
-        dimOrder
-      );
+      let matches: MajorMatchResult[] = [];
+      const cap = state.config?.scoringCalibration?.objectiveDimensionCap ?? DIMENSION_CAP;
+
+      if (isSimp) {
+        matches = rankMajors(
+          objectiveScores,
+          state.wheel!.level2,
+          state.config!.dimensionWeights,
+          dimOrder
+        );
+      } else {
+        // Professional version uses 4-factor weighted matching
+        const { habits, ability, maxHabits, maxAbility } = accumulateRawScores(
+          state.bank!.questions,
+          state.answers,
+          dimOrder
+        );
+        const normH = normalizeTrack(habits, maxHabits, cap, dimOrder);
+        const normA = normalizeTrack(ability, maxAbility, cap, dimOrder);
+
+        const pragmatismByCode = (state.config as unknown as { pragmatismByCode?: Record<string, unknown> }).pragmatismByCode || {};
+        const factorWeights = (state.config as unknown as { fourFactorCfg?: { factorWeights?: Record<string, number> } }).fourFactorCfg?.factorWeights || {};
+
+        matches = rankMajorsFourFactor({
+          normH,
+          normA,
+          userPractical01: practicalShare,
+          subjectInterest: state.subjectInterest || { "数学": 5, "物理": 5, "化学": 5, "生物": 5, "计算机": 5 },
+          dimensions: dimOrder as string[],
+          weights: state.config!.dimensionWeights,
+          majors: state.wheel!.level2,
+          pragmatismByCode: pragmatismByCode as Record<string, number>,
+          factorWeights: {
+            value: factorWeights.valueOrientation ?? factorWeights.value,
+            interest: factorWeights.interestOrientation ?? factorWeights.interest,
+            habits: factorWeights.thinkingHabits ?? factorWeights.habits,
+            ability: factorWeights.qualityAbility ?? factorWeights.ability,
+          },
+        });
+      }
 
       // Save to localStorage
       try {
@@ -240,11 +331,25 @@ export function useQuizState(editionOverride?: string) {
         // ignore
       }
 
+      // Record submission to server backend for tracing
+      fetch("/api/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName: state.userName,
+          activationCode: state.activationCode,
+          edition: state.edition,
+          answers: state.answers,
+          scores,
+          matches,
+        }),
+      }).catch((e) => console.error("留痕请求失败", e));
+
       dispatch({ type: "RESULT_READY", scores, matches });
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [state.phase, state.bank, state.config, state.wheel, state.answers, state.edition]);
+  }, [state.phase, state.bank, state.config, state.wheel, state.answers, state.subjectInterest, state.edition, state.userName, state.activationCode]);
 
   // Validation: find unanswered questions
   const getUnansweredIds = useCallback((): string[] => {

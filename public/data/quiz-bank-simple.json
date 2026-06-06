@@ -3,9 +3,9 @@
   "meta": {
     "title": "数理素质测验（体验版）",
     "edition": "simple",
-    "objectiveQuestionCount": 18,
+    "objectiveQuestionCount": 17,
     "objectiveHabitsCount": 4,
-    "objectiveAbilityCount": 14,
+    "objectiveAbilityCount": 13,
     "subjectiveQuestionCount": 0,
     "objectiveDimensionOrder": [
       "抽象",
@@ -76,7 +76,7 @@
       "displayDimensions": [
         "观察"
       ],
-      "stem": "此次测验共有18道题，我会仔细阅读此次测验的题干、编号、选项，不夸大、不过谦，诚实准确地回答所有题目。",
+      "stem": "此次测验共有17道题，我会仔细阅读此次测验的内容，不夸大、不过谦，诚实准确地回答所有题目。",
       "options": [
         {
           "id": "T",
@@ -685,54 +685,9 @@
       "section": "objective",
       "objectiveTrack": "ability"
     },
+
     {
       "id": "15",
-      "type": "single",
-      "displayDimensions": [
-        "抽象",
-        "观察",
-        "执行"
-      ],
-      "stem": "朋友用「像快递分拣中心」来解释细胞工作，你的第一反应更接近？",
-      "options": [
-        {
-          "id": "A",
-          "text": "在脑中把比喻和课本图示对照，看哪里贴切",
-          "scores": {
-            "抽象": 2,
-            "观察": 1
-          }
-        },
-        {
-          "id": "B",
-          "text": "觉得有趣，追问还有哪些类似比喻",
-          "scores": {}
-        },
-        {
-          "id": "C",
-          "text": "记住这个说法，考试可能用得上",
-          "scores": {
-            "执行": 1
-          }
-        },
-        {
-          "id": "D",
-          "text": "更相信教材定义，比喻仅供参考",
-          "scores": {
-            "抽象": 2
-          }
-        }
-      ],
-      "maxScores": {
-        "抽象": 2,
-        "观察": 1,
-        "执行": 1
-      },
-      "section": "objective",
-      "objectiveTrack": "ability"
-    },
-    {
-      "id": "16",
       "type": "single",
       "displayDimensions": [
         "观察",
@@ -781,7 +736,7 @@
       "objectiveTrack": "ability"
     },
     {
-      "id": "17",
+      "id": "16",
       "type": "boolean",
       "displayDimensions": [
         "自主",
@@ -816,7 +771,7 @@
       "objectiveTrack": "habits"
     },
     {
-      "id": "18",
+      "id": "17",
       "type": "multi",
       "displayDimensions": [
         "自主"

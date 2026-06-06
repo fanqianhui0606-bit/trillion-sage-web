@@ -87,6 +87,7 @@ export interface UserScores {
     practicalShare: number;
     valueTier: number;
   };
+  subjectInterest?: Record<string, number>;
 }
 
 // ============================================================
@@ -183,18 +184,26 @@ export interface MajorMatchResult {
   score: number;
   officialIntro: string;
   parents: string[];
+  valueSim?: number;
+  interestSim?: number;
+  habitsSim?: number;
+  abilitySim?: number;
+  objectiveSimLegacy?: number;
 }
 
 // ============================================================
 // Quiz state machine
 // ============================================================
 
-export type QuizPhase = "loading" | "cover" | "answering" | "submitting" | "result";
+export type QuizPhase = "loading" | "cover" | "answering" | "interest" | "submitting" | "result";
 
 export interface QuizState {
   phase: QuizPhase;
   currentIndex: number;
   answers: Record<string, string | string[]>;
+  subjectInterest?: Record<string, number>;
+  userName?: string;
+  activationCode?: string;
   userScores: UserScores | null;
   matches: MajorMatchResult[] | null;
   error: string | null;

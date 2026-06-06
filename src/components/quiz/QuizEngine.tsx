@@ -5,12 +5,16 @@ import Button from "@/components/shared/Button";
 import GlassCard from "@/components/shared/GlassCard";
 import QuizResult from "@/components/quiz/QuizResult";
 import { useQuizState } from "@/hooks/useQuizState";
+import { validateActivationCode } from "@/lib/cosine-similarity";
 
 const PRO_CONTACT_TEXT = "请联系「桥梁计划」团队购买参与";
 
 export default function QuizEngine({ edition }: { edition?: string }) {
   const { state, dispatch, getUnansweredIds } = useQuizState(edition);
   const [showValidation, setShowValidation] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [code, setCode] = useState("");
+  const [formError, setFormError] = useState("");
   const topRef = useRef<HTMLDivElement>(null);
 
   const isSimple = (state.edition ?? "user") === "simple";
@@ -40,6 +44,25 @@ export default function QuizEngine({ edition }: { edition?: string }) {
     const dimCount = isSimple ? 8 : 14;
     const timeEstimate = isSimple ? "5 分钟" : "15 分钟";
 
+    const handleStart = () => {
+      if (!userName.trim()) {
+        setFormError("请输入您的姓名");
+        return;
+      }
+      if (!isSimple) {
+        if (!validateActivationCode(code)) {
+          setFormError("激活码无效或格式错误");
+          return;
+        }
+      }
+      setFormError("");
+      dispatch({
+        type: "START_QUIZ_WITH_USER",
+        userName: userName.trim(),
+        activationCode: isSimple ? undefined : code.trim().toUpperCase(),
+      });
+    };
+
     return (
       <div className="min-h-screen flex items-center justify-center px-6 pt-20">
         <GlassCard className="max-w-2xl w-full text-center py-12 px-8">
@@ -51,7 +74,7 @@ export default function QuizEngine({ edition }: { edition?: string }) {
               </span>
             )}
           </h1>
-          <p className="text-bridge-muted leading-relaxed mb-2">
+          <p className="text-bridge-muted leading-relaxed mb-6">
             {questionCount} 道题目 · 约 {timeEstimate}
           </p>
           {isSimple ? (
@@ -59,20 +82,47 @@ export default function QuizEngine({ edition }: { edition?: string }) {
               <p className="text-bridge-muted text-sm leading-relaxed mb-2">
                 由 <strong>985 理工硕博学长团</strong> 制作，涵盖 {dimCount} 项数理素质维度。
               </p>
-              <p className="text-bridge-muted text-sm leading-relaxed mb-2">
+              <p className="text-bridge-muted text-sm leading-relaxed mb-4">
                 参考 <strong>2026 年教育部最新本科专业目录</strong>，为你推荐最匹配的理工专业方向。
-              </p>
-              <p className="text-bridge-muted text-xs leading-relaxed mb-8 text-gray-400">
-                体验版推荐仅依据 8 维客观结果，仅供参考
               </p>
             </>
           ) : (
-            <p className="text-bridge-muted text-sm leading-relaxed mb-8">
+            <p className="text-bridge-muted text-sm leading-relaxed mb-6">
               涵盖 {dimCount} 项数理素质维度，完成后生成 3D 素质图景与专业推荐。
               请如实作答，答案无对错之分。
             </p>
           )}
-          <Button variant="primary" onClick={() => dispatch({ type: "START_QUIZ" })}>
+
+          {/* User registration form */}
+          <div className="max-w-sm mx-auto mb-8 text-left space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-bridge-blue mb-1">您的姓名 / 昵称 (必填)</label>
+              <input
+                type="text"
+                placeholder="请输入您的姓名"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue transition-colors"
+              />
+            </div>
+            {!isSimple && (
+              <div>
+                <label className="block text-xs font-bold text-bridge-blue mb-1">专业版激活码 (必填)</label>
+                <input
+                  type="text"
+                  placeholder="请输入 12 位专业版激活码"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue uppercase font-mono transition-colors"
+                />
+              </div>
+            )}
+            {formError && (
+              <p className="text-red-500 text-xs text-center font-semibold mt-2 animate-shake">{formError}</p>
+            )}
+          </div>
+
+          <Button variant="primary" onClick={handleStart}>
             开始测验
           </Button>
         </GlassCard>
@@ -109,11 +159,27 @@ export default function QuizEngine({ edition }: { edition?: string }) {
         }
         setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       } else {
-        dispatch({ type: "SUBMIT" });
+        if (isSimple) {
+          dispatch({ type: "SUBMIT" });
+        } else {
+          dispatch({ type: "ENTER_INTEREST" });
+        }
       }
     };
 
     const answer = state.answers[currentQ?.id ?? ""];
+
+    // GitHub Aligned Coloring and Typography
+    const getStemClass = (id: string, type: string) => {
+      const lowerId = id.toLowerCase();
+      let colorClass = "text-bridge-text";
+      if (lowerId.startsWith("oh")) colorClass = "text-[#1e3a8a]";
+      else if (lowerId.startsWith("oa")) colorClass = "text-[#6b21a8]";
+      else if (lowerId.startsWith("s")) colorClass = "text-[#991b1b]";
+      
+      const fontStyle = type === "boolean" ? "italic" : "not-italic";
+      return `${colorClass} ${fontStyle} text-lg font-semibold leading-relaxed mb-4`;
+    };
 
     return (
       <div ref={topRef} className="min-h-screen pt-24 pb-16 px-6">
@@ -151,7 +217,8 @@ export default function QuizEngine({ edition }: { edition?: string }) {
                   ? "多选题"
                   : "判断题"}
               </p>
-              <h3 className="text-lg font-semibold text-bridge-text leading-relaxed mb-4">
+              <h3 className={getStemClass(currentQ.id, currentQ.type)}>
+                <span className="font-extrabold mr-2 select-none">{currentQ.id}</span>
                 {currentQ.stem}
               </h3>
 
@@ -226,6 +293,72 @@ export default function QuizEngine({ edition }: { edition?: string }) {
     );
   }
 
+  // --- Interest self-assessment phase (Professional only) ---
+  if (state.phase === "interest") {
+    const subjects = ["数学", "物理", "化学", "生物", "计算机"];
+    
+    const handleInterestChange = (sub: string, val: number) => {
+      dispatch({ type: "SET_INTEREST", subject: sub, score: val });
+    };
+
+    const handleInterestSubmit = () => {
+      dispatch({ type: "SUBMIT" });
+    };
+
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-6">
+        <div className="max-w-2xl mx-auto animate-fade-in">
+          <GlassCard className="mb-6 p-8">
+            <h2 className="text-xl font-bold text-bridge-blue mb-2">
+              一、 兴趣导向自评
+            </h2>
+            <p className="text-sm text-bridge-muted leading-relaxed mb-6">
+              请依据个人兴趣，在「数学、物理、化学、生物、计算机」五门学科中分别打分：
+              <strong> 1</strong> 表示兴趣较低，<strong>10</strong> 表示兴趣较高。
+              提交后将进入测验结果页。
+            </p>
+
+            <div className="space-y-6">
+              {subjects.map((sub) => {
+                const val = state.subjectInterest?.[sub] ?? 5;
+                return (
+                  <div key={sub} className="grid grid-cols-[4.5rem_1fr_2.5rem] items-center gap-4 p-3.5 rounded-xl border border-white/95 bg-white/35 shadow-sm">
+                    <label className="font-bold text-bridge-blue text-sm">{sub}</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      step="1"
+                      value={val}
+                      onChange={(e) => handleInterestChange(sub, parseInt(e.target.value, 10))}
+                      className="w-full accent-bridge-blue cursor-pointer h-1.5 bg-white/40 rounded-lg appearance-none"
+                    />
+                    <span className="text-center font-bold text-bridge-text font-mono">{val}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </GlassCard>
+
+          <div className="flex justify-between items-center">
+            <Button
+              variant="ghost"
+              onClick={() => dispatch({ type: "BACK_TO_QUIZ" })}
+            >
+              返回修改作答
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleInterestSubmit}
+            >
+              提交并查看结果
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // --- Submitting phase ---
   if (state.phase === "submitting") {
     return (
@@ -255,11 +388,14 @@ export default function QuizEngine({ edition }: { edition?: string }) {
         scores={state.userScores}
         matches={state.matches}
         isSimple={isSimple}
+        userName={state.userName || "用户"}
+        activationCode={state.activationCode || "免费体验"}
         lockedDimensions={lockedDims}
         fullDimensionOrder={fullDimOrder}
         catalogReference={catalogRef}
         contactText={PRO_CONTACT_TEXT}
         onRetry={() => dispatch({ type: "START_QUIZ" })}
+        onBackToQuiz={() => dispatch({ type: "BACK_TO_QUIZ" })}
       />
     );
   }

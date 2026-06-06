@@ -2,7 +2,7 @@
 
   "version": "2.1",
 
-  "description": "测验 v2：客观 30 题 + 主观 5 题。专业推荐仅依据客观数理素质；主观意愿仅展示价值导向 5 档简评。习惯轨:能力轨=0.20:0.80（第2次校准）。",
+  "description": "测验 v2：客观 36 题 + 主观 6 题。专业版匹配使用四因子加权（价值:兴趣:习惯:能力=1:2:1:4）；体验版仍用纯客观 rankMajorsForQuiz。习惯轨:能力轨=0.20:0.80。",
 
   "activeQuestionIds": null,
 
@@ -18,7 +18,7 @@
 
     "subjectiveWeight": 0,
 
-    "comment": "专业推荐已停用主观混合；仅保留字段兼容。排序使用 rankMajorsForQuiz（纯客观余弦）。"
+    "comment": "专业版使用 rankMajorsFourFactor；本字段保留兼容。对照见 match_config_four_factor.json。"
 
   },
 
@@ -40,7 +40,7 @@
 
     "useObjectivePerDimensionNormalize": true,
 
-    "comment": "客观向量：habits/ability 两轨归一化后合成；主观不参与专业推荐。",
+    "comment": "客观向量：habits/ability 两轨归一化后合成；专业版四因子匹配另用 normH/normA 分轨参与习惯/能力因子。",
 
     "calibrationSource": "cal_results_pass2.json → 0.20:0.80（sum{δ}极小）"
 

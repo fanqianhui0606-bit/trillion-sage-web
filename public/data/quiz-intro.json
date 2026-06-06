@@ -1,0 +1,15 @@
+{
+  "version": "2.1",
+  "source": "专业版封面引言",
+  "heading": "测验说明",
+  "lines": [
+    "这是一份由「<strong class=\"hl\">桥梁计划</strong>」<strong class=\"hl\">985 理工硕博学长团</strong>独家设计打造的「<strong class=\"hl\">数理素质测验_专业版</strong>」。",
+    "我们将从 <strong class=\"hl\">4 向 14 维</strong>对你的数理素养进行全面测验，",
+    "同时根据测验结果给出匹配你的理工专业。",
+    "所有专业参考 <strong class=\"hl\">2026 年教育部最新本科专业目录</strong>。",
+    { "spacer": true },
+    { "spacer": true },
+    "全篇共有 <strong class=\"hl\">42</strong> 道题目，做完约 <strong class=\"hl\">15 分钟</strong>。"
+  ],
+  "closingLine": "点击下方按钮，参与测验。"
+}

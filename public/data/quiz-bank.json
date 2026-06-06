@@ -2,10 +2,10 @@
   "version": "2.0",
   "meta": {
     "title": "专业数理素质测验（模拟题库 v2）",
-    "objectiveQuestionCount": 30,
-    "objectiveHabitsCount": 15,
-    "objectiveAbilityCount": 15,
-    "subjectiveQuestionCount": 5,
+    "objectiveQuestionCount": 36,
+    "objectiveHabitsCount": 14,
+    "objectiveAbilityCount": 22,
+    "subjectiveQuestionCount": 6,
     "objectiveSubjectiveScoreRatio": [
       0.7,
       0.3
@@ -45,17 +45,33 @@
     "objectiveMaxPerDimensionTarget": 10,
     "subjectiveMaxPerDimensionTarget": 10,
     "notes": [
-      "客观题分思维习惯（objectiveTrack=habits）与能力自检（ability）各 15 题，计分权重各占客观一半后再与主观合成。",
+      "客观题分思维习惯（objectiveTrack=habits）与能力自检（ability）两轨；当前题库为 OH 14 题 + OA 22 题，计分权重按配置 habits:ability 合成。",
       "题型仅为 single 、multi 或 boolean；无开放题。",
       "主观题两维可同时得分，用于计算「实际/利益」取向比例并与专业 l2_value_pragmatism 对齐参与推荐（见 rankMajorsWithQuizBlend）。",
-      "各题 options 尽量分散到多个素质维度，避免单一维度与总分完全共线。",
-      "【变更记录 2026-05】题干/题序/选项若已调整，则 calibration/ 下三位专家（A/B/C）自评与按旧题序生成的匹配对照不再适用于新题库；复测请重新收集专家作答或按新题 id 重标。"
+      "各题 options 尽量分散到多个素质维度，避免单一维度与总分完全共线。"
     ],
     "objectiveScoring": {
       "normalizeByAchievableMax": true,
       "normalizedCap": 5,
       "perTrackNormalizeThenBlend": true,
       "description": "客观：habits/ability 两轨分别按各维 maxScores 合计归一化到 1–5，再按 50%-50% 合成用户客观向量。"
+    },
+    "catalogReference": {
+      "label": "本专业推荐参考2026年最新教育部本科专业目录名单",
+      "links": [
+        {
+          "text": "教育部：普通高等学校本科专业目录（2026年）发布说明",
+          "url": "http://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202604/t20260428_1435016.html"
+        },
+        {
+          "text": "教育部：关于公布《普通高等学校本科专业目录（2026年）》的通知",
+          "url": "http://www.moe.gov.cn/srcsite/A08/moe_1034/s3882/202604/t20260427_1434931.html"
+        },
+        {
+          "text": "附件 PDF：普通高等学校本科专业目录（2026年）",
+          "url": "http://www.moe.gov.cn/srcsite/A08/moe_1034/s3882/202604/W020260427440749576927.pdf"
+        }
+      ]
     }
   },
   "questions": [
@@ -68,7 +84,7 @@
       "displayDimensions": [ 
 "观察"      
       ],
-      "stem": "此次测验共有40道题，我会仔细阅读此次测验的题干、编号、选项，不夸大、不过谦，诚实准确地回答所有题目。",
+      "stem": "此次测验共有42道题。我会仔细阅读此次测验的所有文字、视觉信息，不夸大、不过谦，诚实准确地回答所有题目。",
       "options": [
         { "id": "T",
           "text": "是",
@@ -167,7 +183,7 @@
           "scores": { "自主": 3, "操作": 3 }
          }
       ],
-      "maxScores": { "整理": 2, "执行": 3, "操作": 3, "观察": 2, "计算": 3, "自主": 3 }
+      "maxScores": { "整理": 2, "执行": 3, "操作": 3, "观察": 2, "计算": 3, "自主": 3, "记忆": 2 }
 },
 
    
@@ -181,7 +197,7 @@
       "displayDimensions": [
         "推导", "操作", "空间", "整理","观察", "好奇"
       ],
-      "stem": "拼复杂拼图，你通常从哪开始？",
+      "stem": "如果拼复杂拼图，你最有可能从哪开始？",
       "options": [
         { "id": "A",
           "text": "先拼边和角",
@@ -200,7 +216,7 @@
           "scores": { "操作": 4, "联想": 1 }
          }
       ],
-      "maxScores": { "空间": 3, "整理": 1, "观察": 4, "好奇": 1, "操作": 4, "推导": 2 }
+      "maxScores": { "空间": 3, "整理": 1, "观察": 4, "好奇": 1, "操作": 4, "推导": 2, "联想": 1 }
 },
 
 
@@ -320,7 +336,7 @@
           "scores": { "执行": 4 }
          }
       ],
-      "maxScores": { "整理": 3, "推导": 2, "计算":2, "执行": 3 }
+      "maxScores": { "整理": 3, "推导": 2, "计算": 2, "执行": 4, "联想": 1 }
 },
 
  
@@ -482,9 +498,6 @@
 
 
 
-
-
-
   {
       "id": "S15",
       "section": "subjective",
@@ -542,7 +555,7 @@
          }
 
       ],
-      "maxScores": {  "抽象": 3, "操作": 2, "整理": 2, "自主": 3, "推导": 6 , "观察": 5, "执行": 2 }
+      "maxScores": { "抽象": 3, "操作": 2, "整理": 2, "自主": 3, "推导": 3, "观察": 3, "执行": 2 }
 },
 
 
@@ -590,7 +603,7 @@
         "构建", "抽象", "整理", "执行", "记忆", "好奇", "自学"
 
       ],
-      "stem": "听长篇讲解时，你更易？",
+      "stem": "听较有难度的长篇讲解时，你更易？",
       "options": [
         { "id": "A",
           "text": "边听边画结构图",
@@ -624,7 +637,7 @@
       "displayDimensions": [
         "操作"
       ],
-      "stem": "对于电脑/手机的操作类游戏，或乐高、模型拼装等手工爱好，或是玩卡丁车、无人机等操作类爱好，我——",
+      "stem": "对于电脑/手机上操作难度较高的游戏，或者乐高、模型拼装等手工爱好，或是玩卡丁车、无人机等操作类爱好，我——",
       "options": [
         { "id": "A",
           "text": "我喜欢且擅长",
@@ -645,6 +658,7 @@
       ],
       "maxScores": { "操作": 3 }
 },
+
 
 
     {
@@ -677,13 +691,6 @@
       ],
       "maxScores": { "联想": 3, "抽象": 3 }
 },
-
-
-
-
-
-
-
 
 
 
@@ -822,7 +829,7 @@
       "displayDimensions": [
         "操作", "执行"
       ],
-      "stem": "对于学校计算机课上布置的编程任务，或是科学实验任务，我能：",
+      "stem": "对于学校计算机课上布置的编程任务，或是科学实验任务（有教程但无演示），我能：",
       "options": [
         { "id": "A",
           "text": "很顺利地快速完成任务",
@@ -874,7 +881,7 @@
           "scores": { "计算": 1, "推导": 0 }
          }
       ],
-      "maxScores": { "计算": 5, "推导": 2 }
+      "maxScores": { "计算": 5, "推导": 3 }
 },
 
 
@@ -914,41 +921,8 @@
 
 
 
-    {
-      "id": "S28",
-      "section": "subjective",
-      "area": "S",
-      "type": "single",
-      "displayDimensions": [
-        "interest_ambition", "practical_benefit"
-      ],
-      "stem": "社团/竞赛会占用时间，你为什么坚持参加？",
-      "options": [
-        { "id": "A",
-          "text": "这件事让我感觉像我自己",
-          "scores": { "interest_ambition": 3 }
-         },
-        { "id": "B",
-          "text": "对简历/升学路径更有用",
-          "scores": { "practical_benefit": 3 }
-         },
-        { "id": "C",
-          "text": "过程开心且队友靠谱",
-          "scores": { "interest_ambition": 2, "practical_benefit":1 }
-         },
-        { "id": "D",
-          "text": "师长建议先坚持看看",
-          "scores": { "interest_ambition": 1, "practical_benefit": 2 }
-         }
-      ],
-      "maxScores": { "interest_ambition": 3, "practical_benefit": 3 }
-},
-
-
-
-
  {
-      "id": "S29",
+      "id": "S28",
       "section": "subjective",
       "area": "S",
       "type": "boolean",
@@ -973,6 +947,36 @@
 
 
 
+    {
+      "id": "OA29",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "计算", "推导", "观察"
+      ],
+      "stem": "十进制的“1”、“2”、“3”分别对应二进制的“1”、“10”、“11”，以此类推。那么按照二进制计数，此题的题号应为",
+      "options": [
+        { "id": "A",
+          "text": "OH11101",
+          "scores": { "计算": 3, "推导": 2, "观察": 0 }
+         },
+        { "id": "B",
+          "text": "OA1110",
+          "scores": { "计算": 0, "推导": 0  }
+         },
+        { "id": "C",
+          "text": "OA11110",
+          "scores": {  "计算": 0, "推导": 0  }
+         },
+        { "id": "D",
+          "text": "OA11101",
+          "scores": {  "计算": 3, "推导": 2 , "观察": 2 }
+         }
+      ],
+      "maxScores": { "计算": 3, "推导": 2 , "观察": 2 }
+},
 
 
 
@@ -991,22 +995,22 @@
       "options": [
         { "id": "A",
           "text": "注意到了，是11题编号漏了",
-          "scores": { "观察": 5, "记忆": 2 }
+          "scores": { "观察": 2, "记忆": 2 }
          },
         { "id": "B",
           "text": "注意到了，是整套题的前半段漏了一题",
-          "scores": { "观察": 3, "记忆": 1 }
+          "scores": { "观察": 2, "记忆": 1 }
          },
         { "id": "C",
           "text": "注意到了，但忘记在哪儿",
-          "scores": { "观察": 2, "记忆": 0 }
+          "scores": { "观察": 1, "记忆": 0 }
          },
         { "id": "D",
           "text": "有漏题吗？",
           "scores": { "观察": 0, "记忆": 0 }
          }
       ],
-      "maxScores": { "观察": 5, "记忆": 2 }
+      "maxScores": { "观察": 2, "记忆": 2 }
 },
 
 
@@ -1019,14 +1023,14 @@
       "displayDimensions": [
         "观察", "记忆", "整理"
       ],
-      "stem": "（做到此题请勿往前翻）前面题目有选择题和判断题，我们按照了一定规律进行排列，你注意到",
+      "stem": "（做到此题请勿往前翻）前面题目有选择题和判断题，我们按照了一定规律进行排列，你注意到——",
       "options": [
         { "id": "A",
           "text": "每出现n道选择题，就有一道判断题，n从1开始是递增数列",
-          "scores": { "观察": 5, "整理": 3, "记忆": 2 }
+          "scores": { "观察": 4, "整理": 3, "记忆": 2 }
          },
         { "id": "B",
-          "text": "选择题和判断题穿插安排，越到后面判断题出现的频率越低",
+          "text": "选择题和判断题穿插安排，越到后面判断题出现频率越低",
           "scores": { "观察": 3, "整理": 2, "记忆": 2 }
          },
         { "id": "C",
@@ -1038,8 +1042,9 @@
           "scores": { "观察": 1, "整理": 0, "记忆": 1 }
          }
       ],
-      "maxScores": { "观察": 5, "整理": 3, "记忆": 2 }
+      "maxScores": { "观察": 4, "整理": 3, "记忆": 2 }
 },
+
 
 
     {
@@ -1049,82 +1054,9 @@
       "area": "A",
       "type": "single",
       "displayDimensions": [
-        "整理", "观察", "构建", "推导"
-      ],
-      "stem": "（此道题目可以前翻）此测验每道题目前方都有不同的编号，共有OH、OA、S三种，通过前面的题目你可以总结归纳出？（请内心有答案后再选选项）",
-      "options": [
-        { "id": "A",
-          "text": "OH是考察数理思维习惯，OA是考察数理能力高低，S是考察价值取向",
-          "scores": { "整理": 5, "观察": 3, "推导": 3, "构建": 3 }
-         },
-        { "id": "B",
-          "text": "OH题是多向考量，OA题是单向考量，S题是二元考量",
-          "scores": { "整理": 3, "观察": 3, "推导": 3, "构建": 2 }
-         },
-        { "id": "C",
-          "text": "OH题选项彼此不互容，OA题和S题的选项是单一事物的高低程度排列",
-          "scores": { "整理": 2, "观察": 3, "推导": 2, "构建": 1 }
-         },
-        { "id": "D",
-          "text": "OH题数量与OA题目数量多，S题数量少",
-          "scores": { "整理": 1, "观察": 2, "推导": 1, "构建": 0 }
-         }
-      ],
-      "maxScores": { "整理": 5, "观察": 3, "推导": 3, "构建": 3 }
-},
-
-
-    {
-      "id": "OA33",
-      "section": "objective",
-      "objectiveTrack": "ability",
-      "area": "A",
-      "type": "single",
-      "displayDimensions": [
-        "计算", "推导"
-      ],
-      "stem": "（此道题目请勿后翻）现在告诉你此测验OH题目比OA题目少4题，OH题已全部出完，由此你可以推算出后面剩下几题应是：",
-      "options": [
-        { "id": "A",
-          "text": "1道S题和7道OA题",
-          "scores": { "计算": 3, "推导": 4 }
-         },
-        { "id": "B",
-          "text": "0道S题和8道OA题",
-          "scores": { "计算": 1, "推导": 1 }
-         },
-        { "id": "C",
-          "text": "1道S题和8道OA题",
-          "scores": { "计算": 1, "推导": 1 }
-         },
-        { "id": "D",
-          "text": "2道S题和7道OA题",
-          "scores":  { "计算": 1, "推导": 1 }
-         },
-        { "id": "E",
-          "text": "1道S题和6道OA题",
-          "scores": { "计算": 1, "推导": 1 }
-         },
-        { "id": "F",
-          "text": "1道S题和8道OA题",
-          "scores": { "计算": 0, "推导": 0 }
-         }
-
-      ],
-      "maxScores": { "计算": 3, "推导": 4 }
-},
-
-
-    {
-      "id": "OA34",
-      "section": "objective",
-      "objectiveTrack": "ability",
-      "area": "A",
-      "type": "single",
-      "displayDimensions": [
         "推导", "联想"
       ],
-      "stem": "而下一题可以用以下哪道题做题干呢？",
+      "stem": "按照上一题的逻辑，下一题可以用以下哪道题做题干呢？",
       "options": [
         { "id": "A",
           "text": "你有理想的大学专业和院校吗？",
@@ -1148,39 +1080,79 @@
 
 
     {
-      "id": "OA35",
+      "id": "OA33",
       "section": "objective",
       "objectiveTrack": "ability",
       "area": "A",
-      "type": "single",
+      "type": "multi",
       "displayDimensions": [
-        "好奇", "自主", "执行", "观察"
+         "推导", "整理", "观察"
       ],
-      "stem": "现在我们处在科学技术快速且剧烈变革的时代，不仅技术层面有具身机器人、脑机接口的全新发展，科学领域中也伴随着球状闪电的成功制造、“时间晶体”的冻结等许多意想不到的突破，对于这些你的态度是？",
+      "stem": "（此题可以前翻）我们给题目设置了不同的颜色和字体，你能总结——",
       "options": [
         { "id": "A",
-          "text": "很好奇未来时代发展的去向，并会主动去了解感兴趣的领域发展",
-          "scores": { "好奇": 5, "自主": 3, "观察": 2, "执行": 3 }
+          "text": "红色是S题、蓝色是OH题、紫色是OA题",
+          "scores": { "观察": 1, "推导": 1, "整理": 1.5 }
          },
         { "id": "B",
-          "text": "会比较好奇未来的发展和感兴趣的领域，但不会主动去查询相关咨询",
-          "scores": { "好奇": 3, "自主": 2, "观察": 1, "执行": 2 }
+          "text": "红色是OH题、蓝色是OH题、紫色是OA题",
+          "scores": { "观察": 0, "推导": 0, "整理": 0 }
          },
         { "id": "C",
-          "text": "认为事物发展有一定的规律，就坐这个时代来临",
-          "scores": { "好奇": 2, "自主": 1, "观察": 1, "执行": 0 }
+          "text": "正体是选择题、斜体是判断题",
+          "scores": {  "观察": 1, "推导": 1, "整理": 1.5 }
          },
         { "id": "D",
-          "text": "、无感，该咋咋地",
-          "scores": { "好奇": 1, "自主": 0, "观察": 0, "执行": 0 }
+          "text": "斜体是选择题、正体是判断题",
+          "scores": { "观察": 0, "推导": 0, "整理": 0 }
          }
       ],
-      "maxScores": { "好奇": 5, "自主": 3, "观察": 2, "执行": 3 }
+      "maxScores": { "推导": 2, "整理": 3, "观察": 2 }
 },
 
 
+
     {
-      "id": "OA36",
+      "id": "OA34",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "multi",
+      "displayDimensions": [
+        "整理", "观察", "构建", "推导", "抽象"
+      ],
+      "stem": "（此题可以前翻）此测验每道题目前方都有不同的编号，共有OH、OA、S三种，通过前面的题目你可以总结归纳出？（请内心有答案后再选选项）",
+      "options": [
+        { "id": "A",
+          "text": "OH是考察数理思维习惯，OA是考察数理能力高低，S是考察价值取向",
+          "scores": { "整理": 2, "观察": 1, "推导": 1, "构建": 2, "抽象": 1.5 }
+         },
+        { "id": "B",
+          "text": "OH题是多维多向考量，OA题是多维单向考量，S题是二元考量",
+          "scores": { "整理": 1, "观察": 1.5, "推导": 1.5, "构建": 1 , "抽象": 1.5 }
+         },
+        { "id": "C",
+          "text": "OH题选项彼此不互容，OA题和S题的选项是单一事物的高低程度排列",
+          "scores": { "整理": 1, "观察": 1.5, "推导": 1.5, "构建": 1 , "抽象": 1}
+         },
+        { "id": "D",
+          "text": "OH题多为零散题，OA题多为关联题",
+          "scores": { "整理": 1, "观察": 1, "推导": 0.5, "构建": 0 }
+         },
+        { "id": "E",
+          "text": "OH题数量与OA题目数量多，S题数量少",
+          "scores": { "整理": 0.5, "观察": 0.5, "推导": 0, "构建": 0 }
+         }
+      ],
+      "maxScores": { "整理": 5.5, "观察": 5.5, "推导": 4.5, "构建": 4, "抽象": 4 }
+},
+
+
+
+
+
+    {
+      "id": "OA35",
       "section": "objective",
       "objectiveTrack": "ability",
       "area": "A",
@@ -1201,6 +1173,47 @@
       ],
       "maxScores": { "好奇": 2 }
 },
+
+
+
+
+    {
+      "id": "OA36",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "计算", "推导"
+      ],
+      "stem": "（此道题目请勿后翻）现在告诉你此测验OH题目比OA题目少6题，OH题已全部出完，由此你可以推算出后面剩下几题应是：",
+      "options": [
+        { "id": "A",
+          "text": "2道S题和4道OA题",
+          "scores": { "计算": 3, "推导": 3 }
+         },
+        { "id": "B",
+          "text": "1道S题和5道OA题",
+          "scores": { "计算": 1, "推导": 1 }
+         },
+        { "id": "C",
+          "text": "1道S题和4道OA题",
+          "scores": { "计算": 1, "推导": 1 }
+         },
+        { "id": "D",
+          "text": "2道S题和5道OA题",
+          "scores":  { "计算": 1, "推导": 1 }
+         },
+        { "id": "E",
+          "text": "0道S题和7道OA题",
+          "scores": { "计算": 0, "推导": 0 }
+         }
+      ],
+      "maxScores": { "计算": 3, "推导": 3 }
+},
+
+
+
 
 
     {
@@ -1235,8 +1248,73 @@
 },
 
 
+
+    {
+      "id": "OA38",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "single",
+      "displayDimensions": [
+        "好奇", "自主", "执行", "观察"
+      ],
+      "stem": "现在我们处在科学技术快速且剧烈变革的时代，不仅技术层面有具身机器人、脑机接口的全新发展，科学领域中也伴随着球状闪电的成功制造、“时间晶体”的冻结等许多意想不到的突破，对于这些你的态度是？",
+      "options": [
+        { "id": "A",
+          "text": "很好奇未来时代发展的去向，并会主动去了解感兴趣的领域发展",
+          "scores": { "好奇": 5, "自主": 3, "观察": 2, "执行": 3 }
+         },
+        { "id": "B",
+          "text": "会比较好奇未来的发展和感兴趣的领域，但不会主动去查询相关咨询",
+          "scores": { "好奇": 3, "自主": 2, "观察": 1, "执行": 2 }
+         },
+        { "id": "C",
+          "text": "认为事物发展有一定的规律，就坐这个时代来临",
+          "scores": { "好奇": 2, "自主": 1, "观察": 1, "执行": 0 }
+         },
+        { "id": "D",
+          "text": "无感，该咋咋地",
+          "scores": { "好奇": 1, "自主": 0, "观察": 0, "执行": 0 }
+         }
+      ],
+      "maxScores": { "好奇": 5, "自主": 3, "观察": 2, "执行": 3 }
+},
+
+
+    {
+      "id": "S39",
+      "section": "subjective",
+      "area": "S",
+      "type": "single",
+      "displayDimensions": [
+        "interest_ambition", "practical_benefit"
+      ],
+      "stem": "社团/竞赛/爱好会占用时间，你最有可能因为什么理由而放弃？",
+      "options": [
+        { "id": "A",
+          "text": "这件事让我感觉不像我自己",
+          "scores": { "interest_ambition": 3 }
+         },
+        { "id": "B",
+          "text": "对简历/升学路径没有用",
+          "scores": { "practical_benefit": 3 }
+         },
+        { "id": "C",
+          "text": "过程不开心或队友不靠谱",
+          "scores": { "interest_ambition": 2, "practical_benefit":1 }
+         },
+        { "id": "D",
+          "text": "师长建议我放弃",
+          "scores": { "interest_ambition": 1, "practical_benefit": 2 }
+         }
+      ],
+      "maxScores": { "interest_ambition": 3, "practical_benefit": 3 }
+},
+
+
+
  {
-      "id": "S38",
+      "id": "S40",
       "section": "subjective",
       "area": "S",
       "type": "single",
@@ -1267,33 +1345,9 @@
 
 
 
-   {
-      "id": "OA39",
-      "section": "objective",
-      "objectiveTrack": "ability",
-      "area": "A",
-      "type": "boolean",
-      "displayDimensions": [
-        "自主", "执行", "操作"
-      ],
-      "stem": "面对你感兴趣的大学专业，你倾向主动找相关的专业人士了解而非独自在网络上搜索。",
-      "options": [
-        { "id": "T",
-          "text": "是",
-          "scores": { "自主": 2 , "执行": 2}
-         },
-        { "id": "F",
-          "text": "否",
-          "scores": { "操作": 2 , "执行": 1}
-         }
-      ],
-      "maxScores": { "自主": 2 , "执行": 2 , "操作": 2 }
-},
-
-
 
     {
-      "id": "OA40",
+      "id": "OA41",
       "section": "objective",
       "objectiveTrack": "ability",
       "area": "A",
@@ -1301,7 +1355,7 @@
       "displayDimensions": [
         "好奇", "自主"
       ],
-      "stem": "如果有985硕博学长亲自为你讲解答你感兴趣的专业相关咨询，包括这个专业大学学什么，就业方向，好不好考研/保研、考公/考编，该领域科学/行业的前沿发展如何，你希望包含以下哪些学科呢",
+      "stem": "如果有985硕博学长亲自为你讲解不同理工科专业的相关资讯，包括专业在大学怎么学、学什么，就业方向和行业前景怎么样，好不好考研/考公，科学中该领域的前沿发展等等，你希望包含以下哪些学科呢",
       "options": [
         { "id": "A",
           "text": "A.数学：应用数学、金融数学、密码学等",
@@ -1333,7 +1387,29 @@
          }
       ],
       "maxScores": { "好奇": 0.6, "自主": 1.8 }
+    },
+
+    {
+      "id": "OA42",
+      "section": "objective",
+      "objectiveTrack": "ability",
+      "area": "A",
+      "type": "boolean",
+      "displayDimensions": [
+        "自主", "执行", "操作"
+      ],
+      "stem": "面对你感兴趣的大学专业，你倾向主动找相关的专业人士了解而非独自在网络上搜索。",
+      "options": [
+        { "id": "T",
+          "text": "是",
+          "scores": { "自主": 2 , "执行": 2}
+         },
+        { "id": "F",
+          "text": "否",
+          "scores": { "操作": 2 , "执行": 1}
+         }
+      ],
+      "maxScores": { "自主": 2 , "执行": 2 , "操作": 2 }
     }
   ]
 }
-

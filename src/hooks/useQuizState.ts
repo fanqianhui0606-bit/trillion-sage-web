@@ -259,12 +259,21 @@ export function useQuizState(editionOverride?: string) {
       let valueTier = 3;
 
       if (!isSimp) {
-        const subjMeta = state.bank!.meta.subjectiveDimensions;
-        for (const sd of subjMeta) {
-          const answer = state.answers[sd.id];
-          const val = typeof answer === "string" ? parseInt(answer, 10) : 0;
-          if (sd.axis === "ideal") interestAmbition += val || 0;
-          else practicalBenefit += val || 0;
+        const subjectiveQuestions = state.bank!.questions.filter(
+          (q) => q.section === "subjective"
+        );
+        for (const q of subjectiveQuestions) {
+          const answer = state.answers[q.id];
+          if (!answer) continue;
+          const chosen = Array.isArray(answer) ? answer : [answer];
+          for (const optId of chosen) {
+            const option = q.options.find((o) => o.id === optId);
+            if (!option) continue;
+            if (option.scores) {
+              interestAmbition += option.scores.interest_ambition ?? 0;
+              practicalBenefit += option.scores.practical_benefit ?? 0;
+            }
+          }
         }
 
         practicalShare = calculatePracticalShare(interestAmbition, practicalBenefit);

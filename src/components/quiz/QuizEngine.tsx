@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Button from "@/components/shared/Button";
 import GlassCard from "@/components/shared/GlassCard";
 import QuizResult from "@/components/quiz/QuizResult";
@@ -18,6 +18,20 @@ export default function QuizEngine({ edition }: { edition?: string }) {
   const topRef = useRef<HTMLDivElement>(null);
 
   const isSimple = (state.edition ?? "user") === "simple";
+
+  // Firewall: Block Ctrl+S / Cmd+S (Problem 4)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        alert("系统已启用安全防火墙，禁止保存网页代码。");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   // --- Cover phase ---
   if (state.phase === "loading") {
@@ -40,7 +54,7 @@ export default function QuizEngine({ edition }: { edition?: string }) {
   }
 
   if (state.phase === "cover") {
-    const questionCount = state.bank?.meta.objectiveQuestionCount ?? (isSimple ? 18 : 35);
+    const questionCount = state.bank?.questions.length ?? (isSimple ? 18 : 42);
     const dimCount = isSimple ? 8 : 14;
     const timeEstimate = isSimple ? "5 分钟" : "15 分钟";
 

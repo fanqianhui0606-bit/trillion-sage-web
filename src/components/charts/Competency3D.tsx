@@ -201,7 +201,7 @@ function NodeSphere({
           blending={ThreeLib.AdditiveBlending}
         />
       </sprite>
-      <Html position={[0, 0.42, 0]} center style={{ pointerEvents: "none" }}>
+      <Html position={[0, 0.42, 0]} center style={{ pointerEvents: "none" }} zIndexRange={[10, 0]}>
         <span
           className="text-xs font-semibold whitespace-nowrap select-none"
           style={{ color: labelColor, opacity: isLocked ? 0.45 : 1, filter: isLocked ? "grayscale(1)" : "none" }}
@@ -222,37 +222,40 @@ function DetailPanel({ detail, onClose }: { detail: DetailData | null; onClose: 
   const levelZh: Record<number, string> = { 1: "一", 2: "二", 3: "三", 4: "四" };
   return (
     <div className="absolute bottom-4 left-4 right-4 z-20 pointer-events-none">
-      <div className="pointer-events-auto max-w-sm mx-auto glass-panel p-4 text-sm animate-fade-in">
+      <div className="pointer-events-auto max-w-sm mx-auto bg-slate-900/90 border border-white/10 backdrop-blur-md shadow-2xl rounded-2xl p-4 text-sm animate-fade-in">
         <div className="flex items-start justify-between mb-2">
-          <strong className="text-base" style={{ color: detail.colorHex }}>
+          <strong className="text-base font-bold" style={{ color: detail.colorHex }}>
             {detail.id}
           </strong>
           <button
             onClick={onClose}
-            className="text-bridge-muted hover:text-bridge-text text-lg leading-none ml-2"
+            className="text-slate-400 hover:text-white text-lg leading-none ml-2 bg-transparent border-0 cursor-pointer"
             aria-label="关闭"
           >
             &times;
           </button>
         </div>
-        <p className="text-bridge-muted text-xs">
+        <p className="text-slate-400 text-xs font-medium">
           {detail.title} · 第{levelZh[detail.level] ?? detail.level}层
           {detail.isLocked
             ? ` · 亮度 -- / 5 分（专业版解锁）`
             : ` · 亮度 ${detail.intensity.toFixed(1)}/5`}
         </p>
-        <p className="text-bridge-text text-xs mt-1 leading-relaxed">{detail.definition}</p>
+        <p className="text-slate-200 text-xs mt-1.5 leading-relaxed font-medium">{detail.definition}</p>
         {detail.isLocked && detail.lockedHint && (
-          <p className="text-xs text-gray-400 mt-1 italic">{detail.lockedHint}</p>
+          <p className="text-xs text-slate-400 mt-1 italic">{detail.lockedHint}</p>
         )}
         {detail.edges.length > 0 && (
-          <div className="mt-2">
-            <strong className="text-xs text-bridge-blue">关联素质</strong>
-            <ul className="mt-1 text-xs text-bridge-muted space-y-0.5">
+          <div className="mt-3.5 pt-2.5 border-t border-white/10">
+            <strong className="text-xs text-blue-400 font-bold block mb-1">关联素质</strong>
+            <ul className="mt-1 text-xs text-slate-300 space-y-1 pl-1">
               {detail.edges.map((e, i) => (
-                <li key={i}>
-                  「{e.otherTitle}」
-                  {e.relation === "peer" ? "：平级联系" : e.relation === "from" ? "：下层/因果" : "：上层/因果"}
+                <li key={i} className="list-none flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/50 flex-shrink-0" />
+                  <span>
+                    「{e.otherTitle}」
+                    {e.relation === "peer" ? "：平级联系" : e.relation === "from" ? "：下层/因果" : "：上层/因果"}
+                  </span>
                 </li>
               ))}
             </ul>

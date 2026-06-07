@@ -301,23 +301,23 @@ function BubbleWordCloud({
   const GOLDEN_ANGLE = 2.39996; // 137.5 degrees in radians
 
   const bubbleElements = matches.map((item, i) => {
-    // Deterministic pseudo-randomness based on index for stable positions
+    // Optimizing placement Fermat's spiral with higher radius expansion and minimized random jitter to avoid overlapping (Problem 5)
     const randVal = Math.abs(Math.sin(i * 98765.4321)); 
     const rankNorm = (i + 0.5) / n;
-    const rBase = maxR * Math.pow(rankNorm, 0.52);
-    const dist = rBase * (0.92 + 0.16 * randVal);
-    const ang = i * GOLDEN_ANGLE + (randVal - 0.5) * 0.35;
+    const rBase = maxR * Math.pow(rankNorm, 0.65);
+    const dist = rBase * (0.96 + 0.08 * randVal);
+    const ang = i * GOLDEN_ANGLE + (randVal - 0.5) * 0.12;
     
     const x = cx + Math.cos(ang) * dist;
     const y = cy + Math.sin(ang) * dist;
 
     const t = (item.score - minScore) / span;
-    const size = 11 + t * 13; // Font sizes 11px to 24px
+    const size = 11 + t * 14; // Font sizes 11px to 25px
 
-    // Color based on tiering
-    const color = ["#a3b8cc", "#648cb3", "#2e75b6", "#1e5385", "#143759"][
+    // Enhanced high-contrast bright text color palette (Problem 5 & 10)
+    const color = ["#ffffff", "#e2e8f0", "#93c5fd", "#60a5fa", "#3b82f6"][
       Math.min(4, Math.floor((1 - t) * 4.99))
-    ] || "#2e75b6";
+    ] || "#ffffff";
 
     const isActive = activeMajorId === item.majorId;
 
@@ -325,10 +325,10 @@ function BubbleWordCloud({
       <button
         key={item.majorId}
         onClick={() => onSelectMajor(item.majorId)}
-        className={`absolute select-none transition-all duration-300 font-sans cursor-pointer whitespace-nowrap px-2.5 py-1 rounded-full border border-white/10 shadow-sm backdrop-blur-[2px] bg-slate-900/40
+        className={`absolute select-none transition-all duration-300 font-sans cursor-pointer whitespace-nowrap px-3 py-1 rounded-full border border-transparent shadow-none bg-transparent
           ${isActive 
-            ? 'bg-bridge-blue/20 text-white font-extrabold z-10 border-bridge-blue/80 shadow-[0_0_15px_rgba(46,117,182,0.4)] scale-110 ring-2 ring-bridge-blue/30' 
-            : 'hover:scale-[1.05] hover:bg-slate-800/60 hover:text-white hover:border-white/20'
+            ? 'bg-bridge-blue/35 text-white font-extrabold z-10 border-bridge-blue shadow-[0_0_15px_rgba(46,117,182,0.5)] scale-110 ring-2 ring-bridge-blue/40' 
+            : 'hover:scale-[1.08] hover:bg-slate-800/50 hover:text-white hover:border-white/10 hover:shadow-md'
           }
         `}
         style={{
@@ -336,13 +336,13 @@ function BubbleWordCloud({
           top: `${y}px`,
           transform: 'translate(-50%, -50%)',
           fontSize: `${size}px`,
-          fontWeight: t > 0.55 ? 700 : 600,
+          fontWeight: t > 0.4 ? 700 : 600,
           color: isActive ? '#ffffff' : color,
         }}
         title={`${item.majorId} · 匹配度 ${(item.score * 100).toFixed(2)}%`}
       >
         {item.majorName}
-        <span className="ml-1 text-[0.8em] font-semibold font-mono opacity-80 text-bridge-gold">
+        <span className="ml-1 text-[0.8em] font-semibold font-mono opacity-85 text-bridge-gold">
           {(item.score * 100).toFixed(2)}%
         </span>
       </button>
@@ -378,6 +378,7 @@ const PDF_STYLES = `
     color: #1a1a1a;
     padding: 18px 22px 28px;
     font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    font-weight: 500; /* Medium font weight globally for better legibility (Problem 10) */
   }
   .pdf-page-unit { width: 100%; box-sizing: border-box; }
   .pdf-cover { text-align: center; padding: 28px 16px 36px; margin-bottom: 22px; }
@@ -407,8 +408,9 @@ const PDF_STYLES = `
   .pdf-intro { margin: 0 0 12px; font-size: 12px; line-height: 1.65; color: #475569; }
   .pdf-interest-scores { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; color: #475569; margin-bottom: 10px; }
   .pdf-interest-scores strong { color: #2e75b6; }
-  .pdf-radar-wrap { text-align: center; margin: 8px 0; }
-  .pdf-radar-wrap img { max-width: 280px; height: auto; }
+  /* Centering radar chart in PDF exports (Problem 6) */
+  .pdf-radar-wrap { display: flex; justify-content: center; align-items: center; width: 100%; margin: 12px 0; }
+  .pdf-radar-wrap img { width: 280px; height: 280px; object-fit: contain; display: block; margin: 0 auto; }
   .pdf-value-bar { height: 12px; border-radius: 999px; overflow: hidden; display: flex; background: linear-gradient(90deg,#22c55e,#eab308,#f97316); margin: 8px 0 4px; }
   .pdf-value-bar .ideal { background: rgba(34,197,94,0.35); border-right: 2px solid rgba(255,255,255,0.85); height: 100%; }
   .pdf-value-bar .prac { background: rgba(249,115,22,0.35); height: 100%; }
@@ -531,6 +533,7 @@ export default function QuizResult({
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [showProOverlay, setShowProOverlay] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Loaded metadata
   const [valueTiers, setValueTiers] = useState<ValueOrientationTiers | null>(null);
@@ -675,14 +678,10 @@ export default function QuizResult({
 
       const buildInterestHtml = () => {
         if (isSimple || !scores.subjectInterest) return "";
-        const subjects = ["数学", "物理", "化学", "生物", "计算机"];
         return `
           <div class="pdf-page-unit pdf-block" data-section="interest">
             <h2>一、兴趣导向</h2>
             <p class="pdf-intro">兴趣导向部分来自你在数学、物理、化学、生物、计算机五门学科上的兴趣自评。雷达图帮助你看清此刻更被哪些学科吸引。</p>
-            <div class="pdf-interest-scores">
-              ${subjects.map((s) => `<span><strong>${esc(s)}</strong> ${esc(scores.subjectInterest?.[s] ?? 5)} 分</span>`).join("")}
-            </div>
             ${radarDataUrl ? `<div class="pdf-radar-wrap"><img src="${radarDataUrl}" alt="兴趣导向雷达图" /></div>` : ""}
           </div>
         `;
@@ -722,7 +721,7 @@ export default function QuizResult({
           return `
             <div class="pdf-dim-row">
               <div class="pdf-dim-head">
-                <span class="pdf-dim-name">${esc(row.id)}${row.title ? ` · ${esc(row.title)}` : ""}</span>
+                <span class="pdf-dim-name">${esc(row.title || row.id)}</span>
                 <span class="pdf-dim-score">${esc(scoreText)}</span>
               </div>
               ${row.definition ? `<div class="pdf-dim-def">${esc(row.definition)}</div>` : ""}
@@ -1033,14 +1032,6 @@ export default function QuizResult({
                 兴趣导向部分来自你在数学、物理、化学、生物、计算机五门学科上的兴趣自评。雷达图帮助你看清此刻更被哪些学科吸引。
               </p>
               <InterestRadarChart scores={scores.subjectInterest} />
-              <div className="grid grid-cols-5 gap-2 mt-4 text-center">
-                {["数学", "物理", "化学", "生物", "计算机"].map((sub) => (
-                  <div key={sub} className="p-2 rounded-lg bg-white/5 border border-white/5">
-                    <span className="text-[10px] text-bridge-muted block">{sub}</span>
-                    <span className="text-sm font-bold font-mono text-white">{scores.subjectInterest?.[sub] ?? 5}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
@@ -1084,14 +1075,22 @@ export default function QuizResult({
 
             {/* 3D Competency Visualization */}
             {graphData && (
-              <div className="mt-4 border border-slate-200 rounded-lg overflow-hidden bg-bridge-3d-bg h-[380px] md:h-[450px]">
+              <div className="relative mt-4 border border-slate-200 rounded-lg overflow-hidden bg-bridge-3d-bg h-[380px] md:h-[450px]">
                 <Competency3D
+                  key={refreshKey}
                   graphData={graphData}
                   profileScores={scores3d as Record<string, number>}
                   lockedDimensions={lockedDimensions}
-                  lockedHint={`${contactText}，开通专业版后可查看该素质维度结果。`}
+                  lockedHint={`${contactText}，解锁专业版可查看 14 维视角`}
                   className="w-full h-full"
                 />
+                <button
+                  type="button"
+                  onClick={() => setRefreshKey((prev) => prev + 1)}
+                  className="absolute bottom-3 right-3 z-10 px-3 py-1.5 text-xs font-semibold text-bridge-blue bg-white/80 hover:bg-white border border-bridge-blue/20 rounded-md shadow-sm transition-all cursor-pointer"
+                >
+                  重置 3D 视图
+                </button>
               </div>
             )}
           </div>

@@ -99,7 +99,7 @@ export async function POST(req: Request) {
 
     // Call LLM
     const baseUrl = process.env.DEEPSEEK_API_KEY ? "https://api.deepseek.com/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
-    const model = process.env.DEEPSEEK_API_KEY ? "deepseek-chat" : "gpt-3.5-turbo";
+    const model = process.env.DEEPSEEK_API_KEY ? "deepseek-v4-flash" : "gpt-3.5-turbo";
 
     const response = await fetch(baseUrl, {
       method: "POST",

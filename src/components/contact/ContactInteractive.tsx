@@ -37,7 +37,7 @@ export default function ContactInteractive() {
           <div>
             <div className="flex items-baseline justify-between border-b border-stone-200/50 pb-3 mb-4">
               <h3 className="font-serif text-xl font-bold text-stone-850 tracking-wider">
-                主理人 胡天予
+                主理人 胡桐祎
               </h3>
               <span className="text-[10px] font-serif tracking-widest text-bridge-blue uppercase font-semibold">
                 Founder / CEO

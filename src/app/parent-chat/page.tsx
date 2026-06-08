@@ -803,6 +803,7 @@ export default function ParentChatPage() {
                     </div>
                   </div>
                 </div>
+                    )}
 
                 {/* External Actions & Links */}
                 <div className="w-full max-w-2xl mt-8 space-y-6">
@@ -843,6 +844,8 @@ export default function ParentChatPage() {
                         <span className="text-[10px] text-bridge-gold mt-4">&rarr; 预约1v1引航</span>
                       </Link>
                     </div>
+                  </div>
+                </div>
                   </div>
                 </div>
               </div>

@@ -53,7 +53,7 @@ interface ChatRecord {
   role: "student" | "parent" | "unknown";
   code: string;
   messages: ChatMessage[];
-  report: Record<string, any> | null;
+  report: Record<string, unknown> | null;
 }
 
 interface AppointmentRecord {
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
   };
 
   // Convert array to CSV and download (Quiz)
-  const handleExportCSV = () => {
+  const handleExportQuizCSV = () => {
     if (records.length === 0) {
       alert("没有可导出的数据");
       return;
@@ -367,6 +367,66 @@ export default function AdminDashboardPage() {
     document.body.removeChild(link);
   };
 
+  // Export chat records to CSV
+  const handleExportChatCSV = () => {
+    if (chatRecords.length === 0) {
+      alert("没有可导出的聊天留痕数据");
+      return;
+    }
+    const headers = ["提交时间", "角色", "专属码", "对话轮数", "是否有报告"];
+    const csvRows = [headers.join(",")];
+    for (const r of chatRecords) {
+      const row = [
+        `"${new Date(r.timestamp).toLocaleString("zh-CN", { hour12: false })}"`,
+        r.role === "student" ? "学生" : r.role === "parent" ? "家长" : "未知",
+        `"${r.code || ""}"`,
+        r.messages?.length || 0,
+        r.report ? "是" : "否"
+      ];
+      csvRows.push(row.join(","));
+    }
+    const csvContent = "﻿" + csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `千殊桥梁计划_思维共振聊天留痕_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export appointment records to CSV
+  const handleExportAppointmentCSV = () => {
+    if (appointmentRecords.length === 0) {
+      alert("没有可导出的预约记录");
+      return;
+    }
+    const headers = ["预约时间", "工单号", "姓名", "联系方式", "学业阶段", "偏好方向", "诉求瓶颈"];
+    const csvRows = [headers.join(",")];
+    for (const r of appointmentRecords) {
+      const row = [
+        `"${new Date(r.timestamp).toLocaleString("zh-CN", { hour12: false })}"`,
+        `"${r.appointmentId || ""}"`,
+        `"${(r.studentName || "").replace(/"/g, '""')}"`,
+        `"${(r.contact || "").replace(/"/g, '""')}"`,
+        `"${r.grade || ""}"`,
+        `"${(r.selectedFields || []).join("、")}"`,
+        `"${(r.concern || "").replace(/"/g, '""')}"`
+      ];
+      csvRows.push(row.join(","));
+    }
+    const csvContent = "﻿" + csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `千殊桥梁计划_1v1预约记录_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Filters quiz
   const filteredRecords = records.filter((r) => {
     const matchesSearch =
@@ -442,13 +502,23 @@ export default function AdminDashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={activeTab === "quiz" ? handleExportCSV : handleExportFamilyCSV}
+              onClick={() => {
+                if (activeTab === "quiz") handleExportQuizCSV();
+                else if (activeTab === "family") handleExportFamilyCSV();
+                else if (activeTab === "chat") handleExportChatCSV();
+                else if (activeTab === "appointment") handleExportAppointmentCSV();
+              }}
               className="px-4 py-2 text-xs font-bold text-white bg-bridge-blue hover:bg-blue-700 rounded-lg shadow-md border-0 cursor-pointer transition-colors"
             >
-              导出 {activeTab === "quiz" ? "测评" : "家庭"} CSV 表格
+              导出 CSV
             </button>
             <button
-              onClick={activeTab === "quiz" ? fetchSubmissions : fetchFamilyRecords}
+              onClick={() => {
+                if (activeTab === "quiz") fetchSubmissions();
+                else if (activeTab === "family") fetchFamilyRecords();
+                else if (activeTab === "chat") fetchChatRecords();
+                else if (activeTab === "appointment") fetchAppointmentRecords();
+              }}
               className="px-3 py-2 text-xs font-bold text-slate-300 hover:text-white border border-white/10 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
             >
               刷新数据
@@ -479,6 +549,22 @@ export default function AdminDashboardPage() {
             }`}
           >
             家庭共振（双端聊天）管理
+          </button>
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`pb-3 text-sm font-serif font-bold transition-all cursor-pointer border-b-2 px-1 bg-transparent ${
+              activeTab === "chat" ? "border-bridge-blue text-white" : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            💬 聊天留痕
+          </button>
+          <button
+            onClick={() => setActiveTab("appointment")}
+            className={`pb-3 text-sm font-serif font-bold transition-all cursor-pointer border-b-2 px-1 bg-transparent ${
+              activeTab === "appointment" ? "border-bridge-blue text-white" : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            📋 预约记录
           </button>
         </div>
 
@@ -682,7 +768,7 @@ export default function AdminDashboardPage() {
                       {filteredFamilyRecords.map((r, idx) => {
                         const studentAuth = r.student_authorized === true ? "已授权" : r.student_authorized === false ? "已拒绝" : "未选择";
                         const parentAuth = r.parent_authorized === true ? "已授权" : r.parent_authorized === false ? "已拒绝" : "未选择";
-                        
+
                         return (
                           <tr key={idx} className="hover:bg-white/5 transition-colors">
                             <td className="p-4 font-mono font-bold text-white select-all">{r.code}</td>
@@ -730,6 +816,185 @@ export default function AdminDashboardPage() {
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* CHAT TAB PANEL */}
+        {activeTab === "chat" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white font-serif">
+                💬 思维共振聊天留痕（共 {chatRecords.length} 条）
+              </h2>
+            </div>
+
+            {chatRecords.length === 0 ? (
+              <GlassCard className="py-16 text-center text-bridge-muted text-xs">
+                暂无聊天留痕数据
+              </GlassCard>
+            ) : (
+              <div className="overflow-x-auto border border-white/10 rounded-2xl bg-slate-900/40 backdrop-blur-md">
+                <table className="w-full border-collapse text-left text-xs text-slate-300">
+                  <thead>
+                    <tr className="bg-slate-950/60 border-b border-white/10 text-bridge-blue font-bold font-serif">
+                      <th className="p-4">时间</th>
+                      <th className="p-4">角色</th>
+                      <th className="p-4">专属码</th>
+                      <th className="p-4 text-center">对话轮数</th>
+                      <th className="p-4 text-center">报告状态</th>
+                      <th className="p-4 text-center">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {chatRecords.map((r, idx) => (
+                      <tr key={idx} className="hover:bg-white/5 transition-colors">
+                        <td className="p-4 font-mono text-slate-400 whitespace-nowrap">
+                          {new Date(r.timestamp).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
+                        </td>
+                        <td className="p-4">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            r.role === "student" ? "bg-bridge-blue/10 text-bridge-blue" : r.role === "parent" ? "bg-amber-500/10 text-amber-400" : "bg-slate-800 text-slate-400"
+                          }`}>
+                            {r.role === "student" ? "学生" : r.role === "parent" ? "家长" : "未知"}
+                          </span>
+                        </td>
+                        <td className="p-4 font-mono text-slate-400">{r.code || "—"}</td>
+                        <td className="p-4 text-center font-mono text-white font-bold">
+                          {r.messages?.length || 0} 轮
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${r.report ? 'bg-green-500/10 text-green-400' : 'bg-slate-800 text-slate-400'}`}>
+                            {r.report ? "已生成" : "未生成"}
+                          </span>
+                        </td>
+                        <td className="p-4 text-center">
+                          <button
+                            onClick={() => { setSelectedChat(r); setShowChatModal(true); }}
+                            className="px-2.5 py-1 text-[10px] font-bold text-white bg-bridge-blue hover:bg-blue-700 rounded transition-colors border-0 cursor-pointer"
+                          >
+                            查看对话详情
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* APPOINTMENT TAB PANEL */}
+        {activeTab === "appointment" && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white font-serif">
+                📋 1v1 预约记录（共 {appointmentRecords.length} 条）
+              </h2>
+            </div>
+
+            {appointmentRecords.length === 0 ? (
+              <GlassCard className="py-16 text-center text-bridge-muted text-xs">
+                暂无预约记录（或 appointments.json 不存在）
+              </GlassCard>
+            ) : (
+              <div className="overflow-x-auto border border-white/10 rounded-2xl bg-slate-900/40 backdrop-blur-md">
+                <table className="w-full border-collapse text-left text-xs text-slate-300">
+                  <thead>
+                    <tr className="bg-slate-950/60 border-b border-white/10 text-bridge-blue font-bold font-serif">
+                      <th className="p-4">预约时间</th>
+                      <th className="p-4">工单号</th>
+                      <th className="p-4">姓名/称呼</th>
+                      <th className="p-4">联系方式</th>
+                      <th className="p-4">学业阶段</th>
+                      <th className="p-4">偏好方向</th>
+                      <th className="p-4">诉求瓶颈</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {appointmentRecords.map((r, idx) => {
+                      const gradeLabels: Record<string, string> = {
+                        high1: "高一", high2: "高二", high3: "高三",
+                        graduated: "高考毕业", college: "大学低年级", parent: "家长"
+                      };
+                      return (
+                        <tr key={idx} className="hover:bg-white/5 transition-colors">
+                          <td className="p-4 font-mono text-slate-400 whitespace-nowrap">
+                            {new Date(r.timestamp).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
+                          </td>
+                          <td className="p-4 font-mono text-bridge-gold font-bold select-all">{r.appointmentId || "—"}</td>
+                          <td className="p-4 font-semibold text-white">{r.studentName || "—"}</td>
+                          <td className="p-4 font-mono text-slate-400">{r.contact || "—"}</td>
+                          <td className="p-4">{gradeLabels[r.grade] || r.grade || "—"}</td>
+                          <td className="p-4">
+                            <div className="flex flex-wrap gap-1">
+                              {(r.selectedFields || []).map((f) => (
+                                <span key={f} className="px-1.5 py-0.5 rounded text-[9px] bg-bridge-blue/10 text-bridge-blue">{f}</span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-4 text-slate-400 max-w-[200px] truncate">{r.concern || "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Chat Detail Modal */}
+        {showChatModal && selectedChat && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowChatModal(false)}>
+            <div className="bg-slate-900 border border-white/10 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-slate-950/90 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+                <div>
+                  <h3 className="text-sm font-bold text-white font-serif">对话详情</h3>
+                  <p className="text-[10px] text-bridge-muted mt-0.5">
+                    {selectedChat.role === "student" ? "学生端" : "家长端"} · {selectedChat.code || "无专属码"} · {new Date(selectedChat.timestamp).toLocaleString("zh-CN")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowChatModal(false)}
+                  className="text-slate-400 hover:text-white text-lg cursor-pointer bg-transparent border-0"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Chat Bubbles */}
+              <div className="p-6 space-y-4">
+                {selectedChat.messages?.map((msg, i) => {
+                  const isAI = msg.sender === "ai";
+                  return (
+                    <div key={i} className={`flex ${isAI ? "justify-start" : "justify-end"}`}>
+                      <div className={`max-w-[75%] px-4 py-2.5 rounded-xl text-xs leading-relaxed ${
+                        isAI
+                          ? "bg-slate-800 text-slate-200 border border-white/5 rounded-tl-sm"
+                          : "bg-bridge-blue/20 text-blue-100 border border-bridge-blue/30 rounded-tr-sm"
+                      }`}>
+                        {msg.agentName && (
+                          <p className="text-[9px] font-bold text-bridge-gold mb-1 font-serif">{msg.agentName}</p>
+                        )}
+                        <p className="whitespace-pre-wrap">{msg.text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Report Section (if exists) */}
+              {selectedChat.report && (
+                <div className="border-t border-white/10 px-6 py-4">
+                  <h4 className="text-xs font-bold text-bridge-gold font-serif mb-3">📄 生成的分析报告</h4>
+                  <pre className="text-[10px] text-slate-300 bg-slate-950 p-4 rounded-lg overflow-x-auto font-mono leading-relaxed whitespace-pre-wrap">
+                    {JSON.stringify(selectedChat.report, null, 2)}
+                  </pre>
                 </div>
               )}
             </div>

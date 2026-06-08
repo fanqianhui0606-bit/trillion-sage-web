@@ -9,245 +9,329 @@ interface Tutor {
   field: string;
   quote: string;
   tagColor: string;
+  featured: boolean;
 }
 
-interface TutorGroup {
-  id: string;
-  name: string;
-  desc: string;
-  icon: string;
-  tutors: Tutor[];
-}
+const TUTORS: Tutor[] = [
+  // ═══════════════════════════════════════════
+  // 默认可见（高含金量，约 16 位）
+  // ═══════════════════════════════════════════
+  {
+    school: "北京大学",
+    role: "博士在读",
+    field: "凝聚态物理 / 拓扑量子器件",
+    quote: "探索晶格缺陷中涌现的量子实在，如同在无声的微观迷宫中寻找宏观对称性的投影。",
+    tagColor: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+    featured: true,
+  },
+  {
+    school: "北京大学",
+    role: "博士毕业",
+    field: "临床心理学",
+    quote: "心理测评不是给人贴标签，而是在混沌的情绪场中为来访者找到第一根可以倚靠的认知锚点。",
+    tagColor: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+    featured: true,
+  },
+  {
+    school: "清华大学",
+    role: "博士在读",
+    field: "代数几何",
+    quote: "概形上的层与上同调，是代数几何在交换环谱上重建拓扑直觉的逻辑利刃。",
+    tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    featured: true,
+  },
+  {
+    school: "清华大学",
+    role: "博士在读",
+    field: "化学 / 材料化学",
+    quote: "在分子尺度上设计功能材料的电子结构，是从原子轨道对称性出发重构宏观物性的化学炼金术。",
+    tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    featured: true,
+  },
+  {
+    school: "中科院理论物理所",
+    role: "博士在读",
+    field: "理论物理 / 全息ADS-CFT对应",
+    quote: "将三维空间的重力场全息投影在二维边界上，黑洞的熵可能只是边界量子纠缠的宏观表象。",
+    tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+    featured: true,
+  },
+  {
+    school: "中科院理论物理所",
+    role: "博士在读",
+    field: "理论物理 / 黑洞引力波理论",
+    quote: "物质告诉时空如何弯曲，时空告诉物质如何运动。这简短的二十个字，蕴含着时空最深邃的纯净。",
+    tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+    featured: true,
+  },
+  {
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "数学物理 / 计算相对论方向",
+    quote: "用数值方法在时空网格上重构双黑洞合并过程，是逻辑在强弯曲时空的具象表达。",
+    tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+    featured: true,
+  },
+  {
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "数学物理 / 数值广相计算",
+    quote: "在差分格点上计算爱因斯坦场方程的波动演化，每一步都是离散与连续的博弈。",
+    tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+    featured: true,
+  },
+  {
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "应用数学 / 密码学与计算复杂度",
+    quote: "用可计算复杂度理论设计加密体系，在图灵限界之内为信息流建立起逻辑防火墙。",
+    tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+    featured: true,
+  },
+  {
+    school: "中科院高能所",
+    role: "博士在读",
+    field: "高能物理计算 / 空间天文探测",
+    quote: "捕捉来自百亿光年外的原初宇宙射线，是宇宙在视界边缘留给今天的电磁余温。",
+    tagColor: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+    featured: true,
+  },
+  {
+    school: "国家天文台",
+    role: "博士在读",
+    field: "引力波理论 / 黑洞微扰学",
+    quote: "引力波的干涉条纹，是千亿光年外黑洞并合事件跨越时空阻尼送达的引力签名。",
+    tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    featured: true,
+  },
+  {
+    school: "中国工程物理研究院",
+    role: "博士在读",
+    field: "量子场论 / 基础引力理论",
+    quote: "将引力场量子化并探索超对称作用，是人类攀爬终极统一理论的逻辑长征。",
+    tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+    featured: true,
+  },
+  {
+    school: "上海交通大学",
+    role: "博士在读",
+    field: "动物学",
+    quote: "物种的演化树是地球生命四十亿年与环境博弈的博弈论最优解，每一个分支节点都是一次自然选择的豪赌。",
+    tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    featured: true,
+  },
+  {
+    school: "爱丁堡大学",
+    role: "硕士毕业",
+    field: "金融科技 / 计算机",
+    quote: "从代码到资本市场的映射，是用图灵机语言在不确定性中寻找可计算套利边界的知识转译。",
+    tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    featured: true,
+  },
+  {
+    school: "麦考瑞大学 & 悉尼大学",
+    role: "硕士毕业",
+    field: "金融 / 会计 / 数据科学",
+    quote: "跨学科的学习路径从来不是笔直的公路，而是在不同学科版图间反复测绘、发现最短路程的探索者之旅。",
+    tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    featured: true,
+  },
+  {
+    school: "中科院数学所 & 宁波大学",
+    role: "博士后",
+    field: "数学物理 / 数值计算相对论算法",
+    quote: "将连续物理场映射为格点离散算法，解决强引力场的数值奇异性，是算法在极端时空的极限测试。",
+    tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+    featured: true,
+  },
 
-const TUTOR_GROUPS: TutorGroup[] = [
+  // ═══════════════════════════════════════════
+  // 展开后可见
+  // ═══════════════════════════════════════════
   {
-    id: "math",
-    name: "数学与纯粹逻辑组",
-    desc: "极致的公理化追求与拓扑流形逻辑探针",
-    icon: "📐",
-    tutors: [
-      {
-        school: "中科院数学所",
-        role: "博士在读",
-        field: "分析相对论 / 广义相对论引力波",
-        quote: "极度质量比旋入 (EMRI) 中的引力波波形，是人类探测时空强引力场几何结构的终极交响乐。",
-        tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-      },
-      {
-        school: "中科院数学所",
-        role: "博士在读",
-        field: "数学物理 / 计算相对论方向",
-        quote: "用数值方法在时空网格上重构双黑洞合并过程，是逻辑在强弯曲时空的具象表达。",
-        tagColor: "bg-stone-500/10 text-stone-600 border-stone-200/50",
-      },
-      {
-        school: "中科院数学所",
-        role: "博士在读",
-        field: "数学物理 / 数值广相计算",
-        quote: "在差分格点上计算爱因斯坦场方程的波动演化，每一步都是离散与连续的博弈。",
-        tagColor: "bg-stone-500/10 text-stone-600 border-stone-200/50",
-      },
-      {
-        school: "中科院数学所",
-        role: "博士在读",
-        field: "代数与流形几何 / 密码学方向",
-        quote: "对称与非对称的安全攻防，是信息论与流形几何交织的数学艺术。",
-        tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-      }
-    ]
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "分析相对论 / 广义相对论引力波",
+    quote: "极度质量比旋入 (EMRI) 中的引力波波形，是人类探测时空强引力场几何结构的终极交响乐。",
+    tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    featured: false,
   },
   {
-    id: "physics",
-    name: "理论与应用物理组",
-    desc: "黑洞引力、强凝聚态与天体宇宙探测元直觉",
-    icon: "🪐",
-    tutors: [
-      {
-        school: "北京大学",
-        role: "博士在读",
-        field: "凝聚态物理 / 拓扑量子器件",
-        quote: "探索晶格缺陷中涌现的量子实在，如同在无声的微观迷宫中寻找宏观对称性的投影。",
-        tagColor: "bg-sky-500/10 text-sky-600 border-sky-500/20",
-      },
-      {
-        school: "中科院理论物理所",
-        role: "博士在读",
-        field: "理论物理 / 全息ADS-CFT对应",
-        quote: "将三维空间的重力场全息投影在二维边界上，黑洞的熵可能只是边界量子纠缠的宏观表象。",
-        tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-      },
-      {
-        school: "中科院理论物理所",
-        role: "博士在读",
-        field: "理论物理 / 黑洞引力波理论",
-        quote: "物质告诉时空如何弯曲，时空告诉物质如何运动。这简短的二十个字，蕴含着时空最深邃的纯净。",
-        tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-      },
-      {
-        school: "中国科学技术大学",
-        role: "博士在读",
-        field: "超冷原子物理 / 量子相干计算",
-        quote: "在微开尔文的极寒中捕获原子的自旋相干，是我们叩开通用量子计算大门的一声轻扣。",
-        tagColor: "bg-teal-500/10 text-teal-600 border-teal-500/20",
-      },
-      {
-        school: "南京大学",
-        role: "博士在读",
-        field: "柔性电子学 / 强关联电子器件",
-        quote: "在柔性分子基底上重新编织电子的流动，是让冰冷的芯片技术拥抱有机生命体的柔美之桥。",
-        tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-      },
-      {
-        school: "国家天文台",
-        role: "博士在读",
-        field: "高能天体物理 / 强重力透镜效应",
-        quote: "被超大质量星系偏折的光束，是宇宙在百亿年前寄给今天人类的，带着引力余温的微波信件。",
-        tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
-      },
-      {
-        school: "中科院高能所",
-        role: "博士在读",
-        field: "高能物理计算 / 空间天文探测",
-        quote: "捕捉来自百亿光年外的原初宇宙射线，是宇宙在视界边缘留给今天的电磁余温。",
-        tagColor: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
-      },
-      {
-        school: "中山大学",
-        role: "博士在读",
-        field: "计算物理 / 数值引力相对论",
-        quote: "用算法模拟引力波的数值演化，是在硅基世界里克隆黑洞对撞的引力相干。",
-        tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-      },
-      {
-        school: "武汉大学",
-        role: "博士在读",
-        field: "物理波形载波 / 电子信息系统",
-        quote: "在物理介质中实现高精度的信息载波，是麦克斯韦方程组在日常通信中的完美重现。",
-        tagColor: "bg-slate-500/10 text-slate-600 border-slate-200/50",
-      },
-      {
-        school: "中国科学技术大学",
-        role: "硕士在读",
-        field: "天文学 / 射电天体物理探测",
-        quote: "以射电望远镜扫描银河系的边缘，是人类向无穷未知投射的一道引力问候。",
-        tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
-      },
-      {
-        school: "湖南师范大学",
-        role: "博士在读",
-        field: "计算相对论 / 强引力场数值模拟",
-        quote: "以格点计算模拟强重力场演化，将繁杂的广义相对论方程在超级计算机中收敛为数值波形。",
-        tagColor: "bg-stone-500/10 text-stone-600 border-stone-200/50",
-      },
-      {
-        school: "兰州大学",
-        role: "博士在读",
-        field: "凝聚态物理 / 磁性纳米材料",
-        quote: "微观自旋的无序到有序，是电子关联系统在局部降低系统熵的磁性相变过程。",
-        tagColor: "bg-sky-500/10 text-sky-600 border-sky-500/20",
-      },
-      {
-        school: "中国工程物理研究院",
-        role: "博士在读",
-        field: "量子场论 / 基础引力理论",
-        quote: "将引力场量子化并探索超对称作用，是人类攀爬终极统一理论的逻辑长征。",
-        tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-      },
-      {
-        school: "国家天文台",
-        role: "博士在读",
-        field: "引力波理论 / 黑洞微扰学",
-        quote: "引力波的干涉条纹，是千亿光年外黑洞并合事件跨越时空阻尼送达的引力签名。",
-        tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-      }
-    ]
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "代数与流形几何 / 密码学方向",
+    quote: "对称与非对称的安全攻防，是信息论与流形几何交织的数学艺术。",
+    tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+    featured: false,
   },
   {
-    id: "biology",
-    name: "生化与前沿材料组",
-    desc: "湿实验负熵秩序构建、细胞代谢与高分子化学阻力分析",
-    icon: "🧬",
-    tutors: [
-      {
-        school: "清华大学",
-        role: "博士在读",
-        field: "生物化学与分子生物学 / 细胞代谢调控与负熵构建",
-        quote: "在起伏的自由能势垒和酶催化过渡态中，生命用完美的负熵机制对抗着宇宙的热寂。",
-        tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-      },
-      {
-        school: "北京大学",
-        role: "博士在读",
-        field: "化学基因组学 / 小分子药物靶点与分子反应动力学",
-        quote: "小分子与蛋白质受体的靶向识别，是微观化学动力学与拓扑几何契合的微观交响。",
-        tagColor: "bg-teal-500/10 text-teal-600 border-teal-500/20",
-      },
-      {
-        school: "清华大学",
-        role: "硕士在读",
-        field: "结构生物学 / 冷冻电镜与生物大分子拓扑重构",
-        quote: "在接近绝对零度的冰冻中捕捉大分子的三维衍射，冷冻电镜帮我们在原子分辨率重构生命的动态机械模型。",
-        tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-      },
-      {
-        school: "中国农业大学",
-        role: "博士在读",
-        field: "生物合成学 / 代谢流 analysis",
-        quote: "设计底盘细胞的代谢通路，是人工制造局部负熵、重构生命信息流的湿实验创世纪。",
-        tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-      },
-      {
-        school: "兰州大学 & 航天501所",
-        role: "硕士在读",
-        field: "材料科学 / 航天轻质特种材料",
-        quote: "在极端空间阻力环境下，通过合金原子错位设计，构筑航天器特种轻质防热结构。",
-        tagColor: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
-      },
-      {
-        school: "兰州大学",
-        role: "博士在读",
-        field: "无机材料 / 稀土发光材料",
-        quote: "稀土离子的能级跃迁与荧光自组织，是用原子轨道能带微调去精准捕捉光子能量的物理化学桥梁。",
-        tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-      }
-    ]
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "数学物理 / 强引力场数值并行求解",
+    quote: "用数值求解爱因斯坦引力方程，算法的每一次迭代，都是硅基逻辑对弯曲时空实在的逼近。",
+    tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+    featured: false,
   },
   {
-    id: "algorithm",
-    name: "计算与算法科学组",
-    desc: "图灵限界限界、分布式并行演变与算法复杂度压缩",
-    icon: "💻",
-    tutors: [
-      {
-        school: "中科院数学所",
-        role: "博士后",
-        field: "数学物理 / 数值计算相对论算法",
-        quote: "将连续物理场映射为格点离散算法，解决强引力场的数值奇异性，是算法在极端时空的极限测试。",
-        tagColor: "bg-stone-500/10 text-stone-600 border-stone-200/50",
-      },
-      {
-        school: "中科院数学所",
-        role: "博士在读",
-        field: "数学物理 / 强引力场数值并行求解",
-        quote: "用数值求解爱因斯坦引力方程，算法的每一次迭代，都是硅基逻辑对弯曲时空实在的逼近。",
-        tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-      },
-      {
-        school: "中科院数学所",
-        role: "博士在读",
-        field: "计算机应用 / 高性能并行计算",
-        quote: "以分布式并行计算求解时空偏微分方程，用算法力量重塑两个黑洞并合时的三维波形。",
-        tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-      },
-      {
-        school: "中科院数学所",
-        role: "博士在读",
-        field: "应用数学 / 密码学与计算复杂度",
-        quote: "用可计算复杂度理论设计加密体系，在图灵限界之内为信息流建立起逻辑防火墙。",
-        tagColor: "bg-teal-500/10 text-teal-600 border-teal-500/20",
-      }
-    ]
-  }
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "计算机应用 / 高性能并行计算",
+    quote: "以分布式并行计算求解时空偏微分方程，用算法力量重塑两个黑洞并合时的三维波形。",
+    tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+    featured: false,
+  },
+  {
+    school: "清华大学",
+    role: "博士在读",
+    field: "生物化学与分子生物学 / 细胞代谢调控与负熵构建",
+    quote: "在起伏的自由能势垒和酶催化过渡态中，生命用完美的负熵机制对抗着宇宙的热寂。",
+    tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    featured: false,
+  },
+  {
+    school: "北京大学",
+    role: "博士在读",
+    field: "化学基因组学 / 小分子药物靶点与分子反应动力学",
+    quote: "小分子与蛋白质受体的靶向识别，是微观化学动力学与拓扑几何契合的微观交响。",
+    tagColor: "bg-teal-500/10 text-teal-600 border-teal-500/20",
+    featured: false,
+  },
+  {
+    school: "清华大学",
+    role: "硕士在读",
+    field: "结构生物学 / 冷冻电镜与生物大分子拓扑重构",
+    quote: "在接近绝对零度的冰冻中捕捉大分子的三维衍射，冷冻电镜帮我们在原子分辨率重构生命的动态机械模型。",
+    tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    featured: false,
+  },
+  {
+    school: "中国农业大学",
+    role: "博士在读",
+    field: "生物合成学 / 代谢流分析",
+    quote: "设计底盘细胞的代谢通路，是人工制造局部负熵、重构生命信息流的湿实验创世纪。",
+    tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    featured: false,
+  },
+  {
+    school: "兰州大学 & 航天501所",
+    role: "硕士在读",
+    field: "材料科学 / 航天轻质特种材料",
+    quote: "在极端空间阻力环境下，通过合金原子错位设计，构筑航天器特种轻质防热结构。",
+    tagColor: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+    featured: false,
+  },
+  {
+    school: "兰州大学",
+    role: "博士在读",
+    field: "无机材料 / 稀土发光材料",
+    quote: "稀土离子的能级跃迁与荧光自组织，是用原子轨道能带微调去精准捕捉光子能量的物理化学桥梁。",
+    tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    featured: false,
+  },
+  {
+    school: "中国科学技术大学",
+    role: "博士在读",
+    field: "超冷原子物理 / 量子相干计算",
+    quote: "在微开尔文的极寒中捕获原子的自旋相干，是我们叩开通用量子计算大门的一声轻扣。",
+    tagColor: "bg-teal-500/10 text-teal-600 border-teal-500/20",
+    featured: false,
+  },
+  {
+    school: "中国科学技术大学",
+    role: "硕士在读",
+    field: "天文学 / 射电天体物理探测",
+    quote: "以射电望远镜扫描银河系的边缘，是人类向无穷未知投射的一道引力问候。",
+    tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+    featured: false,
+  },
+  {
+    school: "南京大学",
+    role: "博士在读",
+    field: "柔性电子学 / 强关联电子器件",
+    quote: "在柔性分子基底上重新编织电子的流动，是让冰冷的芯片技术拥抱有机生命体的柔美之桥。",
+    tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    featured: false,
+  },
+  {
+    school: "国家天文台",
+    role: "博士在读",
+    field: "高能天体物理 / 强重力透镜效应",
+    quote: "被超大质量星系偏折的光束，是宇宙在百亿年前寄给今天人类的，带着引力余温的微波信件。",
+    tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+    featured: false,
+  },
+  {
+    school: "中山大学",
+    role: "博士在读",
+    field: "计算物理 / 数值引力相对论",
+    quote: "用算法模拟引力波的数值演化，是在硅基世界里克隆黑洞对撞的引力相干。",
+    tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+    featured: false,
+  },
+  {
+    school: "武汉大学",
+    role: "博士在读",
+    field: "物理波形载波 / 电子信息系统",
+    quote: "在物理介质中实现高精度的信息载波，是麦克斯韦方程组在日常通信中的完美重现。",
+    tagColor: "bg-slate-500/10 text-slate-600 border-slate-200/50",
+    featured: false,
+  },
+  {
+    school: "湖南师范大学",
+    role: "博士在读",
+    field: "计算相对论 / 强引力场数值模拟",
+    quote: "以格点计算模拟强重力场演化，将繁杂的广义相对论方程在超级计算机中收敛为数值波形。",
+    tagColor: "bg-stone-500/10 text-stone-600 border-stone-200/50",
+    featured: false,
+  },
+  {
+    school: "兰州大学",
+    role: "博士在读",
+    field: "凝聚态物理 / 磁性纳米材料",
+    quote: "微观自旋的无序到有序，是电子关联系统在局部降低系统熵的磁性相变过程。",
+    tagColor: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+    featured: false,
+  },
+  {
+    school: "兰州大学 & 中科院数学所",
+    role: "硕士毕业",
+    field: "分析相对论 / 天文",
+    quote: "在广袤的星野与微分几何之间建立桥梁，是每一位数理人穿越抽象与实在的成人礼。",
+    tagColor: "bg-stone-500/10 text-stone-600 border-stone-200/50",
+    featured: false,
+  },
+  {
+    school: "中科院数学所",
+    role: "博士在读",
+    field: "分析相对论 / 天文",
+    quote: "爱因斯坦场方程的每一个解，都对应着宇宙中一种可能的时空几何——我们是这些几何的解读者。",
+    tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    featured: false,
+  },
+  {
+    school: "兰州大学",
+    role: "硕士毕业",
+    field: "大气科学 / 无人机",
+    quote: "从大气环流模型到无人机飞行控制，流体力学在代码与螺旋桨之间找到了最真实的物理投影。",
+    tagColor: "bg-slate-500/10 text-slate-600 border-slate-200/50",
+    featured: false,
+  },
+  {
+    school: "兰州大学",
+    role: "硕士毕业",
+    field: "物理",
+    quote: "物理学的训练从来不只是知识的积累，更是一种将复杂世界压缩为简洁模型的思维范式。",
+    tagColor: "bg-stone-500/10 text-stone-600 border-stone-200/50",
+    featured: false,
+  },
+  {
+    school: "同济大学",
+    role: "硕士毕业",
+    field: "结构设计 / 一级注册结构工程师",
+    quote: "七年的土木工程实践教会我：最优雅的结构不是最复杂的，而是用最少的材料承受最大荷载的那一个。",
+    tagColor: "bg-slate-500/10 text-slate-600 border-slate-200/50",
+    featured: false,
+  },
 ];
 
 const FIELDS_OPTIONS = [
@@ -260,9 +344,9 @@ const FIELDS_OPTIONS = [
 ];
 
 export default function TeamInteractive() {
-  // Accordion state - keeps track of which group is expanded
-  const [expandedGroupId, setExpandedGroupId] = useState<string | null>("math");
-  const [expandedTutorKey, setExpandedTutorKey] = useState<string | null>(null);
+  // View state
+  const [showAll, setShowAll] = useState(false);
+  const [expandedTutorIdx, setExpandedTutorIdx] = useState<number | null>(null);
 
   // Booking Form State
   const [studentName, setStudentName] = useState("");
@@ -270,7 +354,7 @@ export default function TeamInteractive() {
   const [grade, setGrade] = useState("");
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [concern, setConcern] = useState("");
-  
+
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitPhase, setSubmitPhase] = useState<"idle" | "simulating" | "success">("idle");
@@ -278,16 +362,13 @@ export default function TeamInteractive() {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  const displayTutors = showAll ? TUTORS : TUTORS.filter(t => t.featured);
+
   // Field selection toggle
   const toggleField = (id: string) => {
     setSelectedFields((prev) =>
       prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
     );
-  };
-
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroupId((prev) => (prev === groupId ? null : groupId));
-    setExpandedTutorKey(null); // Reset sub-tutor expand state when switching groups
   };
 
   // Generate mock appointment ID
@@ -326,7 +407,7 @@ export default function TeamInteractive() {
       });
 
       if (!res.ok) throw new Error("预约保存失败");
-      
+
       // Delay slightly to allow simulation animation
       setTimeout(() => {
         setSubmitPhase("success");
@@ -378,7 +459,7 @@ export default function TeamInteractive() {
     let phase = 0;
 
     const render = () => {
-      ctx.fillStyle = "rgba(15, 23, 42, 0.15)"; 
+      ctx.fillStyle = "rgba(15, 23, 42, 0.15)";
       ctx.fillRect(0, 0, w, h);
 
       ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
@@ -420,7 +501,7 @@ export default function TeamInteractive() {
       for (const s of stars) {
         s.x += s.speed;
         if (s.x > w) s.x = 0;
-        
+
         const waveY = h / 2 + Math.sin(s.x * 0.015 + phase) * 20;
         const currentY = waveY + Math.sin(phase * 1.5 + s.phase) * s.amp;
 
@@ -446,118 +527,94 @@ export default function TeamInteractive() {
 
   return (
     <div className="space-y-16">
-      
-      {/* 1. Accordion Tutor groups */}
-      <div className="space-y-4 max-w-4xl mx-auto">
-        <div className="mb-6">
+
+      {/* ══════════════════════════════════════ */}
+      {/* 1. Tutor Roster — 单列折叠式 */}
+      {/* ══════════════════════════════════════ */}
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-8 text-center">
           <p className="text-xs text-bridge-muted font-serif tracking-widest uppercase mb-1">Tutor Roster</p>
           <h2 className="text-xl md:text-2xl font-serif text-bridge-blue-dark font-bold tracking-wider">
-            科学导师团队成员
+            科学导师团队
           </h2>
+          <p className="text-xs text-bridge-muted font-serif mt-2">
+            全部导师均来自清北、中科院、海内外顶尖高校硕博团队
+          </p>
         </div>
 
-        {TUTOR_GROUPS.map((group) => {
-          const isExpanded = expandedGroupId === group.id;
-          return (
-            <div 
-              key={group.id} 
-              className="border border-white/60 bg-white/20 backdrop-blur-md rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
-            >
-              {/* Accordion Header */}
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/30 transition-all focus:outline-none"
+        {/* Tutor list — single column */}
+        <div className="flex flex-col gap-2.5">
+          {displayTutors.map((tutor) => {
+            const globalIdx = TUTORS.indexOf(tutor);
+            const isExpanded = expandedTutorIdx === globalIdx;
+            const fieldParts = tutor.field.split(" / ");
+            const mainField = fieldParts[0];
+            const subField = fieldParts[1] || "";
+
+            return (
+              <GlassCard
+                key={globalIdx}
+                className="border border-white/50 hover:border-bridge-gold/30 hover:shadow-sm transition-all duration-300 px-5 py-3.5 relative overflow-hidden group cursor-pointer"
+                onClick={() => setExpandedTutorIdx(isExpanded ? null : globalIdx)}
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{group.icon}</span>
-                  <div>
-                    <h3 className="font-serif text-sm md:text-base font-bold text-stone-850 tracking-wider">
-                      {group.name}
-                    </h3>
-                    <p className="text-[10px] md:text-xs text-bridge-muted font-serif tracking-wide mt-0.5">
-                      {group.desc}
+                <div className="absolute -right-10 -bottom-10 w-20 h-20 bg-bridge-blue/5 rounded-full group-hover:bg-bridge-gold/5 transition-all duration-700 blur-xl" />
+
+                {/* Row Header */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <h4 className="font-serif text-sm font-bold text-stone-850 tracking-wider whitespace-nowrap">
+                      {tutor.school}
+                    </h4>
+                    <span className="text-[11px] text-bridge-blue font-serif bg-bridge-blue/5 px-2 py-0.5 rounded border border-bridge-blue/10 truncate">
+                      {mainField}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-serif border ${tutor.tagColor}`}>
+                      {tutor.role}
+                    </span>
+                    <span className={`text-stone-400 text-xs transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}>
+                      ▼
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expand: sub-field + quote */}
+                {isExpanded && (
+                  <div className="mt-3 pt-3 border-t border-stone-200/40 animate-slide-down text-left select-none">
+                    {subField && (
+                      <p className="text-[10px] text-stone-500 font-serif leading-relaxed">
+                        <strong className="text-stone-700">细分研究方向：</strong>{subField}
+                      </p>
+                    )}
+                    <p className="text-xs text-stone-600 leading-relaxed font-serif pt-2.5 italic border-l-2 border-bridge-gold/30 pl-3 bg-amber-50/15 rounded-r mt-2">
+                      &ldquo;{tutor.quote}&rdquo;
                     </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono text-bridge-blue bg-bridge-blue/10 px-2 py-0.5 rounded-full font-semibold">
-                    {group.tutors.length}位导师
-                  </span>
-                  <span className={`text-stone-500 text-xs transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}>
-                    ▼
-                  </span>
-                </div>
-              </button>
+                )}
+              </GlassCard>
+            );
+          })}
+        </div>
 
-              {/* Accordion Content */}
-              {isExpanded && (
-                <div className="p-6 border-t border-stone-200/40 bg-stone-50/30 animate-slide-down">
-                  <div className="flex flex-col gap-3 max-w-3xl mx-auto">
-                    {group.tutors.map((tutor, idx) => {
-                      const tutorKey = `${group.id}_${idx}`;
-                      const isTutorExpanded = expandedTutorKey === tutorKey;
-                      
-                      // 解析大方向和小方向
-                      const fieldParts = tutor.field.split(" / ");
-                      const mainField = fieldParts[0];
-                      const subField = fieldParts[1] || "";
-                      
-                      return (
-                        <GlassCard 
-                          key={idx} 
-                          className="border border-white/50 hover:border-bridge-gold/30 hover:shadow-sm transition-all duration-300 p-4 relative overflow-hidden group cursor-pointer"
-                          onClick={() => setExpandedTutorKey(isTutorExpanded ? null : tutorKey)}
-                        >
-                          <div className="absolute -right-10 -bottom-10 w-20 h-20 bg-bridge-blue/5 rounded-full group-hover:bg-bridge-gold/5 transition-all duration-700 blur-xl" />
-                          
-                          {/* Row Header */}
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-6 flex-1">
-                              <h4 className="font-serif text-sm md:text-base font-bold text-stone-850 tracking-wider min-w-[120px]">
-                                {tutor.school}
-                              </h4>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] md:text-xs text-bridge-blue font-serif font-semibold bg-bridge-blue/5 px-2 py-0.5 rounded border border-bridge-blue/10">
-                                  {mainField}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 flex-shrink-0">
-                              <span className={`text-[9px] px-2 py-0.5 rounded-full font-serif border ${tutor.tagColor}`}>
-                                {tutor.role}
-                              </span>
-                              <span className={`text-stone-400 text-xs transition-transform duration-300 ${isTutorExpanded ? "rotate-180" : ""}`}>
-                                ▼
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Second Level Accordion Content */}
-                          {isTutorExpanded && (
-                            <div className="mt-4 pt-3 border-t border-stone-200/40 animate-slide-down text-left select-none">
-                              {subField && (
-                                <p className="text-[10px] md:text-xs text-stone-500 font-serif leading-relaxed">
-                                  <strong className="text-stone-700">细分研究方向：</strong>{subField}
-                                </p>
-                              )}
-                              <p className="text-xs text-stone-600 leading-relaxed font-serif pt-2.5 italic border-l-2 border-bridge-gold/30 pl-3 bg-amber-50/15 rounded-r mt-2">
-                                “{tutor.quote}”
-                              </p>
-                            </div>
-                          )}
-                        </GlassCard>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {/* Expand / Collapse toggle */}
+        <div className="text-center mt-6">
+          <button
+            onClick={() => {
+              setShowAll(!showAll);
+              setExpandedTutorIdx(null);
+            }}
+            className="px-6 py-2.5 border border-bridge-gold/40 text-bridge-gold font-serif text-xs tracking-widest rounded-full hover:bg-bridge-gold/10 transition-all duration-300"
+          >
+            {showAll ? "收起导师列表 ▲" : `展开全部硕博导师（共 ${TUTORS.length} 位）▼`}
+          </button>
+        </div>
       </div>
 
+      {/* ══════════════════════════════════════ */}
       {/* 2. Booking Section (#consult) */}
+      {/* ══════════════════════════════════════ */}
       <div id="consult" className="pt-8 scroll-mt-24">
         <GlassCard className="border border-bridge-gold/30 shadow-[0_4px_24px_rgba(197,160,89,0.06)] bg-gradient-to-b from-amber-50/10 to-transparent p-8 md:p-12 relative overflow-hidden">
           <div className="absolute top-0 right-0 bg-bridge-gold/15 text-bridge-gold text-[9px] font-serif tracking-widest px-4 py-1.5 uppercase rounded-bl border-l border-b border-bridge-gold/20 select-none animate-pulse">
@@ -706,7 +763,7 @@ export default function TeamInteractive() {
               <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center border border-bridge-gold/40 shadow-[0_0_15px_rgba(197,160,89,0.2)]">
                 <span className="text-2xl text-bridge-gold">✦</span>
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="font-serif text-xl md:text-2xl text-amber-900 tracking-widest font-bold">
                   星轨引航预约成功

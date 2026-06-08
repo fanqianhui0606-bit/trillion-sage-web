@@ -36,7 +36,7 @@ export default function CTASection() {
                 <div>
                   <div className="flex items-baseline justify-between border-b border-stone-200/40 pb-2 mb-3">
                     <h4 className="font-serif text-base font-bold text-stone-850 tracking-wider">
-                      主理人 胡天予
+                      主理人 胡桐祎
                     </h4>
                     <span className="text-[9px] font-serif tracking-widest text-bridge-blue uppercase font-semibold">
                       Founder / CEO

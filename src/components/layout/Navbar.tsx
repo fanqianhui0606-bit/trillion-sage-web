@@ -5,12 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 
 const NAV_LINKS = [
-  { href: "/#values", label: "关于我们" },
-  { href: "/quiz", label: "数理测评" },
-  { href: "/programs", label: "学术营" },
-  { href: "/team", label: "硕博团队" },
-  { href: "/cooperation", label: "合作方" },
-  { href: "/contact", label: "联系我们" },
+  { href: "/#chat-teaser", label: "思维共振聊天" },
+  { href: "/#quiz-teaser", label: "数理素质测评" },
+  { href: "/#consultation", label: "预约一对一引航" },
+  { href: "/#programs-preview", label: "学术衔接营" },
+  { href: "/#contact", label: "联系我们" },
 ];
 
 export default function Navbar() {
@@ -34,7 +33,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link
           href="/"
-          className="flex items-center gap-2 text-bridge-blue font-bold text-xl tracking-wider"
+          className="flex items-center gap-2 text-bridge-blue font-bold text-xl tracking-wider font-serif"
         >
           <Image
             src="/images/logo.png"
@@ -48,7 +47,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8 text-sm">
+        <div className="hidden md:flex items-center gap-6 text-sm">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}

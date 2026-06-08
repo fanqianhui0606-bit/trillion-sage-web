@@ -1,8 +1,9 @@
 import HeroSection from "@/components/home/HeroSection";
 import ValuesSection from "@/components/home/ValuesSection";
+import ChatTeaserSection from "@/components/home/ChatTeaserSection";
 import QuizTeaserSection from "@/components/home/QuizTeaserSection";
+import ConsultationSection from "@/components/home/ConsultationSection";
 import ProgramsPreviewSection from "@/components/home/ProgramsPreviewSection";
-import TeamPreviewSection from "@/components/home/TeamPreviewSection";
 import CTASection from "@/components/home/CTASection";
 
 export default function Home() {
@@ -10,9 +11,10 @@ export default function Home() {
     <>
       <HeroSection />
       <ValuesSection />
+      <ChatTeaserSection />
       <QuizTeaserSection />
+      <ConsultationSection />
       <ProgramsPreviewSection />
-      <TeamPreviewSection />
       <CTASection />
     </>
   );

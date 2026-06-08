@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Button from "@/components/shared/Button";
 import type { GraphData, CompetencyVector } from "@/lib/types";
 import SubjectWheel from "@/components/home/SubjectWheel";
+import ChatEntryModal from "@/components/shared/ChatEntryModal";
 
 const Competency3D = dynamic(
   () => import("@/components/charts/Competency3D"),
@@ -14,6 +15,7 @@ const Competency3D = dynamic(
 export default function HeroSection() {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [hoveredProfile, setHoveredProfile] = useState<CompetencyVector | null>(null);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
   useEffect(() => {
     fetch("/data/graph.json")
@@ -62,10 +64,10 @@ export default function HeroSection() {
           <hr className="w-48 mt-6 border-0 h-px bg-gradient-to-r from-transparent via-bridge-gold to-transparent" />
           <div className="flex gap-4 mt-8">
             <Button href="/quiz" variant="primary">
-              开始测验
+              数理素质测验
             </Button>
-            <Button href="/programs" variant="secondary">
-              服务项目
+            <Button onClick={() => setIsChatModalOpen(true)} variant="secondary">
+              思维共振聊天
             </Button>
           </div>
         </div>
@@ -90,7 +92,8 @@ export default function HeroSection() {
           )}
         </div>
       </div>
+
+      <ChatEntryModal isOpen={isChatModalOpen} onClose={() => setIsChatModalOpen(false)} />
     </section>
   );
 }
-

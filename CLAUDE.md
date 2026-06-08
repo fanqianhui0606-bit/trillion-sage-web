@@ -12,10 +12,12 @@
 |---|---|---|
 | `/` | `src/app/page.tsx` | 首页 5 屏（Hero+3D → Values → QuizTeaser → TeamPreview → CTA） |
 | `/quiz` | `src/app/quiz/page.tsx` | 数理测评（35 题 → 14 维计分 → 结果页） |
+| `/burrow` | `src/app/burrow/page.tsx` | 发掘你的光 — 独立思维共振空间 (深夜微光烛火风格) |
 | `/programs` | `src/app/programs/page.tsx` | 学术衔接营 |
-| `/team` | `src/app/team/page.tsx` | 硕博团队（院校+状态+方向，不列姓名） |
+| `/team` | `src/app/team/page.tsx` | 硕博团队与 1v1 预约（院校+方向+LaTeX学术寄语，带高保真预约表单） |
 | `/cooperation` | `src/app/cooperation/page.tsx` | 合作方式 |
-| `/contact` | `src/app/contact/page.tsx` | 联系主理人 + 公司信息 + 营业执照 |
+| `/contact` | `src/app/contact/page.tsx` | 联系我们 + 营业执照放大层 |
+
 
 ## 目录约定
 

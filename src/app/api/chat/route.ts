@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-
-export const runtime = 'edge';
+import https from "https";
 
 const SYSTEM_PROMPT = `
 # Role & Identity (角色与身份)
@@ -74,11 +73,62 @@ function generateMockResponse(turn: number, lastUserMessage: string): string {
   }
 }
 
-export async function POST(req: Request) {
-  try {
-    const { messages, turn } = await req.json();
+async function deepseekChat(model: string, apiKey: string, messages: unknown[], maxTokens: number, isJson: boolean): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({
+      model,
+      messages,
+      temperature: 0.75,
+      max_tokens: maxTokens,
+      response_format: isJson ? { type: "json_object" } : { type: "text" }
+    });
 
-    // Prepare messages for LLM
+    const req = https.request(
+      "https://api.deepseek.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Length": Buffer.byteLength(body).toString()
+        },
+        timeout: 30000,
+        family: 4  // Force IPv4
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => { data += chunk; });
+        res.on("end", () => {
+          if (res.statusCode !== 200) {
+            reject(new Error(`DeepSeek API ${res.statusCode}: ${data.slice(0, 200)}`));
+            return;
+          }
+          try {
+            const json = JSON.parse(data);
+            resolve(json.choices[0].message.content);
+          } catch {
+            reject(new Error(`Failed to parse DeepSeek response: ${data.slice(0, 200)}`));
+          }
+        });
+      }
+    );
+
+    req.on("error", reject);
+    req.on("timeout", () => { req.destroy(); reject(new Error("Request timeout")); });
+    req.write(body);
+    req.end();
+  });
+}
+
+export async function POST(req: Request) {
+  let messages: { sender: string; text: string }[] = [];
+  let turn = 1;
+
+  try {
+    const body = await req.json();
+    messages = body.messages || [];
+    turn = body.turn || 1;
+
     const apiMessages = [
       { role: "system", content: SYSTEM_PROMPT },
       ...messages.map((m: { sender: string; text: string }) => ({
@@ -89,48 +139,24 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY;
 
-    // Use Mock if no API key
     if (!apiKey) {
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate delay
-      const lastMsg = messages[messages.length - 1].text || "";
-      const responseText = generateMockResponse(turn, lastMsg);
-      return NextResponse.json({ text: responseText, turn });
-    }
-
-    // Call LLM
-    const baseUrl = process.env.DEEPSEEK_API_KEY ? "https://api.deepseek.com/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
-    const model = process.env.DEEPSEEK_API_KEY ? "deepseek-v4-flash" : "gpt-3.5-turbo";
-
-    const response = await fetch(baseUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        messages: apiMessages,
-        temperature: 0.75,
-        max_tokens: turn === 10 ? 800 : 250,
-        response_format: turn === 10 ? { type: "json_object" } : { type: "text" }
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("LLM API Error:", errorText);
-      // Fallback to mock on error
+      await new Promise(resolve => setTimeout(resolve, 1500));
       const lastMsg = messages[messages.length - 1].text || "";
       return NextResponse.json({ text: generateMockResponse(turn, lastMsg), turn });
     }
 
-    const data = await response.json();
-    const replyText = data.choices[0].message.content;
+    const model = "deepseek-chat";
+    const replyText = await deepseekChat(
+      model, apiKey, apiMessages,
+      turn === 10 ? 800 : 250,
+      turn === 10
+    );
 
     return NextResponse.json({ text: replyText, turn });
 
   } catch (error) {
     console.error("Chat API Error:", error);
-    return NextResponse.json({ error: "Failed to process chat" }, { status: 500 });
+    const lastMsg = messages.length > 0 ? messages[messages.length - 1].text || "" : "";
+    return NextResponse.json({ text: generateMockResponse(turn, lastMsg), turn });
   }
 }

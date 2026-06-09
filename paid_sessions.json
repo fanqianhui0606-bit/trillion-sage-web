@@ -130,5 +130,25 @@
     "phase": "completed",
     "createdAt": "2026-06-09T10:00:42.893Z",
     "updatedAt": "2026-06-09T10:03:20.872Z"
+  },
+  "BRIDGE-testuser": {
+    "code": "BRIDGE-testuser",
+    "messages": [
+      {
+        "role": "user",
+        "content": "hello"
+      }
+    ],
+    "currentAgent": "manager",
+    "agentTurns": {
+      "manager": 1,
+      "physics": 0,
+      "math": 0,
+      "biology": 0,
+      "algorithm": 0
+    },
+    "phase": "opening",
+    "createdAt": "2026-06-09T12:49:58.513Z",
+    "updatedAt": "2026-06-09T12:49:58.514Z"
   }
 }

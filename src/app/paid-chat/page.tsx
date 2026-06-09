@@ -237,6 +237,7 @@ export default function PaidChatPage() {
     let handoffOccurred = false;
     let handoffTargetId = "";
 
+    try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -304,6 +305,11 @@ export default function PaidChatPage() {
       return;
     }
 
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return; // stream cancelled by user
+      throw err;
+    }
+
     setTurns((prev) => prev + 1);
     setAgentTurns((prev) => ({ ...prev, [sendingAgentId]: (prev[sendingAgentId] || 0) + 1 }));
   };
@@ -329,16 +335,57 @@ export default function PaidChatPage() {
     }
   };
 
+  // 检测是否为切换意图的短消息
+  const detectSwitchIntent = (text: string): string | null => {
+    const t = text.trim();
+    const patterns: [RegExp, string][] = [
+      [/想(和|跟|找|切换|换).*?(物理|观测|程朗)/i, "physics"],
+      [/想(和|跟|找|切换|换).*?(数学|孤点|简之)/i, "math"],
+      [/想(和|跟|找|切换|换).*?(生物|生化|栖息|苏野)/i, "biology"],
+      [/想(和|跟|找|切换|换).*?(计算|算法|终端|归也|计算机)/i, "algorithm"],
+      [/想(和|跟|找|切换|换).*?(主理|manager|温澜)/i, "manager"],
+    ];
+    for (const [re, agent] of patterns) {
+      if (re.test(t)) return agent;
+    }
+    if (/^(物理|数学|生物|计算|算法|主理)/.test(t) && t.length <= 5) {
+      const map: Record<string, string> = { "物理": "physics", "数学": "math", "生物": "biology", "计算": "algorithm", "算法": "algorithm", "主理": "manager" };
+      return map[t] || null;
+    }
+    return null;
+  };
+
   // 发送消息
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isTyping) return;
+    if (!inputValue.trim()) return;
 
     const userText = inputValue.trim();
-    const sendingAgent = currentAgentId;
-    const newMessages = [...messages, { sender: "user" as const, text: userText }];
-    setMessages(newMessages);
     setInputValue("");
+
+    // If stream is active, cancel it and clean up placeholder
+    if (isTyping && streamReaderRef.current) {
+      try { streamReaderRef.current.cancel(); } catch { /* ignore */ }
+      streamReaderRef.current = null;
+      // Remove the in-progress AI placeholder message
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last && last.sender === "ai" && last.text === "") {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
+    }
+
+    // Detect switch intent and update agent
+    const switchTarget = detectSwitchIntent(userText);
+    if (switchTarget && switchTarget !== currentAgentId) {
+      setCurrentAgentId(switchTarget);
+    }
+    const sendingAgent = switchTarget || currentAgentId;
+
+    const newMessages = [...messages.filter(m => !(m.sender === "ai" && m.text === "")), { sender: "user" as const, text: userText }];
+    setMessages(newMessages);
     setIsTyping(true);
 
     const historyPayload = newMessages.map(m => ({
@@ -349,6 +396,7 @@ export default function PaidChatPage() {
     try {
       await performStreamSend(historyPayload, sendingAgent);
     } catch (err) {
+      if ((err as Error)?.name === "AbortError") return; // stream cancelled, ignore
       console.error(err);
       const message = err instanceof Error ? err.message : "无法拉取后台流数据";
       setMessages((prev) => [

@@ -299,8 +299,8 @@ export default function WelcomeSplash() {
       <div className="relative z-10 max-w-2xl px-8 text-center flex flex-col items-center gap-8 w-full">
         
         {/* Subtle Title Badge */}
-        <div className="text-bridge-blue-dark/60 text-[10px] tracking-[0.25em] font-serif uppercase">
-          桥梁计划 · 给高考后你的小礼物
+        <div className="text-bridge-blue-dark/70 text-xs md:text-sm tracking-[0.25em] font-serif">
+          桥梁计划 · 一份只关于你的短暂停留
         </div>
 
         {identity === null ? (
@@ -329,23 +329,18 @@ export default function WelcomeSplash() {
         ) : (
           // Greeting text display
           <div className="flex flex-col items-start gap-6 animate-fade-in w-full max-w-xl mx-auto">
-            <h1 
+            <h1
               style={{
-                fontFamily: '"Noto Serif SC", "Source Han Serif SC", "SimSun", "STSong", "Songti SC", serif',
+                fontFamily: '"ZCOOL XiaoWei", "Noto Serif SC", "Songti SC", serif',
                 textJustify: 'inter-character'
               }}
-              className="text-base md:text-lg text-stone-850 leading-loose tracking-wide transition-all text-justify whitespace-pre-wrap w-full font-serif"
+              className="text-base md:text-lg text-amber-900 leading-loose tracking-wide transition-all text-justify whitespace-pre-wrap w-full"
             >
               {selectedGreeting}
             </h1>
 
             {/* Signature */}
-            <div 
-              style={{
-                fontFamily: '"Noto Serif SC", "Source Han Serif SC", "SimSun", "STSong", "Songti SC", serif'
-              }}
-              className="text-stone-600 text-xs md:text-sm tracking-widest text-right w-full mt-4 pr-4 font-serif"
-            >
+            <div className="text-bridge-gold/80 italic text-xs md:text-sm tracking-widest text-right w-full mt-4 pr-4 font-serif">
               —— 桥梁计划主理人
             </div>
             
@@ -366,7 +361,7 @@ export default function WelcomeSplash() {
           e.stopPropagation();
           handleDismiss();
         }}
-        className="absolute top-8 right-8 z-[110] px-3 py-1.5 border border-stone-300 rounded-md font-serif text-[10px] text-stone-500 hover:text-stone-850 hover:border-stone-400 hover:bg-stone-100 transition-all duration-300 backdrop-blur-sm"
+        className="absolute top-8 right-8 z-[110] px-3 py-1.5 rounded-md font-serif text-[10px] text-stone-400/60 hover:text-stone-600 hover:bg-stone-100/50 transition-all duration-500 backdrop-blur-sm"
       >
         跳过寄语
       </button>

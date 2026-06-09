@@ -359,7 +359,7 @@ export default function BurrowPage() {
             </div>
             <Link
               href="/"
-              className="text-stone-600 hover:text-bridge-blue transition-colors font-serif text-xs px-3 py-1 border border-stone-300 rounded-md bg-stone-100/80 hover:bg-stone-200/80"
+              className="text-indigo-700 hover:text-indigo-900 font-serif text-xs px-3 py-1 border-2 border-indigo-300 rounded-md bg-indigo-50 hover:bg-indigo-100 font-semibold transition-all"
             >
               返回官网首页
             </Link>
@@ -464,7 +464,7 @@ export default function BurrowPage() {
                         setFamilyCode(null);
                       }
                     }}
-                    className="px-6 py-2.5 border border-stone-300 hover:bg-stone-50 text-stone-600 rounded font-serif text-sm tracking-widest transition-all flex-1"
+                    className="px-6 py-2.5 border-2 border-indigo-300 hover:border-indigo-400 text-indigo-700 hover:text-indigo-900 rounded font-serif text-sm tracking-widest transition-all flex-1 font-semibold"
                   >
                     暂不授权
                   </button>
@@ -503,7 +503,7 @@ export default function BurrowPage() {
                       // Bypass waiting and display single report
                       setFamilyCode(null);
                     }}
-                    className="px-6 py-2.5 border border-stone-300 hover:border-stone-400 text-stone-600 rounded font-serif text-sm tracking-widest transition-all bg-white"
+                    className="px-6 py-2.5 border-2 border-indigo-300 hover:border-indigo-400 text-indigo-700 rounded font-serif text-sm tracking-widest transition-all bg-white font-semibold"
                   >
                     先看我自己的单端报告
                   </button>
@@ -665,7 +665,7 @@ export default function BurrowPage() {
                     <button
                       onClick={handleDownloadPDF}
                       disabled={isDownloading}
-                      className="px-6 py-2.5 bg-stone-100 hover:bg-stone-200 border border-bridge-blue/30 text-bridge-blue-dark font-serif text-sm rounded-md transition-all flex items-center gap-2 disabled:opacity-50"
+                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-serif text-sm rounded-md transition-all flex items-center gap-2 disabled:opacity-50 font-semibold tracking-wider"
                     >
                       {isDownloading ? "生成中..." : "⬇ 下载并保存当前报告"}
                     </button>
@@ -707,7 +707,7 @@ export default function BurrowPage() {
                   onChange={(e) => setInputValue(e.target.value)}
                   disabled={isTyping}
                   placeholder={isTyping ? "等待回应..." : "在此输入你最真实的直觉..."}
-                  className="flex-1 px-4 py-2 bg-white border border-stone-300 rounded-md focus:border-bridge-blue/50 focus:outline-none text-stone-800 text-sm tracking-wide transition-all disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-white border-2 border-indigo-200 rounded-md focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none/50 focus:outline-none text-stone-800 text-sm tracking-wide transition-all disabled:opacity-50"
                 />
                 <button
                   type="submit"

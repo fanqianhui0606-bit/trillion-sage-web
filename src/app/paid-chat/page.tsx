@@ -795,7 +795,7 @@ export default function PaidChatPage() {
                     onChange={(e) => setInputValue(e.target.value)}
                     disabled={isTyping}
                     placeholder={isTyping ? "等待响应..." : "输入你最真实的科学与逻辑直觉..."}
-                    className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-md focus:border-indigo-400 focus:outline-none text-stone-850 text-sm tracking-wide transition-all disabled:opacity-50"
+                    className="flex-1 px-3 py-2 bg-white border-2 border-indigo-200 rounded-md focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none text-stone-850 text-sm tracking-wide transition-all disabled:opacity-50"
                   />
                   <button
                     type="submit"
@@ -819,7 +819,7 @@ export default function PaidChatPage() {
             {/* 关闭按钮 */}
             <button
               onClick={() => setReportData(null)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 bg-white/90 border border-stone-300 rounded-full flex items-center justify-center text-stone-500 hover:text-stone-800 hover:border-stone-400 shadow-sm transition-all"
+              className="absolute top-4 right-4 z-10 w-8 h-8 bg-white border-2 border-indigo-300 rounded-full flex items-center justify-center text-indigo-600 hover:text-indigo-800 hover:border-indigo-500 shadow-sm transition-all font-bold"
             >
               ✕
             </button>
@@ -949,7 +949,7 @@ export default function PaidChatPage() {
               <div className="flex justify-center gap-3 mt-8">
                 <button
                   onClick={() => setReportData(null)}
-                  className="px-5 py-2 bg-white border border-stone-300 hover:border-stone-400 text-stone-600 font-serif text-xs rounded transition-all"
+                  className="px-5 py-2 bg-white border-2 border-indigo-300 hover:border-indigo-400 text-indigo-700 font-serif text-xs rounded transition-all font-semibold"
                 >
                   ← 返回对话
                 </button>

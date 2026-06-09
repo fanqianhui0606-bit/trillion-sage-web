@@ -48,20 +48,7 @@ export default function ChatEntryModal({ isOpen, onClose }: ChatEntryModalProps)
     setErrorMsg("");
 
     try {
-      // 1. 特权管理员直接放行
-      if (trimmedCode === "TSG_ADMIN_PAGE") {
-        sessionStorage.setItem("family_code", trimmedCode);
-        sessionStorage.setItem("student_wechat_name", "Admin(学生)");
-        sessionStorage.setItem("parent_wechat_name", "Admin(家长)");
-        setIsValidating(false);
-        onClose();
-        if (role === "student") {
-          router.push("/burrow");
-        } else {
-          router.push("/parent-chat");
-        }
-        return;
-      }
+
 
       // 2. 校验普通码
       const res = await fetch(`/api/family-link?code=${trimmedCode}`);
@@ -73,6 +60,19 @@ export default function ChatEntryModal({ isOpen, onClose }: ChatEntryModalProps)
       }
 
       const data = await res.json();
+      
+      // 普通激活码排他性验证
+      if (role === "student" && data.student_completed) {
+        setErrorMsg("该专属关联码的学生端对话已完成，不可重复进入。若有疑问，请联系助理。");
+        setIsValidating(false);
+        return;
+      }
+      if (role === "parent" && data.parent_completed) {
+        setErrorMsg("该专属关联码的家长端对话已完成，不可重复进入。若有疑问，请联系助理。");
+        setIsValidating(false);
+        return;
+      }
+
       sessionStorage.setItem("family_code", trimmedCode);
       sessionStorage.setItem("student_wechat_name", data.student_wechat_name || "");
       sessionStorage.setItem("parent_wechat_name", data.parent_wechat_name || "");

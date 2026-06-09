@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import GlassCard from "@/components/shared/GlassCard";
@@ -14,67 +13,64 @@ interface Message {
   borderColor?: string;
 }
 
-interface WaveParameters {
-  amplitude: number;
-  frequency: number;
-  phase_shift: number;
+interface ExpertAnalysis {
+  agent_id: string;
+  agent_name: string;
+  discipline: string;
+  perspective: string;
 }
 
 interface ReportData {
-  is_conflict: boolean;
+  expert_analyses: ExpertAnalysis[];
+  manager_summary: string;
+  talent_directions: string[];
   similarity: number;
-  explanation: string;
-  wave_parameters: WaveParameters;
-  upsell_card: {
-    title: string;
-    mismatch_detected: boolean;
-    cta_url: string;
-  };
+  quiz_comparison?: string;
 }
 
 // 智能体配置参数 (色谱、头像、中性描述)
-const AGENT_CONFIGS: Record<string, { name: string; title: string; color: string; border: string; bg: string; dot: string; glow: string }> = {
+const AGENT_CONFIGS: Record<string, { name: string; category: string; color: string; border: string; bg: string; dot: string; glow: string }> = {
   manager: {
     name: "主理人",
-    title: "生涯规划导师",
+    category: "",
     color: "text-amber-800",
-    border: "border-amber-350/35",
+    border: "border-amber-300/30",
     bg: "bg-amber-500/10",
     dot: "bg-amber-600",
     glow: "shadow-[0_0_15px_rgba(245,158,11,0.2)]"
   },
   physics: {
-    name: "物理专家",
-    title: "宇宙微观探索者",
+    name: "观测者",
+    category: "物理",
     color: "text-indigo-900",
-    border: "border-indigo-350/35",
+    border: "border-indigo-300/30",
     bg: "bg-indigo-500/10",
     dot: "bg-indigo-600",
     glow: "shadow-[0_0_15px_rgba(99,102,241,0.2)]"
   },
   math: {
-    name: "数学专家",
-    title: "极致纯逻辑架构师",
-    color: "text-stone-850",
+    name: "孤点",
+    category: "数学",
+    color: "text-stone-800",
     border: "border-stone-400/40",
     bg: "bg-stone-500/10",
     dot: "bg-stone-700",
     glow: "shadow-[0_0_15px_rgba(120,113,108,0.2)]"
   },
   biology: {
-    name: "生化专家",
-    title: "复杂系统负熵构建者",
+    name: "栖息者",
+    category: "生物",
     color: "text-emerald-900",
-    border: "border-emerald-350/35",
+    border: "border-emerald-300/30",
     bg: "bg-emerald-500/10",
     dot: "bg-emerald-600",
     glow: "shadow-[0_0_15px_rgba(16,185,129,0.2)]"
   },
   algorithm: {
-    name: "算法专家",
-    title: "复杂度限界计算家",
-    color: "text-cyan-950",
-    border: "border-cyan-350/35",
+    name: "终端",
+    category: "计算机",
+    color: "text-cyan-900",
+    border: "border-cyan-300/30",
     bg: "bg-cyan-500/10",
     dot: "bg-cyan-600",
     glow: "shadow-[0_0_15px_rgba(6,182,212,0.2)]"
@@ -94,6 +90,7 @@ export default function PaidChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [turns, setTurns] = useState(0);
   const [currentAgentId, setCurrentAgentId] = useState("manager");
+  const [agentTurns, setAgentTurns] = useState<Record<string, number>>({ manager: 0, physics: 0, math: 0, biology: 0, algorithm: 0 });
   const [sessionId, setSessionId] = useState("");
   const [userId, setUserId] = useState("");
 
@@ -105,8 +102,15 @@ export default function PaidChatPage() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reportRef = useRef<HTMLDivElement | null>(null);
-  const waveCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rippleCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamReaderRef = useRef<ReadableStreamDefaultReader | null>(null);
+
+  // 显示名：主理人不带括号，其他角色显示"称号（学科）"
+  const getDisplayName = (agentId: string) => {
+    const cfg = AGENT_CONFIGS[agentId];
+    if (!cfg) return agentId;
+    return cfg.category ? `${cfg.name}（${cfg.category}）` : cfg.name;
+  };
 
   // 初始化 IDs 与缓存激活码
   useEffect(() => {
@@ -114,10 +118,38 @@ export default function PaidChatPage() {
     if (cachedCode) {
       setActivationCode(cachedCode);
     }
-    // 随机分配会话和用户 ID
     setSessionId("sess_" + Math.random().toString(36).substring(2, 11));
     setUserId("usr_" + Math.random().toString(36).substring(2, 11));
   }, []);
+
+  // 加载历史会话
+  const loadSession = async (code: string) => {
+    try {
+      const res = await fetch(`/api/paid-chat?code=${encodeURIComponent(code)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.session) {
+          const s = data.session;
+          // Restore messages
+          const restored: Message[] = s.messages.map((m: { role: string; content: string }) => ({
+            sender: m.role === "user" ? "user" : "ai",
+            text: m.content,
+            agentId: s.currentAgent || "manager",
+            agentName: AGENT_CONFIGS[s.currentAgent]?.name || "主理人",
+            borderColor: AGENT_CONFIGS[s.currentAgent]?.border || "border-amber-300/30",
+          }));
+          if (restored.length > 0) {
+            setMessages(restored);
+            setTurns(restored.filter(m => m.sender === "user").length);
+            setCurrentAgentId(s.currentAgent || "manager");
+            if (s.agentTurns) setAgentTurns(s.agentTurns);
+          }
+          return true;
+        }
+      }
+    } catch { /* ignore */ }
+    return false;
+  };
 
   // 自动滚动到底部
   useEffect(() => {
@@ -135,38 +167,23 @@ export default function PaidChatPage() {
     setIsVerifying(true);
 
     try {
-      // 通过发一条空的 stream 请求（包含单条打招呼历史）来检验密钥有效性
-      const res = await fetch("/api/paid-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "stream",
-          session_id: sessionId,
-          user_id: userId,
-          activation_code: activationCode.trim().toUpperCase(),
-          current_agent: "manager",
-          inherit_data: false,
-          history: [{ role: "user", content: "hello" }]
-        })
-      });
+      // 用 GET 验证（admin code 直接通过，正式码走 backend）
+      const verifyRes = await fetch(`/api/paid-chat?code=${encodeURIComponent(activationCode.trim().toUpperCase())}`);
+      const verifyData = await verifyRes.json();
 
-      if (res.ok) {
+      if (verifyData.success) {
         setIsUnlocked(true);
         localStorage.setItem("tsg_paid_code", activationCode.trim().toUpperCase());
-        // 开启第一条欢迎信息
-        setMessages([
-          {
-            sender: "ai",
-            text: "相干共振已锁定。我是主理人。在这里，我们将以理性的纯净、物理常数、生化负熵以及算法极限的视角，探查你的心智结构。告诉我，在这场没有满分标准答案的对弈中，你现在最想打破的世俗定轨是什么？",
-            agentId: "manager",
-            agentName: "主理人",
-            borderColor: "border-amber-300/30"
-          }
-        ]);
-        setTurns(1);
+
+        // Try to load existing session
+        const hasSession = await loadSession(activationCode.trim().toUpperCase());
+        if (!hasSession) {
+          // Delay opening message for natural feel
+          setIsTyping(true);
+          setTimeout(() => triggerOpening(), 1500);
+        }
       } else {
-        const errData = await res.json().catch(() => ({}));
-        setVerifyError(errData.error || "激活码无效。请检查拼写或付款状态。");
+        setVerifyError("激活码无效。请检查拼写或付款状态。");
       }
     } catch (err) {
       console.error(err);
@@ -176,107 +193,161 @@ export default function PaidChatPage() {
     }
   };
 
+  // 核心流式发送逻辑
+  const performStreamSend = async (historyPayload: { role: string; content: string }[], sendingAgentId: string) => {
+    const res = await fetch("/api/paid-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "stream",
+        session_id: sessionId,
+        user_id: userId,
+        activation_code: activationCode.trim().toUpperCase(),
+        current_agent: sendingAgentId,
+        inherit_data: true,
+        history: historyPayload
+      })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || "大模型网关拒绝访问");
+    }
+
+    if (!res.body) throw new Error("无法读取流式响应数据");
+
+    // 初始化占位的 AI 消息
+    setMessages((prev) => [
+      ...prev,
+      {
+        sender: "ai",
+        text: "",
+        agentId: sendingAgentId,
+        agentName: AGENT_CONFIGS[sendingAgentId].name,
+        borderColor: AGENT_CONFIGS[sendingAgentId].border
+      }
+    ]);
+
+    const reader = res.body.getReader();
+    streamReaderRef.current = reader;
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullText = "";
+    let tempAgentId = sendingAgentId;
+    let handoffOccurred = false;
+    let handoffTargetId = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.trim() || !line.startsWith("data: ")) continue;
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") continue;
+
+        try {
+          const dataObj = JSON.parse(jsonStr);
+          if (dataObj.event === "handoff") {
+            // Agent ID 校验：只接受合法 ID
+            const validIds = ["manager", "physics", "math", "biology", "algorithm"];
+            const validatedId = validIds.includes(dataObj.agent) ? dataObj.agent : tempAgentId;
+            tempAgentId = validatedId;
+            handoffOccurred = true;
+            handoffTargetId = validatedId;
+            setCurrentAgentId(validatedId);
+            setMessages((prev) => {
+              const nextList = [...prev];
+              const lastIdx = nextList.length - 1;
+              nextList[lastIdx].agentId = validatedId;
+              nextList[lastIdx].agentName = AGENT_CONFIGS[validatedId].name;
+              nextList[lastIdx].borderColor = AGENT_CONFIGS[validatedId].border;
+              return nextList;
+            });
+          } else if (dataObj.event === "token") {
+            fullText += dataObj.text;
+            setMessages((prev) => {
+              const nextList = [...prev];
+              const lastIdx = nextList.length - 1;
+              nextList[lastIdx].text = fullText;
+              return nextList;
+            });
+          } else if (dataObj.event === "report_ready") {
+            setIsTyping(false);
+            streamReaderRef.current = null;
+            setTimeout(() => handleGenerateReport(), 500);
+            return;
+          }
+        } catch {
+          // 解析单行 JSON 出错，忽略或等待 buffer 完整
+        }
+      }
+    }
+
+    // Handoff fallback：如果切换后消息极短（空白发言），自动让新角色补发
+    if (handoffOccurred && fullText.trim().length < 10) {
+      // 移除空白占位消息
+      setMessages((prev) => prev.slice(0, -1));
+      // 自动触发新角色发言
+      setIsTyping(false);
+      setTimeout(async () => {
+        try {
+          // 用对话历史 + 系统指令触发新角色开场
+          const followHistory = [...historyPayload, { role: "user", content: "。" }];
+          await performStreamSend(followHistory, handoffTargetId);
+        } catch { /* fallback 失败静默 */ }
+      }, 300);
+      return;
+    }
+
+    setTurns((prev) => prev + 1);
+    setAgentTurns((prev) => ({ ...prev, [sendingAgentId]: (prev[sendingAgentId] || 0) + 1 }));
+  };
+
+  // AI 开场触发：验证通过后自动获取主理人开场白
+  const triggerOpening = async () => {
+    setIsTyping(true);
+    try {
+      await performStreamSend([], "manager");
+      setTurns(1);
+    } catch (err) {
+      console.error(err);
+      setMessages([{
+        sender: "ai",
+        text: "抱歉，连接出现了一些波动。请刷新页面重试。",
+        agentId: "manager",
+        agentName: "主理人",
+        borderColor: "border-amber-300/30"
+      }]);
+    } finally {
+      setIsTyping(false);
+      streamReaderRef.current = null;
+    }
+  };
+
   // 发送消息
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isTyping) return;
 
     const userText = inputValue.trim();
+    const sendingAgent = currentAgentId;
     const newMessages = [...messages, { sender: "user" as const, text: userText }];
     setMessages(newMessages);
     setInputValue("");
     setIsTyping(true);
 
-    // 映射 Next.js 结构至 python 服务端期待的 {"role": "user"|"assistant", "content": "..."}
     const historyPayload = newMessages.map(m => ({
       role: m.sender === "user" ? "user" : "assistant",
       content: m.text
     }));
 
     try {
-      const res = await fetch("/api/paid-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "stream",
-          session_id: sessionId,
-          user_id: userId,
-          activation_code: activationCode.trim().toUpperCase(),
-          current_agent: currentAgentId,
-          inherit_data: true,
-          history: historyPayload
-        })
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "大模型网关拒绝访问");
-      }
-
-      if (!res.body) throw new Error("无法读取流式响应数据");
-
-      // 初始化占位的 AI 消息
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "ai",
-          text: "",
-          agentId: currentAgentId,
-          agentName: AGENT_CONFIGS[currentAgentId].name,
-          borderColor: AGENT_CONFIGS[currentAgentId].border
-        }
-      ]);
-
-      const reader = res.body.getReader();
-      streamReaderRef.current = reader;
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let fullText = "";
-      let tempAgentId = currentAgentId;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        // 保留最后一个可能未完的 line
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.trim() || !line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") continue;
-
-          try {
-            const dataObj = JSON.parse(jsonStr);
-            if (dataObj.event === "handoff") {
-              tempAgentId = dataObj.agent;
-              setCurrentAgentId(tempAgentId);
-              setMessages((prev) => {
-                const nextList = [...prev];
-                const lastIdx = nextList.length - 1;
-                nextList[lastIdx].agentId = tempAgentId;
-                nextList[lastIdx].agentName = AGENT_CONFIGS[tempAgentId].name;
-                nextList[lastIdx].borderColor = AGENT_CONFIGS[tempAgentId].border;
-                return nextList;
-              });
-            } else if (dataObj.event === "token") {
-              fullText += dataObj.text;
-              setMessages((prev) => {
-                const nextList = [...prev];
-                const lastIdx = nextList.length - 1;
-                nextList[lastIdx].text = fullText;
-                return nextList;
-              });
-            }
-          } catch {
-            // 解析单行 JSON 出错，忽略或等待 buffer 完整
-          }
-        }
-      }
-
-      setTurns((prev) => prev + 1);
+      await performStreamSend(historyPayload, sendingAgent);
     } catch (err) {
       console.error(err);
       const message = err instanceof Error ? err.message : "无法拉取后台流数据";
@@ -295,7 +366,7 @@ export default function PaidChatPage() {
     }
   };
 
-  // 生成最后的偏差与干涉报告
+  // 生成报告
   const handleGenerateReport = async () => {
     setIsGeneratingReport(true);
     try {
@@ -303,6 +374,13 @@ export default function PaidChatPage() {
         role: m.sender === "user" ? "user" : "assistant",
         content: m.text
       }));
+
+      // Check for existing quiz scores to enable comparison
+      let quizScores: Record<string, number> | null = null;
+      try {
+        const stored = localStorage.getItem("tsg_paid_quiz_scores");
+        if (stored) quizScores = JSON.parse(stored);
+      } catch { /* ignore */ }
 
       const res = await fetch("/api/paid-chat", {
         method: "POST",
@@ -312,7 +390,8 @@ export default function PaidChatPage() {
           session_id: sessionId,
           user_id: userId,
           activation_code: activationCode.trim().toUpperCase(),
-          history: historyPayload
+          history: historyPayload,
+          quiz_scores: quizScores
         })
       });
 
@@ -327,65 +406,103 @@ export default function PaidChatPage() {
     }
   };
 
-  // 动态绘制 Canvas 星轨干涉图景
+  // 共振涟漪：基于对话历史生成彩色同心圆波纹
   useEffect(() => {
-    if (!reportData || !waveCanvasRef.current) return;
-    const canvas = waveCanvasRef.current;
+    if (!reportData || !rippleCanvasRef.current || messages.length === 0) return;
+    const canvas = rippleCanvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let animId: number;
-    let t = 0;
     const w = (canvas.width = canvas.parentElement?.clientWidth || 600);
-    const h = (canvas.height = 180);
+    const h = (canvas.height = 200);
 
-    const { amplitude, frequency, phase_shift } = reportData.wave_parameters;
+    // 每个角色对应的涟漪风格
+    const agentRippleStyles: Record<string, { color: string; speed: number; decay: number; lineWidth: number; jitter: number; doubleRing: boolean }> = {
+      manager:   { color: "rgba(245,158,11,__A__)",   speed: 0.4, decay: 0.003, lineWidth: 0.8, jitter: 0, doubleRing: false },
+      physics:   { color: "rgba(99,102,241,__A__)",    speed: 0.25, decay: 0.002, lineWidth: 1.0, jitter: 0, doubleRing: false },
+      math:      { color: "rgba(120,113,108,__A__)",   speed: 0.35, decay: 0.004, lineWidth: 0.6, jitter: 0, doubleRing: false },
+      biology:   { color: "rgba(16,185,129,__A__)",    speed: 0.3, decay: 0.003, lineWidth: 0.8, jitter: 1.5, doubleRing: false },
+      algorithm: { color: "rgba(6,182,212,__A__)",     speed: 0.5, decay: 0.006, lineWidth: 0.7, jitter: 0, doubleRing: true },
+    };
+
+    // 为每条消息生成一个涟漪
+    interface Ripple {
+      x: number;
+      y: number;
+      radius: number;
+      opacity: number;
+      maxRadius: number;
+      agentId: string;
+    }
+
+    const ripples: Ripple[] = [];
+    const cols = Math.min(messages.length, 12); // 最多12列
+    const rowCount = Math.ceil(messages.length / cols);
+    const cellW = w / cols;
+    const cellH = h / rowCount;
+
+    messages.forEach((msg, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const agentId = msg.agentId || "manager";
+      ripples.push({
+        x: cellW * col + cellW / 2 + (Math.random() - 0.5) * cellW * 0.3,
+        y: cellH * row + cellH / 2 + (Math.random() - 0.5) * cellH * 0.3,
+        radius: 0,
+        opacity: 0.5,
+        maxRadius: Math.min(cellW, cellH) * 0.35,
+        agentId,
+      });
+    });
 
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
 
-      // 绘制背景参考轴
-      ctx.strokeStyle = "rgba(46, 117, 182, 0.08)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, h / 2);
-      ctx.lineTo(w, h / 2);
-      ctx.stroke();
+      // 深色背景
+      ctx.fillStyle = "rgba(15,15,25,0.03)";
+      ctx.fillRect(0, 0, w, h);
 
-      // 绘制相干干涉波动线（主线 - 发光效果）
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = "rgba(107, 70, 193, 0.4)";
-      ctx.strokeStyle = "rgba(107, 70, 193, 0.85)";
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
+      for (const ripple of ripples) {
+        const style = agentRippleStyles[ripple.agentId] || agentRippleStyles.manager;
+        ripple.radius += style.speed;
+        ripple.opacity -= style.decay;
 
-      for (let x = 0; x < w; x++) {
-        // 余弦拟合波形：波幅与频率受相似度控制
-        const y = h / 2 + Math.sin(x * frequency + t) * amplitude * Math.cos(x * 0.005 + phase_shift);
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+        if (ripple.radius >= ripple.maxRadius || ripple.opacity <= 0) {
+          ripple.radius = 0;
+          ripple.opacity = 0.5;
+        }
+
+        const alpha = Math.max(0, ripple.opacity);
+        const colorStr = style.color.replace("__A__", alpha.toFixed(3));
+        const jx = style.jitter ? (Math.random() - 0.5) * style.jitter : 0;
+        const jy = style.jitter ? (Math.random() - 0.5) * style.jitter : 0;
+
+        ctx.strokeStyle = colorStr;
+        ctx.lineWidth = style.lineWidth;
+        ctx.beginPath();
+        ctx.arc(ripple.x + jx, ripple.y + jy, ripple.radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 双环效果（终端）
+        if (style.doubleRing) {
+          const innerR = ripple.radius * 0.65;
+          if (innerR > 0) {
+            ctx.strokeStyle = colorStr.replace("__A__", (alpha * 0.6).toFixed(3));
+            ctx.lineWidth = style.lineWidth * 0.6;
+            ctx.beginPath();
+            ctx.arc(ripple.x + jx, ripple.y + jy, innerR, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
       }
-      ctx.stroke();
 
-      // 绘制辅助波（淡金参考波）
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = "rgba(197, 160, 89, 0.35)";
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      for (let x = 0; x < w; x++) {
-        const y = h / 2 + Math.sin(x * (frequency * 0.8) - t * 0.7) * (amplitude * 0.6) * Math.sin(x * 0.008);
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-
-      t += 0.035; // 波动速度
       animId = requestAnimationFrame(draw);
     };
 
     draw();
     return () => cancelAnimationFrame(animId);
-  }, [reportData]);
+  }, [reportData, messages]);
 
   // 背景星屑粒子与蜡烛微动发光
   useEffect(() => {
@@ -483,7 +600,7 @@ export default function PaidChatPage() {
   const activeAgent = AGENT_CONFIGS[currentAgentId];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bridge-gradient-top from-0% via-bridge-gradient-bottom via-72% to-[#f4f4f7] to-100% flex flex-col pt-16 relative overflow-hidden">
+    <div className="h-screen flex flex-col pt-16 relative overflow-hidden">
       {/* 动态绘图粒子背景 */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
 
@@ -515,9 +632,9 @@ export default function PaidChatPage() {
                     setActivationCode(e.target.value);
                     setVerifyError("");
                   }}
-                  placeholder="TSG_ADMIN_PAGE 或 12位激活码"
+                  placeholder="请输入您的专属激活码"
                   disabled={isVerifying}
-                  className="w-full px-4 py-2.5 bg-white border border-stone-300 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none text-xs font-mono tracking-wider transition-all disabled:opacity-50 text-stone-800"
+                  className="w-full px-4 py-2.5 bg-white border-2 border-indigo-300 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-300 focus:outline-none text-xs font-mono tracking-wider transition-all disabled:opacity-50 text-stone-800 shadow-sm"
                 />
                 {verifyError && (
                   <p className="text-[10px] text-red-500 font-serif font-semibold mt-1.5 pl-1">
@@ -538,7 +655,7 @@ export default function PaidChatPage() {
             <div className="w-full border-t border-stone-200/50 pt-4 mt-2">
               <p className="text-[10px] text-stone-500 font-serif leading-relaxed">
                 💡 <strong>激活码获取途径：</strong><br />
-                微信扫码关注官方公众号「<strong>桥梁计划Bridge</strong>」，发送你的测验关联码，获取付款解锁激活码。体验用户可输入后门码 <code className="bg-indigo-100/60 px-1 py-0.5 rounded font-mono text-[9px] text-indigo-700">TSG_ADMIN_PAGE</code> 直接进入。
+                微信扫码关注官方公众号「<strong>桥梁计划Bridge</strong>」，获取付费解锁激活码。
               </p>
             </div>
           </GlassCard>
@@ -546,12 +663,10 @@ export default function PaidChatPage() {
       )}
 
       {/* 2. 核心多智能体对弈聊天室 */}
-      {isUnlocked && (
-        <div className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 relative z-10 flex flex-col h-[calc(100vh-4rem)]">
-          <div className="flex-1 bg-white/75 backdrop-blur-[24px] border border-bridge-blue/20 rounded-xl shadow-[0_12px_40px_rgba(46,117,182,0.05)] flex flex-col overflow-hidden relative">
-            
-            {/* 顶部智能体控制权指示器 */}
-            <div className={`px-6 py-3.5 border-b border-bridge-blue/10 flex items-center justify-between transition-all duration-500 bg-white/50 backdrop-blur-md`}>
+      {isUnlocked && !reportData && (
+        <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto relative z-10 overflow-hidden">
+          {/* Header — fixed below navbar */}
+          <div className="px-6 py-3 border-b-2 border-indigo-200/60 flex items-center justify-between bg-white/60 backdrop-blur-md shrink-0 rounded-t-xl">
               <div className="flex items-center gap-3">
                 <span className={`w-3.5 h-3.5 rounded-full ${activeAgent.dot} ${activeAgent.glow} transition-all duration-500`} />
                 <div className="flex flex-col">
@@ -559,26 +674,29 @@ export default function PaidChatPage() {
                     星航相干室
                   </h1>
                   <span className="text-[9px] text-stone-500 font-serif">
-                    当前对弈角色：<strong className={`${activeAgent.color} font-semibold transition-colors duration-500`}>{activeAgent.name}</strong> ({activeAgent.title})
+                    当前对弈角色：<strong className={`${activeAgent.color} font-semibold transition-colors duration-500`}>{getDisplayName(currentAgentId)}</strong>
                   </span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] text-stone-600 font-mono bg-stone-100 border border-stone-200/50 px-2 py-0.5 rounded">
-                  对弈步数: {turns}/20
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-indigo-600 font-mono bg-indigo-50 border-2 border-indigo-200 px-2.5 py-0.5 rounded font-semibold">
+                  {getDisplayName(currentAgentId)} · {agentTurns[currentAgentId] || 0}/20 轮
                 </span>
-                <Link
-                  href="/"
-                  className="text-stone-600 hover:text-indigo-650 transition-colors font-serif text-[10px] px-2.5 py-1 border border-stone-300 rounded bg-stone-100 hover:bg-stone-200"
-                >
-                  官网首页
-                </Link>
+                {turns > 0 && (
+                  <button
+                    onClick={handleGenerateReport}
+                    disabled={isGeneratingReport}
+                    className="text-indigo-600 hover:text-indigo-800 transition-colors font-serif text-[11px] px-3 py-1.5 border-2 border-indigo-300 rounded-md bg-indigo-50 hover:bg-indigo-100 disabled:opacity-40 font-semibold"
+                  >
+                    {isGeneratingReport ? "生成中..." : "生成报告"}
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* 消息滚动框 */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 scrollbar-thin scrollbar-thumb-stone-250">
+            {/* Messages — scrollable */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 bg-white/40">
               {!reportData && messages.map((msg, idx) => (
                 <div
                   key={idx}
@@ -588,7 +706,7 @@ export default function PaidChatPage() {
                 >
                   {msg.sender === "ai" && msg.agentName && (
                     <span className="text-[10px] font-serif text-stone-600 mb-1 ml-2.5 tracking-wider font-bold">
-                      {msg.agentName}
+                      {msg.agentId ? getDisplayName(msg.agentId) : msg.agentName}
                     </span>
                   )}
                   <div
@@ -606,7 +724,7 @@ export default function PaidChatPage() {
               {isTyping && (
                 <div className="mr-auto items-start flex flex-col max-w-[70%]">
                   <span className="text-[10px] font-serif text-stone-500 mb-1 ml-2.5 tracking-wider font-bold">
-                    {activeAgent.name} 对弈思考中...
+                    {getDisplayName(currentAgentId)} 对弈思考中...
                   </span>
                   <div className={`bg-white/60 p-4 border rounded-lg rounded-tl-none flex items-center gap-1.5 ${activeAgent.border}`}>
                     <span className={`w-1.5 h-1.5 ${activeAgent.dot} rounded-full animate-bounce`} style={{ animationDelay: "0ms" }} />
@@ -616,136 +734,186 @@ export default function PaidChatPage() {
                 </div>
               )}
 
-              {/* 20轮限制已满，触发报告生成 */}
-              {turns >= 20 && !reportData && (
-                <div className="animate-fade-in w-full max-w-lg mx-auto py-10 px-6 bg-white/80 border border-indigo-200/50 rounded-xl shadow-lg flex flex-col items-center text-center gap-5">
-                  <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center border border-indigo-500/20 text-xl">
-                    🪐
-                  </div>
-                  <div>
-                    <h3 className="font-serif text-sm font-bold text-stone-850 tracking-wider">
-                      20 轮对弈收敛完成
-                    </h3>
-                    <p className="text-[11px] text-bridge-muted leading-relaxed mt-2 font-serif">
-                      您的数理、物感、生化负熵和极简算法等 14 维元直觉参数已被充分探针。现在即可生成星轨干涉相消的冲突学情报告。
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleGenerateReport}
-                    disabled={isGeneratingReport}
-                    className="px-6 py-2 bg-indigo-650 hover:bg-indigo-700 text-white rounded font-serif text-xs tracking-widest shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-                  >
-                    {isGeneratingReport ? "生成干涉图景中..." : "生成星轨干涉分析报告"}
-                  </button>
-                </div>
-              )}
-
-              {/* 3. 展示最终干涉分析报告 */}
-              {reportData && (
-                <div className="animate-fade-in w-full flex flex-col items-center pb-12">
-                  <div
-                    ref={reportRef}
-                    className="w-full max-w-2xl bg-[#FAF7F2] p-8 md:p-10 rounded-xl border border-indigo-200/40 relative shadow-2xl"
-                  >
-                    {/* 框体装饰 */}
-                    <div className="absolute top-0 left-0 w-12 h-12 border-t border-l border-indigo-500/30 rounded-tl-xl" />
-                    <div className="absolute top-0 right-0 w-12 h-12 border-t border-r border-indigo-500/30 rounded-tr-xl" />
-                    <div className="absolute bottom-0 left-0 w-12 h-12 border-b border-l border-indigo-500/30 rounded-bl-xl" />
-                    <div className="absolute bottom-0 right-0 w-12 h-12 border-b border-r border-indigo-500/30 rounded-br-xl" />
-
-                    <div className="text-center mb-8">
-                      <h2 className="text-lg md:text-xl font-serif text-indigo-950 tracking-[0.2em] mb-1.5 font-bold">
-                        ☄ 星轨相干 · 直觉干涉报告
-                      </h2>
-                      <p className="text-[10px] text-indigo-500/60 tracking-widest font-serif">
-                        主观对弈直觉与客观量表能力之相位偏差模型
-                      </p>
-                    </div>
-
-                    <div className="space-y-8">
-                      {/* 动态波形渲染区域 */}
-                      <div className="bg-white/80 p-4 border border-indigo-200/20 rounded-lg text-center relative overflow-hidden">
-                        <span className="absolute top-1.5 left-2.5 text-[8px] font-mono text-indigo-500/60 tracking-wider">
-                          COHERENCE WAVEFORMS (相干干涉图景)
-                        </span>
-                        <span className="absolute top-1.5 right-2.5 text-[8px] font-mono text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded">
-                          主客观相似度: {Math.round(reportData.similarity * 100)}%
-                        </span>
-                        <div className="pt-5 pb-2">
-                          <canvas ref={waveCanvasRef} className="w-full h-[180px]" />
-                        </div>
-                      </div>
-
-                      {/* 冲突类型指示 */}
-                      <div>
-                        <h4 className="text-xs font-serif text-indigo-950 mb-2 border-b border-indigo-250 pb-2 font-bold flex items-center gap-1.5">
-                          <span>◆</span> 相位偏差探测：{reportData.is_conflict ? "检测到显著主客观偏离" : "思维结构高度自洽"}
-                        </h4>
-                        <p className="text-stone-750 text-xs leading-loose font-serif text-justify whitespace-pre-wrap">
-                          {reportData.explanation}
-                        </p>
-                      </div>
-
-                      {/* 过来人寄语签名 */}
-                      <div className="bg-stone-50 p-4 rounded-lg border border-stone-200/60 mt-4">
-                        <h4 className="text-[10px] font-serif text-stone-800 mb-2 font-bold flex items-center gap-1.5">
-                          <span>💡</span> 行星轨迹的去中心化启航
-                        </h4>
-                        <p className="text-stone-600 text-[11px] leading-relaxed font-serif italic">
-                          “完美完全对称的系统，就像是一朵没有香气的人造花。正是因为测量干预、前提条件的特殊性、以及主观直觉同客观考卷之间的偏差振荡，你的特立独行才具备了具体的生命力。接受智力差异，在此基础上以平等的姿态真诚地向下兼容，去连接这个不那么快、不那么透明的世界吧。”
-                        </p>
-                        <p className="text-right text-indigo-950/70 text-[10px] font-serif font-bold mt-3">
-                          —— 桥梁计划·数理生化算法博士导师团
-                        </p>
-                      </div>
-                    </div>
-                    {/* 免责声明 */}
-                    <div className="border-t border-indigo-200/20 pt-4 mt-6 text-[9px] text-stone-400 font-serif leading-relaxed text-center">
-                      免责声明：本报告由 AI 语言模型自动生成。其内容仅作为数理逻辑直觉探索之参考，不构成任何心理诊断、治疗方案或专业选科决策之绝对依据。如有情绪危机，请及时寻求专业诊疗。
-                    </div>
-                  </div>
-
-                  {/* 动作 */}
-                  <div className="flex justify-center mt-6">
-                    <button
-                      onClick={handleDownloadPDF}
-                      disabled={isDownloading}
-                      className="px-5 py-2 bg-stone-100 hover:bg-stone-200 border border-indigo-500/30 text-indigo-950 font-serif text-xs rounded transition-all flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {isDownloading ? "生成中..." : "⬇ 保存并导出星轨干涉 PDF"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
+              {/* 报告在浮层中展示 */}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* 对话输入栏 with Disclaimer */}
-            {!reportData && turns < 20 && (
-              <div className="flex flex-col border-t border-bridge-blue/10 bg-white/30">
-                <form onSubmit={handleSend} className="p-4 flex gap-3">
+            {/* Input — fixed at bottom */}
+            <div className="flex flex-col border-t-2 border-indigo-200/60 bg-white/60 backdrop-blur-md shrink-0 rounded-b-xl">
+              <form onSubmit={handleSend} className="p-4 flex gap-2 items-center">
                   <input
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     disabled={isTyping}
-                    placeholder={isTyping ? "等待对弈响应..." : "在此输入你最真实的科学与逻辑直觉..."}
-                    className="flex-1 px-4 py-2.5 bg-white border border-stone-300 rounded-md focus:border-indigo-400 focus:outline-none text-stone-850 text-sm tracking-wide transition-all disabled:opacity-50"
+                    placeholder={isTyping ? "等待响应..." : "输入你最真实的科学与逻辑直觉..."}
+                    className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-md focus:border-indigo-400 focus:outline-none text-stone-850 text-sm tracking-wide transition-all disabled:opacity-50"
                   />
                   <button
                     type="submit"
                     disabled={isTyping || !inputValue.trim()}
-                    className="px-6 py-2 bg-indigo-650 text-white font-serif text-xs tracking-[0.25em] rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-650 transition-all duration-300 cursor-pointer"
+                    className="px-5 py-2 bg-indigo-650 text-white font-serif text-xs tracking-[0.2em] rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-650 transition-all duration-300 cursor-pointer whitespace-nowrap"
                   >
-                    发送对弈
+                    开始对弈
                   </button>
                 </form>
                 <p className="text-[10px] text-stone-400 font-serif text-center pb-2 px-4 select-none">
-                  免责声明：本服务为 AI 辅助思维探索，非专业心理咨询或医学诊断。若面临情绪崩溃或心理危机，请寻求专业咨询或医疗热线帮助。
+                  本服务为 AI 辅助思维探索，非专业心理咨询或医学诊断。若面临情绪崩溃或心理危机，请寻求专业咨询或医疗热线帮助。
+                </p>
+            </div>
+        </div>
+      )}
+
+      {/* 报告全屏浮层 */}
+      {reportData && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm overflow-y-auto py-8">
+          <div className="relative w-full max-w-2xl mx-4 my-auto animate-fade-in">
+            {/* 关闭按钮 */}
+            <button
+              onClick={() => setReportData(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 bg-white/90 border border-stone-300 rounded-full flex items-center justify-center text-stone-500 hover:text-stone-800 hover:border-stone-400 shadow-sm transition-all"
+            >
+              ✕
+            </button>
+
+            <div
+              ref={reportRef}
+              className="bg-[#FAF7F2] p-8 md:p-10 rounded-xl border border-indigo-200/40 shadow-2xl"
+            >
+              {/* 框体装饰 */}
+              <div className="absolute top-0 left-0 w-12 h-12 border-t border-l border-indigo-500/30 rounded-tl-xl" />
+              <div className="absolute top-0 right-0 w-12 h-12 border-t border-r border-indigo-500/30 rounded-tr-xl" />
+              <div className="absolute bottom-0 left-0 w-12 h-12 border-b border-l border-indigo-500/30 rounded-bl-xl" />
+              <div className="absolute bottom-0 right-0 w-12 h-12 border-b border-r border-indigo-500/30 rounded-br-xl" />
+
+              <div className="text-center mb-8">
+                <h2 className="text-lg md:text-xl font-serif text-indigo-950 tracking-[0.2em] mb-1.5 font-bold">
+                  ☄ 星轨相干 · 直觉干涉报告
+                </h2>
+                <p className="text-[10px] text-indigo-500/60 tracking-widest font-serif">
+                  主观对弈直觉与客观量表能力之相位偏差模型
                 </p>
               </div>
-            )}
+
+              <div className="space-y-8">
+                {/* 共振涟漪 */}
+                <div className="bg-white/80 p-4 border border-indigo-200/20 rounded-lg text-center relative overflow-hidden">
+                  <span className="absolute top-1.5 left-2.5 text-[8px] font-mono text-indigo-500/60 tracking-wider">
+                    RESONANCE RIPPLES (对话共振涟漪)
+                  </span>
+                  <span className="absolute top-1.5 right-2.5 text-[8px] font-mono text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded">
+                    主客观相似度: {Math.round(reportData.similarity * 100)}%
+                  </span>
+                  <div className="pt-5 pb-2">
+                    <canvas ref={rippleCanvasRef} className="w-full h-[200px]" />
+                  </div>
+                </div>
+
+                {/* 专家分析卡片 */}
+                {reportData.expert_analyses && reportData.expert_analyses.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-serif text-indigo-950 border-b border-indigo-250 pb-2 font-bold flex items-center gap-1.5">
+                      <span>◆</span> 各学科视角下的思维特质
+                    </h4>
+                    {reportData.expert_analyses.map((analysis, i) => {
+                      const cfg = AGENT_CONFIGS[analysis.agent_id];
+                      const dotColor = cfg?.dot || "bg-stone-400";
+                      return (
+                        <div key={i} className="bg-white/80 p-4 rounded-lg border border-stone-200/60">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
+                            <span className="text-xs font-serif font-bold text-stone-800">
+                              {analysis.agent_name}
+                            </span>
+                            <span className="text-[10px] text-stone-400 font-serif">
+                              {analysis.discipline}视角
+                            </span>
+                          </div>
+                          <p className="text-stone-700 text-xs leading-loose font-serif text-justify">
+                            {analysis.perspective}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* 主理人总评 */}
+                {reportData.manager_summary && (
+                  <div>
+                    <h4 className="text-xs font-serif text-indigo-950 mb-2 border-b border-indigo-250 pb-2 font-bold flex items-center gap-1.5">
+                      <span>◆</span> 主理人总评
+                    </h4>
+                    <p className="text-stone-750 text-xs leading-loose font-serif text-justify whitespace-pre-wrap">
+                      {reportData.manager_summary}
+                    </p>
+                  </div>
+                )}
+
+                {/* 天赋方向 */}
+                {reportData.talent_directions && reportData.talent_directions.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-serif text-indigo-950 mb-2 border-b border-indigo-250 pb-2 font-bold flex items-center gap-1.5">
+                      <span>◆</span> 天赋方向建议
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {reportData.talent_directions.map((dir, i) => (
+                        <span key={i} className="text-[11px] font-serif bg-indigo-50 text-indigo-800 border border-indigo-200/50 px-3 py-1 rounded-full">
+                          {dir}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 测验 vs AI 对话对比 */}
+                {reportData.quiz_comparison && (
+                  <div className="bg-indigo-50/50 p-4 rounded-lg border border-indigo-200/40 mt-4">
+                    <h4 className="text-[10px] font-serif text-indigo-800 mb-2 font-bold flex items-center gap-1.5">
+                      <span>🔍</span> 你的测验和对话，为什么看起来不太一样？
+                    </h4>
+                    <p className="text-stone-700 text-[11px] leading-relaxed font-serif">
+                      {reportData.quiz_comparison}
+                    </p>
+                  </div>
+                )}
+
+                {/* 过来人寄语 */}
+                <div className="bg-stone-50 p-4 rounded-lg border border-stone-200/60 mt-4">
+                  <h4 className="text-[10px] font-serif text-stone-800 mb-2 font-bold flex items-center gap-1.5">
+                    <span>💡</span> 行星轨迹的去中心化启航
+                  </h4>
+                  <p className="text-stone-600 text-[11px] leading-relaxed font-serif italic">
+                    &ldquo;完美完全对称的系统，就像是一朵没有香气的人造花。正是因为测量干预、前提条件的特殊性、以及主观直觉同客观考卷之间的偏差振荡，你的特立独行才具备了具体的生命力。接受智力差异，在此基础上以平等的姿态真诚地向下兼容，去连接这个不那么快、不那么透明的世界吧。&rdquo;
+                  </p>
+                  <p className="text-right text-indigo-950/70 text-[10px] font-serif font-bold mt-3">
+                    —— 桥梁计划·数理生化算法博士导师团
+                  </p>
+                </div>
+              </div>
+
+              {/* 免责声明 */}
+              <div className="border-t border-indigo-200/20 pt-4 mt-6 text-[9px] text-stone-400 font-serif leading-relaxed text-center">
+                本报告由 AI 语言模型自动生成。其内容仅作为数理逻辑直觉探索之参考，不构成任何心理诊断、治疗方案或专业选科决策之绝对依据。如有情绪危机，请及时寻求专业诊疗。
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex justify-center gap-3 mt-8">
+                <button
+                  onClick={() => setReportData(null)}
+                  className="px-5 py-2 bg-white border border-stone-300 hover:border-stone-400 text-stone-600 font-serif text-xs rounded transition-all"
+                >
+                  ← 返回对话
+                </button>
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  className="px-5 py-2 bg-indigo-650 hover:bg-indigo-700 text-white font-serif text-xs rounded transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isDownloading ? "生成中..." : "⬇ 导出 PDF"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

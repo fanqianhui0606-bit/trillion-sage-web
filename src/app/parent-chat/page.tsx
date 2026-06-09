@@ -60,6 +60,7 @@ export default function ParentChatPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reportRef = useRef<HTMLDivElement | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isPageReady, setIsPageReady] = useState(false);
 
   // Family Link States
   const [familyCode, setFamilyCode] = useState<string | null>(null);
@@ -121,17 +122,21 @@ export default function ParentChatPage() {
         .catch(console.error);
     }
 
-    const randomQuestion = OPENING_QUESTIONS[Math.floor(Math.random() * OPENING_QUESTIONS.length)];
-    setMessages([
-      {
-        sender: "ai",
-        text: randomQuestion,
-        agentName: "主理人",
-        borderColor: "border-bridge-blue/20 bg-white/80 text-stone-850 shadow-sm",
-      },
-    ]);
-    setTurn(1);
-    setReportData(null);
+    const timer = setTimeout(() => {
+      const randomQuestion = OPENING_QUESTIONS[Math.floor(Math.random() * OPENING_QUESTIONS.length)];
+      setMessages([
+        {
+          sender: "ai",
+          text: randomQuestion,
+          agentName: "主理人",
+          borderColor: "border-bridge-blue/20 bg-white/80 text-stone-850 shadow-sm",
+        },
+      ]);
+      setTurn(1);
+      setReportData(null);
+      setIsPageReady(true);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Scroll to bottom on new messages
@@ -369,18 +374,14 @@ export default function ParentChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-bridge-gradient-top from-0% via-bridge-gradient-bottom via-72% to-[#f4f4f7] to-100% flex flex-col pt-16 relative overflow-hidden">
+    <div className="h-screen flex flex-col pt-16 relative overflow-hidden">
       {/* Background Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
 
-      {/* Main Chat Box Container */}
-      <div className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 relative z-10 flex flex-col h-[calc(100vh-4rem)]">
-        <div 
-          className="flex-1 bg-white/75 backdrop-blur-[24px] border border-bridge-blue/20 rounded-xl shadow-[0_12px_40px_rgba(46,117,182,0.06)] flex flex-col overflow-hidden"
-          style={{ boxShadow: "0 0 30px rgba(46, 117, 182, 0.05)" }}
-        >
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-bridge-blue/10 flex items-center justify-between bg-white/40 backdrop-blur-md">
+      {/* Chat area — fixed layout */}
+      <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto px-4 md:px-6 relative z-10 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-3 border-b-2 border-bridge-blue/30 flex items-center justify-between bg-white/60 backdrop-blur-md shrink-0 rounded-t-xl">
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-bridge-blue animate-pulse" />
               <h1 className="font-serif text-bridge-blue-dark tracking-widest text-sm md:text-base font-bold">
@@ -398,8 +399,8 @@ export default function ParentChatPage() {
             </Link>
           </div>
 
-          {/* Messages List & Report */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 scrollbar-thin scrollbar-thumb-stone-200">
+          {/* Messages — scrollable */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 bg-white/40">
             {!reportData && messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -424,7 +425,7 @@ export default function ParentChatPage() {
               </div>
             ))}
 
-            {isTyping && (
+            {(!isPageReady || isTyping) && (
               <div className="mr-auto items-start flex flex-col max-w-[70%] animate-pulse">
                 <span className="text-xs font-serif text-bridge-blue/50 mb-1.5 ml-2 tracking-wider">
                   倾听中...
@@ -799,7 +800,7 @@ export default function ParentChatPage() {
                           </div>
                     {/* 免责声明 */}
                     <div className="border-t border-stone-300/40 pt-4 mt-8 text-[9px] text-stone-400 font-serif leading-relaxed text-center">
-                      免责声明：本报告由 AI 语言模型基于对话及测验自动生成，内容仅作为亲子学业沟通与潜质发掘之参考，不构成任何心理诊断、临床治疗建议或升学/选科之专业决定依据。若面临心理危机，请寻求专业咨询或医疗机构帮助。
+                      本报告由 AI 语言模型基于对话及测验自动生成，内容仅作为亲子学业沟通与潜质发掘之参考，不构成任何心理诊断、临床治疗建议或升学/选科之专业决定依据。若面临心理危机，请寻求专业咨询或医疗机构帮助。
                     </div>
                   </div>
                 </div>
@@ -854,9 +855,9 @@ export default function ParentChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Form input bar with Disclaimer */}
+          {/* Input — fixed at bottom */}
           {!reportData && (
-            <div className="flex flex-col border-t border-bridge-blue/10 bg-white/30">
+            <div className="flex flex-col border-t-2 border-bridge-blue/30 bg-white/60 backdrop-blur-md shrink-0 rounded-b-xl">
               <form onSubmit={handleSend} className="p-4 flex gap-3">
                 <input
                   type="text"
@@ -875,12 +876,11 @@ export default function ParentChatPage() {
                 </button>
               </form>
               <p className="text-[10px] text-stone-400 font-serif text-center pb-2 px-4 select-none">
-                免责声明：本服务为 AI 辅助思维探索，非专业心理咨询或医学诊断。若面临情绪崩溃或心理危机，请寻求专业咨询或医疗热线帮助。
+                本服务为 AI 辅助思维探索，非专业心理咨询或医学诊断。若面临情绪崩溃或心理危机，请寻求专业咨询或医疗热线帮助。
               </p>
             </div>
           )}
         </div>
       </div>
-    </div>
   );
 }

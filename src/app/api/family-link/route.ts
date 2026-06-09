@@ -17,18 +17,19 @@ interface LinkRecord {
   paid?: boolean;
 }
 
-// 学术物理隐喻模拟数据 (PhD 级别描述，用于 TSG_ADMIN_PAGE 后门测试)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ADMIN_STUDENT_REPORT = {
-  mirror_echo: "你擅长在看似无序的现实扰动中，剥离出底层的常微分方程。无论是处理引力波微扰下的极质量比旋入（EMRI）轨道演化，还是面对复杂的动力学系统，你的第一直觉都是寻找哈密顿量守恒量。这种对对称性和守恒律的物理敏感性，让你在应对多变量交织的学术困境时，总能找到最省力的本征态。",
-  math_aesthetic: "数理审美极高，具有强烈的‘低熵化’与‘降维解析’倾向。你讨厌没有物理解释的纯粹数值拟合，更偏爱通过解析推导触及规律本质。你眼中的真理是协变且简洁的，这种思维方式使你在面对高难度跨学科探索时，能够建立起极具穿透力的物理类比。",
-  reality_guide: "虽然你的精神世界常驻在光滑、对称的高维流形上，但现实往往是个非协变的耗散系统。试着接受现实中的‘量子退相干’与熵增。不要把每一次低效沟通都视为冗余噪声，很多时候，噪声本身就蕴含着系统演化的涨落耗散定理。尝试在混沌的非平衡态中，寻找局部最优的自组织结构。"
+  mirror_echo: "你擅长在看似无序的现实中，剥离出底层的秩序。无论是梳理复杂的多变量动态曲线，还是在层叠的数据网络中寻找不变的规律，你的第一直觉都是寻找事物最核心的平衡。这种对守恒与内在对称性的逻辑敏感性，让你在应对交织的学业困境时，总能找到最清晰的切入点。",
+  math_aesthetic: "数理直觉极佳，具有强烈的‘提炼本质’与‘化繁为简’倾向。你讨厌没有合理解释的生搬硬套，更偏爱通过推导触及规律底层的逻辑。你眼中的真理是简洁且和谐的，这种思维方式使你在面对高难度跨学科探索时，能够建立起极具穿透力的物理类比。",
+  reality_guide: "虽然你的思想世界常常在完美、对称的逻辑模型中遨游，但现实往往是由无数细碎噪声拼凑成的混沌日常。试着去包容现实中的那些不完美与琐碎。不要把每一次低效的沟通都视为无用功，很多时候，人生的精彩恰恰隐藏在那些看似无规则的涨落与碰撞中。尝试在流动的变化里，寻找最适合你成长的生活节奏。"
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ADMIN_PARENT_REPORT = {
-  decision_role: "在家庭这个高度非线性的多体系统中，您长期扮演着‘引力中心’与‘轨道约束器’的角色。您为家庭成员提供了稳定的边界条件，但为了维持这种对称性，您也独自耗散了大量的热力学自由度，承受着不易被察觉的心智张力。",
-  soft_moment: "那些孩子在物理实验中流露出的纯粹好奇心，或是她在深夜书桌前演算纸上写下某行漂亮公式的瞬间，如同遥远双星并合释放的瞬时引力波，是您心中引力势阱里最柔和、也最真实的相干震颤。",
-  parenting_style: "当孩子为了规避现实摩擦而选择隐入自己的‘视界’（Event Horizon）时，您虽然在宏观上希望用强引力干预其运行轨迹，但微观上又在克制，试图给予她量子隧穿式的自由空间。您在守护与放手之间，经历着频繁的认知相变。",
-  warm_suggestion: "两个具有不同初始条件的动力学系统，在强耦合时难免产生相空间轨道的剧烈分叉。这并非系统的崩溃，而是同频共振前的过渡态。给彼此一点退相干的时间，千殊团队将作为您的学术与成长微扰辅助，协助您调整系统的共振本征频率。"
+  decision_role: "在家庭这艘共同前行的航船中，您长期扮演着‘舵手’与‘定海神针’的角色。您为家庭成员提供了稳定的保护和方向，但为了维持这种平稳，您也独自承担了许多重任，默默消化了那些不易被察觉的心智疲惫。",
+  soft_moment: "那些孩子在做科学小实验时流露出的专注眼神，或是她在书桌前认真演算某道数学题的安静背影，如同琴弦微颤产生的共鸣，是您心中最柔和、也最真实的欣慰瞬间。",
+  parenting_style: "当孩子在遇到摩擦、选择隐入自己的世界时，您虽然在宏观上希望用关切介入她的运行轨迹，但微观上又在克制，试图给她留出呼吸与成长的自由空间。您在静默守护与适当放手之间，常常经历着微妙的权衡。",
+  warm_suggestion: "两个性格不同、想法相异的独立个体，在深度沟通时难免产生小小的碰撞与分歧。这并非关系的隔阂，而是走向同频共振前的必经过程。给彼此一点慢慢调整的缓冲时间，千殊团队会一直在背后为您提供温暖的支持与引导。"
 };
 
 // Helper to read all links
@@ -60,20 +61,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: "缺少关联码" }, { status: 400 });
     }
 
-    // 1. 特权管理员后门放行
-    if (code === "TSG_ADMIN_PAGE") {
-      return NextResponse.json({
-        success: true,
-        student_completed: true,
-        parent_completed: true,
-        student_authorized: true,
-        parent_authorized: true,
-        paid: true,
-        student_wechat_name: "Admin(学生)",
-        parent_wechat_name: "Admin(家长)",
-        student_report: ADMIN_STUDENT_REPORT,
-        parent_report: ADMIN_PARENT_REPORT,
-      });
+    // 1. 特权管理员后门动态注册与持久化
+    const isAdminCode = code && (code.startsWith("BRIDGE_ADMIN") || code.startsWith("TSG_ADMIN_PAGE"));
+    if (isAdminCode) {
+      const numSuffix = code.slice("TSG_ADMIN_PAGE".length);
+      const links = await readLinks();
+      if (!links[code]) {
+        links[code] = {
+          code,
+          student_wechat_name: `Admin(学生${numSuffix})`,
+          parent_wechat_name: `Admin(家长${numSuffix})`,
+          student_completed: false,
+          student_authorized: false,
+          parent_completed: false,
+          parent_authorized: false,
+          paid: true
+        };
+        await writeLinks(links);
+      }
     }
 
     const links = await readLinks();
@@ -116,7 +121,8 @@ export async function POST(request: Request) {
 
     // 1. 处理管理员动作
     if (action === "admin_list" || action === "admin_create" || action === "admin_pay") {
-      if (adminKey !== "TSG_ADMIN_PAGE") {
+      const isAdminKey = (adminKey && (adminKey.startsWith("BRIDGE_ADMIN") || adminKey.startsWith("TSG_ADMIN_PAGE")));
+      if (!isAdminKey) {
         return NextResponse.json({ success: false, error: "无管理员权限" }, { status: 403 });
       }
 
@@ -173,19 +179,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "参数不完整" }, { status: 400 });
     }
 
-    // 特权码直接放行
-    if (code === "TSG_ADMIN_PAGE") {
-      return NextResponse.json({
-        success: true,
-        student_completed: true,
-        parent_completed: true,
-        student_authorized: true,
-        parent_authorized: true,
-        paid: true,
-      });
+    // 特权码动态注册与持久化
+    const isAdminCode = code && (code.startsWith("BRIDGE_ADMIN") || code.startsWith("TSG_ADMIN_PAGE"));
+    let links = await readLinks();
+    if (isAdminCode && !links[code]) {
+      const numSuffix = code.slice("TSG_ADMIN_PAGE".length);
+      links[code] = {
+        code,
+        student_wechat_name: `Admin(学生${numSuffix})`,
+        parent_wechat_name: `Admin(家长${numSuffix})`,
+        student_completed: false,
+        student_authorized: false,
+        parent_completed: false,
+        parent_authorized: false,
+        paid: true
+      };
+      await writeLinks(links);
+      links = await readLinks();
     }
-
-    const links = await readLinks();
     
     // 拦截非法码操作
     if (!links[code]) {

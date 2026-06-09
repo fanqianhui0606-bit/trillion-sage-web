@@ -90,28 +90,39 @@ export default function AdminDashboardPage() {
   const [parentWechatInput, setParentWechatInput] = useState("");
   const [familySearchQuery, setFamilySearchQuery] = useState("");
 
+  const getSavedAdminKey = () => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("tsg_admin_verified") || "";
+    }
+    return "BRIDGE_ADMIN";
+  };
+
   // Check session storage on mount
   useEffect(() => {
     const savedKey = sessionStorage.getItem("tsg_admin_verified");
-    if (savedKey === "TSG_ADMIN_PAGE") {
+    const isValidKey = savedKey && (savedKey.startsWith("BRIDGE_ADMIN") || savedKey.startsWith("TSG_ADMIN_PAGE"));
+    if (isValidKey) {
       setIsAuthenticated(true);
       fetchSubmissions();
-      fetchFamilyRecords();
-      fetchChatRecords();
-      fetchAppointmentRecords();
+      fetchFamilyRecords(savedKey);
+      fetchChatRecords(savedKey);
+      fetchAppointmentRecords(savedKey);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminKey.trim() === "TSG_ADMIN_PAGE") {
-      sessionStorage.setItem("tsg_admin_verified", "TSG_ADMIN_PAGE");
+    const cleanKey = adminKey.trim().toUpperCase();
+    const isValidKey = cleanKey.startsWith("BRIDGE_ADMIN") || cleanKey.startsWith("TSG_ADMIN_PAGE");
+    if (isValidKey) {
+      sessionStorage.setItem("tsg_admin_verified", cleanKey);
       setIsAuthenticated(true);
       setError("");
       fetchSubmissions();
-      fetchFamilyRecords();
-      fetchChatRecords();
-      fetchAppointmentRecords();
+      fetchFamilyRecords(cleanKey);
+      fetchChatRecords(cleanKey);
+      fetchAppointmentRecords(cleanKey);
     } else {
       setError("管理密钥无效，请重新输入");
     }
@@ -138,14 +149,15 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const fetchFamilyRecords = async () => {
+  const fetchFamilyRecords = async (overrideKey?: string) => {
     try {
+      const activeKey = overrideKey || getSavedAdminKey();
       const res = await fetch("/api/family-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "admin_list",
-          adminKey: "TSG_ADMIN_PAGE"
+          adminKey: activeKey
         })
       });
       const data = await res.json();
@@ -157,9 +169,10 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const fetchChatRecords = async () => {
+  const fetchChatRecords = async (overrideKey?: string) => {
     try {
-      const res = await fetch("/api/chat-submissions?adminKey=TSG_ADMIN_PAGE");
+      const activeKey = overrideKey || getSavedAdminKey();
+      const res = await fetch(`/api/chat-submissions?adminKey=${encodeURIComponent(activeKey)}`);
       const data = await res.json();
       if (data.success) {
         const sorted = (data.list || []).sort(
@@ -172,9 +185,10 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const fetchAppointmentRecords = async () => {
+  const fetchAppointmentRecords = async (overrideKey?: string) => {
     try {
-      const res = await fetch("/api/appointments?adminKey=TSG_ADMIN_PAGE");
+      const activeKey = overrideKey || getSavedAdminKey();
+      const res = await fetch(`/api/appointments?adminKey=${encodeURIComponent(activeKey)}`);
       const data = await res.json();
       if (data.success) {
         const sorted = (data.list || []).sort(
@@ -194,12 +208,13 @@ export default function AdminDashboardPage() {
       return;
     }
     try {
+      const activeKey = getSavedAdminKey();
       const res = await fetch("/api/family-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "admin_create",
-          adminKey: "TSG_ADMIN_PAGE",
+          adminKey: activeKey,
           student_wechat_name: studentWechatInput.trim(),
           parent_wechat_name: parentWechatInput.trim()
         })
@@ -209,7 +224,7 @@ export default function AdminDashboardPage() {
         alert(`专属家庭关联码生成成功！\n专属码: ${data.code}`);
         setStudentWechatInput("");
         setParentWechatInput("");
-        fetchFamilyRecords(); // Refresh list
+        fetchFamilyRecords(activeKey); // Refresh list
       } else {
         alert(data.error || "生成家庭关联码失败");
       }
@@ -224,19 +239,20 @@ export default function AdminDashboardPage() {
       return;
     }
     try {
+      const activeKey = getSavedAdminKey();
       const res = await fetch("/api/family-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "admin_pay",
-          adminKey: "TSG_ADMIN_PAGE",
+          adminKey: activeKey,
           targetCode
         })
       });
       const data = await res.json();
       if (data.success) {
         alert("VIP 开通成功！");
-        fetchFamilyRecords(); // Refresh list
+        fetchFamilyRecords(activeKey); // Refresh list
       } else {
         alert(data.error || "开通 VIP 失败");
       }
@@ -514,10 +530,11 @@ export default function AdminDashboardPage() {
             </button>
             <button
               onClick={() => {
+                const activeKey = getSavedAdminKey();
                 if (activeTab === "quiz") fetchSubmissions();
-                else if (activeTab === "family") fetchFamilyRecords();
-                else if (activeTab === "chat") fetchChatRecords();
-                else if (activeTab === "appointment") fetchAppointmentRecords();
+                else if (activeTab === "family") fetchFamilyRecords(activeKey);
+                else if (activeTab === "chat") fetchChatRecords(activeKey);
+                else if (activeTab === "appointment") fetchAppointmentRecords(activeKey);
               }}
               className="px-3 py-2 text-xs font-bold text-slate-300 hover:text-white border border-white/10 hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
             >

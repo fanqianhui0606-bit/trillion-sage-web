@@ -34,7 +34,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const adminKey = searchParams.get("adminKey");
     
-    if (adminKey !== "TSG_ADMIN_PAGE") {
+    const isAdmin = adminKey && (adminKey.startsWith("BRIDGE_ADMIN") || adminKey.startsWith("TSG_ADMIN_PAGE"));
+    if (!isAdmin) {
       return NextResponse.json({ success: false, error: "权限不足" }, { status: 403 });
     }
 

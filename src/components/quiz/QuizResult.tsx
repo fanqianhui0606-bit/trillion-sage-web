@@ -275,6 +275,7 @@ function BubbleWordCloud({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 500, height: 420 });
 
+
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
@@ -546,6 +547,15 @@ export default function QuizResult({
     isSimple && fullDimensionOrder && fullDimensionOrder.length > 0
       ? fullDimensionOrder
       : FULL_DIMENSION_ORDER;
+
+  // Save paid quiz scores for AI chat comparison feature
+  useEffect(() => {
+    if (!isSimple && scores?.objective) {
+      try {
+        localStorage.setItem("tsg_paid_quiz_scores", JSON.stringify(scores.objective));
+      } catch { /* ignore */ }
+    }
+  }, [isSimple, scores]);
 
   useEffect(() => {
     // Load local config resources

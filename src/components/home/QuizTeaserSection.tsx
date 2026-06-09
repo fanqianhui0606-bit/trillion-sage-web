@@ -52,7 +52,7 @@ export default function QuizTeaserSection() {
             </ul>
 
             <div className="mt-auto w-full">
-              <Button href="/quiz" variant="secondary" className="w-full font-serif text-xs tracking-widest">
+              <Button href="/quiz?edition=simple" variant="secondary" className="w-full font-serif text-xs tracking-widest">
                 开启免费测验 (18题)
               </Button>
             </div>
@@ -67,7 +67,7 @@ export default function QuizTeaserSection() {
             <span className="inline-block px-3 py-1 text-xs font-serif rounded-md bg-bridge-gold/15 text-bridge-gold font-semibold mb-4 tracking-widest animate-pulse">
               专业深度版
             </span>
-            <h3 className="text-xl font-bold font-serif text-bridge-gold mb-2">专业深度版 (¥499)</h3>
+            <h3 className="text-xl font-bold font-serif text-bridge-gold mb-2">专业深度版</h3>
             <p className="text-bridge-muted text-xs md:text-sm mb-6 leading-relaxed">
               35道完整题库。深度扫描14维认知图谱，采用三维拓扑流形互动呈现认知全貌，精准匹配2026年教育部新设理工类专业。
             </p>
@@ -88,8 +88,8 @@ export default function QuizTeaserSection() {
             </ul>
 
             <div className="mt-auto w-full">
-              <Button href="/quiz?mode=pro" variant="primary" className="w-full font-serif text-xs tracking-widest bg-bridge-gold hover:bg-amber-600 shadow-[0_2px_10px_rgba(197,160,89,0.2)]">
-                开启深度测验 (¥499)
+              <Button href="/quiz?edition=user" variant="primary" className="w-full font-serif text-xs tracking-widest bg-bridge-gold hover:bg-amber-600 shadow-[0_2px_10px_rgba(197,160,89,0.2)]">
+                开启深度测验
               </Button>
             </div>
           </GlassCard>

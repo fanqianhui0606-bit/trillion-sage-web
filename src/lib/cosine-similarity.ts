@@ -242,19 +242,53 @@ export function rankMajorsFourFactor(input: FourFactorInput): MajorMatchResult[]
 }
 
 /**
- * 校验激活码
- * 格式：TSG + 4位数字 (如 1024) + 5位校验和
- * 校验和生成逻辑：计算 "TSGxxxx" 每个字符与字符位置(1-based)乘积的累加和，并模 100000 补足 5 位
+ * 校验是否为管理员码（内部使用，不在 UI 展示）
+ */
+export function isAdminCode(code: string): boolean {
+  const clean = code.trim().toUpperCase();
+  return clean.startsWith("BRIDGE_ADMIN");
+}
+
+/**
+ * 校验是否为内测码
+ * 格式：BRIDGE- + 英文字母名（总长不超过 20）
+ */
+export function isBetaCode(code: string): boolean {
+  const clean = code.trim().toUpperCase();
+  return /^BRIDGE-[A-Z]{3,16}$/.test(clean);
+}
+
+/**
+ * 校验激活码（兼容新旧格式）
+ * 1. 管理员码 BRIDGE_ADMIN*
+ * 2. 内测码 BRIDGE-NAME
+ * 3. 旧格式：TSG + 4位数字 + 5位校验和
+ * 4. 旧管理员码 TSG_ADMIN_PAGE* (兼容)
  */
 export function validateActivationCode(code: string): boolean {
   const clean = code.trim().toUpperCase();
-  if (clean === "TSG_ADMIN_PAGE") return true; // 后门，管理员激活码
+
+  // 新管理员码
+  if (isAdminCode(clean)) return true;
+
+  // 内测码
+  if (isBetaCode(clean)) return true;
+
+  // 兼容旧管理员码
+  if (clean.startsWith("TSG_ADMIN_PAGE")) {
+    const suffix = clean.slice("TSG_ADMIN_PAGE".length);
+    if (!suffix || /^\d+$/.test(suffix)) {
+      return true;
+    }
+  }
+
+  // 旧格式激活码
   if (clean.length !== 12) return false;
   if (!clean.startsWith("TSG")) return false;
-  
+
   const nums = clean.slice(3, 7);
   if (!/^\d{4}$/.test(nums)) return false;
-  
+
   const content = "TSG" + nums;
   let sum = 0;
   for (let i = 0; i < content.length; i++) {

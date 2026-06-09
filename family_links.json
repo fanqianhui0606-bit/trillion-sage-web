@@ -16,5 +16,36 @@
     },
     "parent_completed": true,
     "parent_authorized": true
+  },
+  "TSG_ADMIN_PAGE": {
+    "code": "TSG_ADMIN_PAGE",
+    "student_wechat_name": "Admin(学生)",
+    "parent_wechat_name": "Admin(家长)",
+    "student_completed": true,
+    "student_authorized": true,
+    "parent_completed": true,
+    "parent_authorized": true,
+    "paid": true,
+    "parent_report": {
+      "decision_role": "您常常在家庭中默默扛起大大小小的决定，为家人撑起一片稳定的天空。这份坚强背后，您独自消化了许多不易察觉的疲惫，孩子的成长路上，每一步都有您深思熟虑的托举。",
+      "soft_moment": "您心中最柔软的一角，是看见孩子沉浸在自己世界里的模样。哪怕只是安静地看着他玩游戏，那份不打扰的陪伴，已是您能给予的最深理解与尊重。",
+      "parenting_style": "面对孩子的沉默或疏远，您虽着急却选择克制地留出空间。在想要拉近与推开之间，您始终在寻找一种不让他受伤的默契，这份小心翼翼的守护，正是您深沉的爱。",
+      "warm_suggestion": "陪伴一个正在蜕变的孩子，感到疲惫或不知所措是再自然不过的。请对自己宽容一些，允许沟通里存在留白。您已经做得足够好了，我们会一直在背后温暖地支持您。"
+    },
+    "student_report": {
+      "mirror_echo": "你会在考试后感到一种空落落的轻松，像潮水退去后露出的沙滩。你习惯用‘都可以’或‘好的’来轻轻带过那些需要深挖的话题，但当你提到写小说和喜欢的角色时，语气里多了一点藏不住的光。你喜欢的往往不是热闹的剧情，而是那些在既定轨道外独自运行的角色——他们安静地做着在别人看来没必要的事，那种姿态让你着迷。你心里有一个属于自己的、安静的坐标系，在随大流的世界里，你始终保留着它。",
+      "math_aesthetic": "你对世界的理解更像是在观察光线穿过棱镜时的分岔——不是粗暴地拆解，而是看它如何自然地折射出不同的色彩。你喜欢的那些角色就像不同轨道上的行星，彼此不碰撞，却共享你设定的同一片引力场。你写他们的时候，其实是在给内心不同的‘自己’分配轨道。这种对‘定轨’的敏感，很像在观察钟摆的共振——看似无序的摆动里，藏着精确的节律。",
+      "reality_guide": "下次当你又进入那种‘安静搭积木’的状态时，试着多停留一会儿。可以随手记下那种状态里浮现的念头，哪怕只是几个词。如果愿意，也可以找一个傍晚，不带目的地去观察一条街道——看行人如何交错、灯光如何亮起，就像观察你笔下角色们运行的轨道。那种观察，会让你的坐标系更加清晰。"
+    }
+  },
+  "TSG_ADMIN_PAGE1": {
+    "code": "TSG_ADMIN_PAGE1",
+    "student_wechat_name": "Admin(学生1)",
+    "parent_wechat_name": "Admin(家长1)",
+    "student_completed": false,
+    "student_authorized": false,
+    "parent_completed": false,
+    "parent_authorized": false,
+    "paid": true
   }
 }

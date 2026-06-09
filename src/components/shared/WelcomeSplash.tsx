@@ -328,22 +328,31 @@ export default function WelcomeSplash() {
           </div>
         ) : (
           // Greeting text display
-          <div className="flex flex-col items-center gap-8 animate-fade-in">
+          <div className="flex flex-col items-start gap-6 animate-fade-in w-full max-w-xl mx-auto">
             <h1 
-              className="text-xl md:text-2xl font-serif text-stone-850 leading-loose tracking-wide transition-all max-w-xl whitespace-pre-wrap text-center"
+              style={{
+                fontFamily: '"Noto Serif SC", "Source Han Serif SC", "SimSun", "STSong", "Songti SC", serif',
+                textJustify: 'inter-character'
+              }}
+              className="text-base md:text-lg text-stone-850 leading-loose tracking-wide transition-all text-justify whitespace-pre-wrap w-full font-serif"
             >
               {selectedGreeting}
             </h1>
 
             {/* Signature */}
-            <div className="text-stone-600 font-serif text-xs md:text-sm tracking-widest text-right w-full max-w-md self-center">
+            <div 
+              style={{
+                fontFamily: '"Noto Serif SC", "Source Han Serif SC", "SimSun", "STSong", "Songti SC", serif'
+              }}
+              className="text-stone-600 text-xs md:text-sm tracking-widest text-right w-full mt-4 pr-4 font-serif"
+            >
               —— 桥梁计划主理人
             </div>
             
             {/* Click to skip text during greeting */}
             <div 
               onClick={handleDismiss}
-              className="mt-6 text-stone-400 text-[10px] font-serif hover:text-stone-600 cursor-pointer animate-pulse transition-all"
+              className="mt-6 text-stone-400 text-[10px] font-serif hover:text-stone-600 cursor-pointer animate-pulse transition-all self-center"
             >
               点击屏幕任意位置跳过并进入网站
             </div>

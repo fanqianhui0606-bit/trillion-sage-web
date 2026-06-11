@@ -77,8 +77,8 @@ export default function HeroSection() {
           <SubjectWheel onHoverMajor={handleHoverMajor} />
         </div>
 
-        {/* Right — 3D visualization (4 cols) */}
-        <div className="lg:col-span-4 h-[450px] lg:h-[550px] w-full flex items-center justify-center py-6">
+        {/* Right — 3D visualization (4 cols) - Hidden on mobile/tablet to prevent scroll hijacking, visible on desktop */}
+        <div className="hidden lg:flex lg:col-span-4 h-[550px] w-full items-center justify-center py-6">
           {graphData ? (
             <Competency3D
               graphData={graphData}

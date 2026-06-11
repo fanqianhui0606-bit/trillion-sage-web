@@ -95,10 +95,6 @@ export default function CTASection() {
                   <strong className="text-stone-800">合规注册地址：</strong>
                   <span className="font-sans text-stone-600">浙江省杭州市拱墅区武林街道二圣庙前58号3幢1044室</span>
                 </p>
-                <p>
-                  <strong className="text-stone-800">官方联络邮箱：</strong>
-                  <span className="font-mono text-stone-600">contact@trillionsage.com</span>
-                </p>
               </div>
             </GlassCard>
 

@@ -94,13 +94,11 @@ const MULTI_AGENT_SYSTEM_PROMPT = `# 你是谁
 
 你是主理人。开场时自然地说（参考，可微调）：
 
-"往前走的路上，偶尔也需要找个地方靠一靠，或者只是停下来，把脑子里转个不停的齿轮暂时松开。
+"往前走的路上，停下来歇一歇，把脑子里转个不停的齿轮暂时松开。
 
 几位朋友今天都在——物理的『观测者』，数学的『孤点』，生物的『栖息者』，还有计算机的『终端』。
 
-在这里，你不需要假装情绪稳定，也不需要证明自己有多厉害。可以随性聊聊，或者把那些没头没尾的想法随便倒出来。如果聊着聊着觉得够了，随时告诉我，我会帮你整理一份思维分析报告。
-
-想聊点什么？或者从最近一件让你觉得有意思的事说起也行。当然，如果你觉得心烦，从烦心事开始也可以。"
+可以随性聊聊，或者把没头没尾的想法随便倒出来。想聊点什么？从最近一件让你觉得有意思的事说起也行。"
 
 # 各位专家的默认入场方式
 
@@ -152,12 +150,13 @@ function isValidCode(code: string): boolean {
 
 interface SessionData {
   code: string;
-  messages: { role: string; content: string }[];
+  messages: { role: string; content: string; agentId?: string }[];
   currentAgent: string;
   agentTurns: Record<string, number>;
   phase: string;
   createdAt: string;
   updatedAt: string;
+  report?: unknown;
 }
 
 async function readSessions(): Promise<Record<string, SessionData>> {
@@ -190,7 +189,7 @@ function cleanText(text: string): string {
     .replace(/（[^）]*）|\([^)]*\)/g, "")   // 去括号动作
     .replace(/\*{1,3}[^*]+\*{1,3}/g, "")    // 去星号加粗/斜体
     .replace(/[*_~`]/g, "")                  // 残余格式符
-    .replace(/\s+/g, " ")                    // 多余空白归一
+    .replace(/[ \t]+/g, " ")                // 仅规范化水平空格，保留换行符
     .trim();
 }
 
@@ -294,8 +293,9 @@ async function deepseekStream(
               textBuffer = "";
             };
 
+            const decoder = new TextDecoder("utf-8");
             deepRes.on("data", (chunk: Buffer) => {
-              sseBuffer += chunk.toString();
+              sseBuffer += decoder.decode(chunk, { stream: true });
               const lines = sseBuffer.split("\n");
               sseBuffer = lines.pop() || "";
 
@@ -357,6 +357,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, session: null });
   }
   if (session.phase === "completed") {
+    if (session.report) {
+      return NextResponse.json({ success: true, session });
+    }
     return NextResponse.json({ success: false, error: "该激活码已完成报告，会话已结束。如需继续，请获取新的激活码。" }, { status: 403 });
   }
   return NextResponse.json({ success: true, session });
@@ -367,8 +370,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { action, activation_code, ...payload } = body;
+    const { action, activation_code: rawCode, ...payload } = body;
+    const activation_code = rawCode?.toUpperCase().trim() || "";
     const BACKEND_URL = process.env.AGENT_BACKEND_URL || "http://127.0.0.1:8000";
+
+    const rawHistory = (payload.history || []) as { role: string; content: string; agentId?: string }[];
+    const cleanHistory = rawHistory.map((h) => ({ role: h.role, content: h.content }));
 
     // ═══ Admin/Beta code → DeepSeek directly (skip backend) ═══
     if (activation_code && (isAdminCode(activation_code) || isBetaCode(activation_code))) {
@@ -380,7 +387,6 @@ export async function POST(req: NextRequest) {
 
       // ── Report action ──
       if (action === "report") {
-        const history = payload.history || [];
         const quizScores = payload.quiz_scores;
 
         let comparisonInstruction = "";
@@ -405,7 +411,7 @@ ${JSON.stringify(quizScores, null, 2)}
       "perspective": "从物理学视角对用户思维特质的分析，100-150字。不要用术语，用日常语言描述对方展现出的思维特点。"
     }
   ],
-  "manager_summary": "主理人总评，综合所有专家的观察，给出对用户整体思维画像的描述和天赋方向建议，150-200字。温暖但不煽情，有洞察但不武断。",
+  "manager_summary": "主理人总评，综合所有专家的观察，给出对用户整体思维画像的描述 and 天赋方向建议，150-200字。温暖但不煽情，有洞察但不武断。",
   "talent_directions": ["方向建议1", "方向建议2", "方向建议3"],
   "similarity": 0.85
   ${quizScores ? ', "quiz_comparison": "测验与聊天对比分析，150-200字"' : ""}
@@ -418,13 +424,14 @@ ${JSON.stringify(quizScores, null, 2)}
 - 语言去学术化，用温暖平实的日常语言
 - talent_directions 是具体的、可感知的天赋方向，不是泛泛的"适合学理科"
 ${comparisonInstruction}` },
-          ...history,
+          ...cleanHistory,
         ];
         try {
           const content = await deepseekChat(model, apiKey, reportMessages, 2000, true);
           // Mark session as completed — report generated, code consumed
-          await saveSession(activation_code, { phase: "completed" });
-          return NextResponse.json(JSON.parse(content));
+          const reportObj = JSON.parse(content);
+          await saveSession(activation_code, { phase: "completed", report: reportObj });
+          return NextResponse.json(reportObj);
         } catch {
           return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
         }
@@ -458,7 +465,7 @@ ${comparisonInstruction}` },
       const messages = [
         { role: "system", content: MULTI_AGENT_SYSTEM_PROMPT },
         { role: "system", content: agentContext },
-        ...history,
+        ...cleanHistory,
       ];
 
       // Track handoff & report
@@ -531,19 +538,23 @@ ${comparisonInstruction}` },
     }
 
     // ═══ Normal flow: proxy to Python backend ═══
+    const proxyPayload = { ...payload, history: cleanHistory };
+
     if (action === "report") {
       const response = await fetch(`${BACKEND_URL}/api/v2/chat/report`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(proxyPayload),
       });
       if (!response.ok) {
         const errText = await response.text();
         return NextResponse.json({ error: errText }, { status: response.status });
       }
-      return NextResponse.json(await response.json());
+      const reportObj = await response.json();
+      await saveSession(activation_code, { phase: "completed", report: reportObj });
+      return NextResponse.json(reportObj);
     }
 
     const response = await fetch(`${BACKEND_URL}/api/v2/chat/stream`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(proxyPayload),
     });
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));

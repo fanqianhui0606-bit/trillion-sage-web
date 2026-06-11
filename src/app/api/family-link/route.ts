@@ -84,6 +84,8 @@ export async function GET(request: Request) {
     const links = await readLinks();
     const record = links[code];
 
+    const role = searchParams.get("role") || "";
+
     // 2. 拦截未注册的普通 code
     if (!record) {
       return NextResponse.json({ 
@@ -94,6 +96,21 @@ export async function GET(request: Request) {
 
     const bothAuthorized = record.student_authorized === true && record.parent_authorized === true;
 
+    // Determine which reports to return
+    let student_report = null;
+    let parent_report = null;
+
+    if (bothAuthorized) {
+      student_report = record.student_report || null;
+      parent_report = record.parent_report || null;
+    } else {
+      if (role === "student") {
+        student_report = record.student_report || null;
+      } else if (role === "parent") {
+        parent_report = record.parent_report || null;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       student_completed: !!record.student_completed,
@@ -103,9 +120,8 @@ export async function GET(request: Request) {
       paid: !!record.paid,
       student_wechat_name: record.student_wechat_name || "",
       parent_wechat_name: record.parent_wechat_name || "",
-      // Only release the reports if both sides authorized
-      student_report: bothAuthorized ? record.student_report : null,
-      parent_report: bothAuthorized ? record.parent_report : null,
+      student_report,
+      parent_report,
     });
   } catch (error) {
     console.error("Family Link GET error:", error);

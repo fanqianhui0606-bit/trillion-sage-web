@@ -131,18 +131,25 @@ export default function PaidChatPage() {
         if (data.success && data.session) {
           const s = data.session;
           // Restore messages
-          const restored: Message[] = s.messages.map((m: { role: string; content: string }) => ({
-            sender: m.role === "user" ? "user" : "ai",
-            text: m.content,
-            agentId: s.currentAgent || "manager",
-            agentName: AGENT_CONFIGS[s.currentAgent]?.name || "主理人",
-            borderColor: AGENT_CONFIGS[s.currentAgent]?.border || "border-amber-300/30",
-          }));
+          const restored: Message[] = s.messages.map((m: { role: string; content: string; agentId?: string }) => {
+            const mAgentId = m.agentId || s.currentAgent || "manager";
+            return {
+              sender: m.role === "user" ? "user" : "ai",
+              text: m.content,
+              agentId: mAgentId,
+              agentName: AGENT_CONFIGS[mAgentId]?.name || "主理人",
+              borderColor: AGENT_CONFIGS[mAgentId]?.border || "border-amber-300/30",
+            };
+          });
           if (restored.length > 0) {
             setMessages(restored);
             setTurns(restored.filter(m => m.sender === "user").length);
             setCurrentAgentId(s.currentAgent || "manager");
             if (s.agentTurns) setAgentTurns(s.agentTurns);
+          }
+          if (s.phase === "completed" && s.report) {
+            setReportData(s.report);
+            setIsUnlocked(true);
           }
           return true;
         }
@@ -232,8 +239,8 @@ export default function PaidChatPage() {
     streamReaderRef.current = reader;
     const decoder = new TextDecoder();
     let buffer = "";
-    let fullText = "";
-    let tempAgentId = sendingAgentId;
+    let currentAgent = sendingAgentId;
+    let currentSegmentText = "";
     let handoffOccurred = false;
     let handoffTargetId = "";
 
@@ -254,27 +261,45 @@ export default function PaidChatPage() {
         try {
           const dataObj = JSON.parse(jsonStr);
           if (dataObj.event === "handoff") {
-            // Agent ID 校验：只接受合法 ID
             const validIds = ["manager", "physics", "math", "biology", "algorithm"];
-            const validatedId = validIds.includes(dataObj.agent) ? dataObj.agent : tempAgentId;
-            tempAgentId = validatedId;
-            handoffOccurred = true;
-            handoffTargetId = validatedId;
-            setCurrentAgentId(validatedId);
-            setMessages((prev) => {
-              const nextList = [...prev];
-              const lastIdx = nextList.length - 1;
-              nextList[lastIdx].agentId = validatedId;
-              nextList[lastIdx].agentName = AGENT_CONFIGS[validatedId].name;
-              nextList[lastIdx].borderColor = AGENT_CONFIGS[validatedId].border;
-              return nextList;
-            });
+            const validatedId = validIds.includes(dataObj.agent) ? dataObj.agent : currentAgent;
+            if (validatedId !== currentAgent) {
+              currentAgent = validatedId;
+              currentSegmentText = "";
+              handoffOccurred = true;
+              handoffTargetId = validatedId;
+              setCurrentAgentId(validatedId);
+              
+              setMessages((prev) => {
+                const nextList = [...prev];
+                const last = nextList[nextList.length - 1];
+                if (last && last.sender === "ai" && last.text.trim() === "") {
+                  last.agentId = validatedId;
+                  last.agentName = AGENT_CONFIGS[validatedId].name;
+                  last.borderColor = AGENT_CONFIGS[validatedId].border;
+                  return nextList;
+                } else {
+                  return [
+                    ...nextList,
+                    {
+                      sender: "ai",
+                      text: "",
+                      agentId: validatedId,
+                      agentName: AGENT_CONFIGS[validatedId].name,
+                      borderColor: AGENT_CONFIGS[validatedId].border
+                    }
+                  ];
+                }
+              });
+            }
           } else if (dataObj.event === "token") {
-            fullText += dataObj.text;
+            currentSegmentText += dataObj.text;
             setMessages((prev) => {
               const nextList = [...prev];
               const lastIdx = nextList.length - 1;
-              nextList[lastIdx].text = fullText;
+              if (lastIdx >= 0 && nextList[lastIdx].sender === "ai") {
+                nextList[lastIdx].text = currentSegmentText;
+              }
               return nextList;
             });
           } else if (dataObj.event === "report_ready") {
@@ -290,7 +315,7 @@ export default function PaidChatPage() {
     }
 
     // Handoff fallback：如果切换后消息极短（空白发言），自动让新角色补发
-    if (handoffOccurred && fullText.trim().length < 10) {
+    if (handoffOccurred && currentSegmentText.trim().length < 10) {
       // 移除空白占位消息
       setMessages((prev) => prev.slice(0, -1));
       // 自动触发新角色发言
@@ -311,7 +336,7 @@ export default function PaidChatPage() {
     }
 
     setTurns((prev) => prev + 1);
-    setAgentTurns((prev) => ({ ...prev, [sendingAgentId]: (prev[sendingAgentId] || 0) + 1 }));
+    setAgentTurns((prev) => ({ ...prev, [currentAgent]: (prev[currentAgent] || 0) + 1 }));
   };
 
   // AI 开场触发：验证通过后自动获取主理人开场白
@@ -390,7 +415,8 @@ export default function PaidChatPage() {
 
     const historyPayload = newMessages.map(m => ({
       role: m.sender === "user" ? "user" : "assistant",
-      content: m.text
+      content: m.text,
+      agentId: m.sender === "user" ? undefined : m.agentId
     }));
 
     try {
@@ -420,7 +446,8 @@ export default function PaidChatPage() {
     try {
       const historyPayload = messages.map(m => ({
         role: m.sender === "user" ? "user" : "assistant",
-        content: m.text
+        content: m.text,
+        agentId: m.sender === "user" ? undefined : m.agentId
       }));
 
       // Check for existing quiz scores to enable comparison
@@ -749,7 +776,7 @@ export default function PaidChatPage() {
                 <div
                   key={idx}
                   className={`flex flex-col max-w-[85%] md:max-w-[78%] ${
-                    msg.sender === "user" ? "ml-auto items-end" : "mr-auto items-start"
+                    msg.sender === "user" ? "ml-auto items-end" : "mr-auto items-start animate-fade-in"
                   }`}
                 >
                   {msg.sender === "ai" && msg.agentName && (
@@ -757,15 +784,38 @@ export default function PaidChatPage() {
                       {msg.agentId ? getDisplayName(msg.agentId) : msg.agentName}
                     </span>
                   )}
-                  <div
-                    className={`p-4 rounded-lg text-sm md:text-base leading-relaxed tracking-wide transition-all duration-500 ${
-                      msg.sender === "user"
-                        ? "bg-indigo-50 text-stone-850 border border-indigo-150 rounded-tr-none shadow-sm"
-                        : `bg-white text-stone-850 border rounded-tl-none shadow-sm ${msg.borderColor || "border-stone-200"}`
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
+                  {msg.sender === "ai" ? (
+                    (() => {
+                      const paragraphs = msg.text.split("\n").map(p => p.trim()).filter(p => p !== "");
+                      if (paragraphs.length === 0) {
+                        return (
+                          <div
+                            className={`p-4 rounded-lg text-sm md:text-base leading-relaxed tracking-wide transition-all duration-500 ${
+                              AGENT_CONFIGS[msg.agentId || "manager"]?.bg || "bg-stone-50"
+                            } text-stone-850 border rounded-tl-none shadow-sm ${msg.borderColor || "border-stone-200"}`}
+                          >
+                            ...
+                          </div>
+                        );
+                      }
+                      return paragraphs.map((para, pIdx) => (
+                        <div
+                          key={pIdx}
+                          className={`p-4 rounded-lg text-sm md:text-base leading-relaxed tracking-wide transition-all duration-500 mb-2 last:mb-0 ${
+                            AGENT_CONFIGS[msg.agentId || "manager"]?.bg || "bg-stone-50"
+                          } text-stone-850 border rounded-tl-none shadow-sm ${msg.borderColor || "border-stone-200"}`}
+                        >
+                          {para}
+                        </div>
+                      ));
+                    })()
+                  ) : (
+                    <div
+                      className="p-4 rounded-lg text-sm md:text-base leading-relaxed tracking-wide transition-all duration-500 bg-indigo-50 text-stone-850 border border-indigo-150 rounded-tr-none shadow-sm"
+                    >
+                      {msg.text}
+                    </div>
+                  )}
                 </div>
               ))}
 

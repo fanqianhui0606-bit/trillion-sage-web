@@ -9,7 +9,6 @@ export default function Footer() {
 
         <div>
           <h4 className="text-white font-semibold mb-3">联系方式</h4>
-          <p>邮箱：contact@trillionsage.com</p>
           <p className="mt-1">微信公众号：千殊教育</p>
         </div>
 

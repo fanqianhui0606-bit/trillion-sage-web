@@ -108,7 +108,7 @@ export default function ConsultationSection() {
               onClick={() => setShowAll(!showAll)}
               className="text-bridge-blue hover:text-bridge-blue-dark font-serif text-sm tracking-wider border-b border-bridge-blue/30 hover:border-bridge-blue-dark transition-all"
             >
-              {showAll ? `收起导师 (显示${INITIAL_COUNT}位) ↑` : `展开全部导师 (${TUTORS.length}位) ↓`}
+              {showAll ? "收起导师 ↑" : "展开全部导师 ↓"}
             </button>
           )}
           <a

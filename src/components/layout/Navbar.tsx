@@ -5,8 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 const NAV_LINKS = [
-  { href: "/#chat-teaser", label: "思维共振聊天" },
   { href: "/#quiz-teaser", label: "数理素质测评" },
+  { href: "/#chat-teaser", label: "思维共振聊天" },
   { href: "/#consultation", label: "预约一对一引航" },
   { href: "/#programs-preview", label: "学术衔接营" },
   { href: "/#contact", label: "联系我们" },

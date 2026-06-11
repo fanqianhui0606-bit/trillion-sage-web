@@ -127,7 +127,7 @@ export default function QuizEngine({ edition }: { edition?: string }) {
                   placeholder="请输入 12 位专业版激活码"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue uppercase font-mono transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue font-mono transition-colors"
                 />
               </div>
             )}

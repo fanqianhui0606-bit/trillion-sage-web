@@ -85,7 +85,7 @@ export default function ParentChatPage() {
           code: familyCode,
           role: "parent",
           action: "pay",
-          activationCode: activationInput
+          activationCode: activationInput.trim().toUpperCase()
         })
       });
       if (res.ok) {
@@ -111,12 +111,15 @@ export default function ParentChatPage() {
     if (code) {
       setFamilyCode(code);
       // Fetch initial link status if code exists
-      fetch(`/api/family-link?code=${code}`)
+      fetch(`/api/family-link?code=${code}&role=parent`)
         .then((r) => r.json())
         .then((data) => {
           setLinkStatus(data);
           if (data.parent_authorized) {
             setIsAuthorized(true);
+          }
+          if (data.parent_completed && data.parent_report) {
+            setReportData(data.parent_report);
           }
         })
         .catch(console.error);
@@ -133,7 +136,7 @@ export default function ParentChatPage() {
         },
       ]);
       setTurn(1);
-      setReportData(null);
+      // If we already loaded reportData, don't clear it
       setIsPageReady(true);
     }, 1500);
     return () => clearTimeout(timer);
@@ -218,7 +221,7 @@ export default function ParentChatPage() {
   const checkLinkStatus = async (codeStr: string) => {
     setCheckingStatus(true);
     try {
-      const res = await fetch(`/api/family-link?code=${codeStr}`);
+      const res = await fetch(`/api/family-link?code=${codeStr}&role=parent`);
       if (res.ok) {
         const data = await res.json();
         setLinkStatus(data);
@@ -724,7 +727,7 @@ export default function ParentChatPage() {
                                 type="text"
                                 value={activationInput}
                                 onChange={(e) => {
-                                  setActivationInput(e.target.value.toUpperCase().trim());
+                                  setActivationInput(e.target.value);
                                   setUnlockError("");
                                 }}
                                 placeholder="激活码例如: VIP-XXXXXX"

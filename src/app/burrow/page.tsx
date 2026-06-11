@@ -75,12 +75,15 @@ export default function BurrowPage() {
     if (code) {
       setFamilyCode(code);
       // Fetch initial link status if code exists
-      fetch(`/api/family-link?code=${code}`)
+      fetch(`/api/family-link?code=${code}&role=student`)
         .then((r) => r.json())
         .then((data) => {
           setLinkStatus(data);
           if (data.student_authorized) {
             setIsAuthorized(true);
+          }
+          if (data.student_completed && data.student_report) {
+            setReportData(data.student_report);
           }
         })
         .catch(console.error);
@@ -98,7 +101,7 @@ export default function BurrowPage() {
         },
       ]);
       setTurn(1);
-      setReportData(null);
+      // If we already loaded reportData, don't clear it
       setIsPageReady(true);
     }, 1500);
     return () => clearTimeout(timer);
@@ -182,7 +185,7 @@ export default function BurrowPage() {
   const checkLinkStatus = async (codeStr: string) => {
     setCheckingStatus(true);
     try {
-      const res = await fetch(`/api/family-link?code=${codeStr}`);
+      const res = await fetch(`/api/family-link?code=${codeStr}&role=student`);
       if (res.ok) {
         const data = await res.json();
         setLinkStatus(data);

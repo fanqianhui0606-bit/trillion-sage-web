@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import TrackerLogin from "@/components/tracker/TrackerLogin";
 import TrackerMain from "@/components/tracker/TrackerMain";
+import TrackerConsole from "@/components/tracker/TrackerConsole";
 import type { TrackerSession } from "@/lib/tracker-types";
 import { STORAGE_KEYS } from "@/lib/tracker-types";
 
@@ -49,5 +50,11 @@ export default function TrackerPage() {
     return <TrackerLogin onLogin={handleLogin} />;
   }
 
+  // 团队成员 → 控制台
+  if (session.role === "staff") {
+    return <TrackerConsole />;
+  }
+
+  // 家庭客户 → 流程跟进
   return <TrackerMain session={session} orderNo={orderNo} onLogout={handleLogout} />;
 }

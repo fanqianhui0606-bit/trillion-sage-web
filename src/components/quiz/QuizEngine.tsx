@@ -152,12 +152,11 @@ export default function QuizEngine({ edition }: { edition?: string }) {
 
     const sectionLabel = (() => {
       if (!currentQ) return "";
-      if (currentQ.section === "subjective") return "— 主观判断";
+      if (currentQ.section === "subjective") return "— 价值导向（6 题）";
       if (isSimple) {
-        return currentQ.objectiveTrack === "habits" ? "— 思维习惯（4 题）" : "— 能力自检（14 题）";
+        return "— 基础数理自测（17 题）";
       }
-      if (currentQ.objectiveTrack === "habits") return "— 思维习惯（15 题）";
-      return "— 能力自检（15 题）";
+      return currentQ.objectiveTrack === "habits" ? "— 思维习惯（15 题）" : "— 能力自检（21 题）";
     })();
 
     const handleSubmit = () => {

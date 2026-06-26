@@ -1,0 +1,17 @@
+{
+  "version": "2.0",
+  "models": {
+    "primary": "deepseek-v4-pro",
+    "fallback": "deepseek-v4-flash"
+  },
+  "request": {
+    "maxTokens": 1400,
+    "temperature": 0.65,
+    "timeoutMs": 25000
+  },
+  "proxyUrl": "https://api.deepseek.com/chat/completions",
+  "directApiUrl": "https://api.deepseek.com/chat/completions",
+  "useProxy": true,
+  "inspectCompareBothModels": true,
+  "consultCta": "如需结合你的具体情况做更深入的志愿与路径规划，欢迎通过「桥梁计划」官方渠道联系我们的学长团队，获取一对一咨询支持。"
+}

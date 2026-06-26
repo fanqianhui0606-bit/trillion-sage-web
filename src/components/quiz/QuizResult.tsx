@@ -4,8 +4,9 @@ import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Button from "@/components/shared/Button";
 import ScoreBarChart from "@/components/quiz/ScoreBarChart";
+import { formatSummaryParagraphs } from "@/lib/quiz-summary";
 import { FULL_DIMENSION_ORDER } from "@/lib/constants";
-import type { UserScores, MajorMatchResult, GraphData, CatalogReference, WheelData } from "@/lib/types";
+import type { UserScores, MajorMatchResult, GraphData, CatalogReference, WheelData, GraphNode } from "@/lib/types";
 
 export interface ValueOrientationTier {
   tier: number;
@@ -504,6 +505,138 @@ const PDF_STYLES = `
 // ============================================================
 // Main Component
 // ============================================================
+
+// ============================================================
+// AI Summary Section
+// ============================================================
+function QuizSummarySection({ userName }: { userName: string }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string>("");
+  const [source, setSource] = useState<string>("");
+  const [sourceLabel, setSourceLabel] = useState<string>("");
+  const [compare, setCompare] = useState<{ pro: string; flash: string } | null>(null);
+  const isInspect = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("edition") === "inspect";
+
+  // Load graph.json for AI summary input
+  const loadSummary = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch all required data
+      const [graphRes] = await Promise.all([
+        fetch("/data/graph.json"),
+      ]);
+
+      const graphData = await graphRes.json();
+
+      // Retrieve stored quiz result from sessionStorage (set by quiz-scoring logic)
+      const storedResult = sessionStorage.getItem("tsg_quiz_result");
+      if (!storedResult) {
+        throw new Error("未找到测验结果数据");
+      }
+
+      // Parse stored result and extract graph nodes
+      const resultData = JSON.parse(storedResult);
+      const graphNodes: GraphNode[] = graphData.nodes || [];
+
+      // Build factor weights from wheel config
+      const matchConfigRes = await fetch("/data/match-config-four-factor.json");
+      const matchConfig = await matchConfigRes.json().catch(() => ({ weights: {} }));
+      const factorWeights = (matchConfig as { weights?: Record<string, number> }).weights || {};
+
+      const payload = {
+        studentName: userName,
+        objectiveUser: resultData.objectiveUser || {},
+        subjectInterest: resultData.subjectInterest || {},
+        interestAmbition: resultData.scores?.subjective?.interestAmbition ?? 0,
+        practicalBenefit: resultData.scores?.subjective?.practicalBenefit ?? 0,
+        valueTier: resultData.scores?.subjective?.valueTier ?? null,
+        valueLabel: resultData.valueLabel ?? "",
+        valueBrief: resultData.valueBrief ?? "",
+        rankedMajors: resultData.matches || [],
+        factorWeights,
+        graphNodes,
+        compareBoth: isInspect,
+      };
+
+      const res = await fetch("/api/quiz-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "请求失败");
+
+      setSummary(data.summary);
+      setSource(data.source || "fallback");
+      setSourceLabel(data.sourceLabel || "本地规则模板");
+      if (isInspect && data.compare) setCompare(data.compare);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "加载失败");
+    } finally {
+      setLoading(false);
+    }
+  }, [userName, isInspect]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  return (
+    <div className="glass-panel p-4 md:p-5 mb-4">
+      <h3 className="text-base md:text-[1.05rem] font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
+        五、测验总评
+      </h3>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="inline-block w-6 h-6 border-2 border-bridge-blue border-t-transparent rounded-full animate-spin mb-2" />
+            <p className="text-xs text-bridge-muted">正在生成总评...</p>
+          </div>
+        </div>
+      ) : error ? (
+        <p className="text-xs text-red-500 text-center py-4">{error}</p>
+      ) : isInspect && compare ? (
+        // Inspect mode: side-by-side comparison
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`p-4 rounded-xl border-2 ${source === "deepseek-v4-pro" ? "border-bridge-blue ring-2 ring-bridge-blue/30" : "border-white/10"} bg-white/20`}>
+            <div className="text-xs font-bold text-bridge-blue mb-2">DeepSeek V4 Pro</div>
+            <div className="space-y-3 text-xs text-bridge-text leading-relaxed">
+              {formatSummaryParagraphs(compare.pro).map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
+          </div>
+          <div className={`p-4 rounded-xl border-2 ${source === "deepseek-v4-flash" ? "border-bridge-gold ring-2 ring-bridge-gold/30" : "border-white/10"} bg-white/20`}>
+            <div className="text-xs font-bold text-bridge-gold mb-2">DeepSeek V4 Flash</div>
+            <div className="space-y-3 text-xs text-bridge-text leading-relaxed">
+              {formatSummaryParagraphs(compare.flash).map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Normal mode: show single summary
+        <div className="space-y-3 text-xs text-bridge-text leading-relaxed">
+          {formatSummaryParagraphs(summary).map((p, i) => (
+            <p key={i} className="text-justify">{p}</p>
+          ))}
+        </div>
+      )}
+
+      {sourceLabel && !loading && !error && (
+        <p className="text-[10px] text-slate-400 text-right mt-3">
+          当前正文来源：{sourceLabel}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function QuizResult({
   scores,
@@ -1273,6 +1406,9 @@ export default function QuizResult({
             </p>
           </div>
         )}
+
+        {/* 五、测验总评 — AI 生成总评 (专业版) */}
+        {!isSimple && userName && <QuizSummarySection userName={userName} />}
 
         {/* Action Buttons Panel matching .quiz-footer in GitHub */}
         <section className="glass-panel p-4 md:p-5 flex flex-wrap gap-3 items-center justify-center">

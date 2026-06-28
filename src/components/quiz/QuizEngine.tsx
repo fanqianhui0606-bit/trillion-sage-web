@@ -156,7 +156,7 @@ export default function QuizEngine({ edition }: { edition?: string }) {
       if (isSimple) {
         return "— 基础数理自测（17 题）";
       }
-      return currentQ.objectiveTrack === "habits" ? "— 思维习惯（15 题）" : "— 能力自检（21 题）";
+      return currentQ.objectiveTrack === "habits" ? "— 思维习惯（14 题）" : "— 能力自检（22 题）";
     })();
 
     const handleSubmit = () => {

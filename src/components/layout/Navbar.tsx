@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/#consultation", label: "预约一对一引航" },
   { href: "/#programs-preview", label: "学术衔接营" },
   { href: "/#contact", label: "联系我们" },
+  { href: "/tracker", label: "服务流程" },
 ];
 
 export default function Navbar() {

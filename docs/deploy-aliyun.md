@@ -40,6 +40,14 @@ cd trillion-sage-web
 npm run build
 ```
 构建产物在 `.next/standalone/` 目录（包含 `server.js`）。
+> [!NOTE]
+> Next.js standalone 模式默认不包含 `public/` 和 `.next/static/` 目录，这会导致线上部署后丢失 CSS 样式和图片。
+> 本项目已通过 `package.json` 中的 `build` 钩子配置了 `scripts/postbuild.js` 自动拷贝这两个目录。
+> 如果在服务器上手动运行，也可执行以下命令手动拷贝：
+> ```bash
+> cp -r public .next/standalone/
+> cp -r .next/static .next/standalone/.next/
+> ```
 
 ### 2.2 上传到服务器
 ```bash
@@ -185,9 +193,13 @@ git checkout <commit-hash> && npm run build && pm2 restart trillionsage-web
 ```
 /path/to/trillion-sage-web/
 ├── .next/
-│   └── standalone/         # npm run build 生成
+│   ├── static/             # 原始编译静态资源
+│   └── standalone/         # npm run build 配合 postbuild 生成
+│       ├── .next/
+│       │   └── static/     # [自动拷贝] 静态文件目录（存放 CSS/JS 等，供独立运行使用）
+│       ├── public/         # [自动拷贝] 静态图片与公共资源
 │       └── server.js       # PM2 启动入口
-├── public/                  # 静态资源
+├── public/                  # 原始静态图片/配置数据
 ├── .env.production          # 环境变量（勿上传 GitHub）
 └── ecosystem.config.js      # PM2 配置文件（可选）
 ```

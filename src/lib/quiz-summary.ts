@@ -41,7 +41,7 @@ export function dominantFactorLabels(item: MajorMatchResult, weights: Record<str
   };
   return FACTOR_KEYS.map((f) => ({
     label: f.label,
-    contribution: Number(item[f.field as keyof MajorMatchResult] ?? 0) * w[f.key],
+    contribution: Number(item[f.field as keyof MajorMatchResult] ?? 0) * (w as Record<string, number>)[f.key],
   }))
     .sort((a, b) => b.contribution - a.contribution)
     .filter((x) => x.contribution > 0)

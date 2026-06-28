@@ -133,7 +133,7 @@ export function buildSummaryInput(
       weaknesses: weaknesses.map((x) => ({ id: x.id, title: x.title, score: x.score })),
       layerAverages: (pack.layerAverages || [])
         .filter((l) => l.average != null)
-        .map((l) => ({ name: l.name, average: Number(l.average.toFixed(2)) })),
+        .map((l) => ({ name: l.name, average: Number((l.average as number).toFixed(2)) })),
     },
     topMajors: (pack._rankedAll || []).slice(0, 5).map((item, idx) => {
       return {

@@ -60,7 +60,6 @@ export default function TrackerConsole() {
     orders.push({ orderNo: order.orderNo, familyCode: code, createdAt: new Date().toISOString() });
     localStorage.setItem(STORAGE_KEYS.ORDERS_LIST, JSON.stringify(orders));
 
-    setFamilyCode(code);
     setConfirmMsg(`订单已创建，家庭联合码：${code}（请告知家长）`);
   };
 

@@ -100,7 +100,7 @@ export default function TrackerLogin({
           {/* 入口切换 */}
           <div className="flex gap-2 mb-6">
             <button
-              onClick={() => { setMode("family"); setShowStaffInput(false); setError(""); }}
+              onClick={() => { setMode("family"); setError(""); }}
               className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors border ${
                 mode === "family"
                   ? "bg-bridge-blue text-white border-bridge-blue"

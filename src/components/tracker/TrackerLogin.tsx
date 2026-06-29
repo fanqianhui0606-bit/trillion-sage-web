@@ -5,6 +5,7 @@ import GlassCard from "@/components/shared/GlassCard";
 import Button from "@/components/shared/Button";
 import type { TrackerSession, TrackerRole } from "@/lib/tracker-types";
 import { STORAGE_KEYS } from "@/lib/tracker-types";
+import { findOrderByFamilyCode } from "@/lib/fireorm";
 
 // 验证码：家庭码格式（6位字母数字），团队码格式（8位字母数字）
 function validateFamilyCode(code: string): boolean {
@@ -23,12 +24,15 @@ export default function TrackerLogin({
   const [code, setCode] = useState("");
   const [contactName, setContactName] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleCodeChange = (v: string) => {
     setCode(v.toUpperCase());
     setError("");
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    setError("");
     if (mode === "family") {
       if (!validateFamilyCode(code)) {
         setError("请输入正确的 6 位家庭联合码");
@@ -46,42 +50,44 @@ export default function TrackerLogin({
       return;
     }
 
+    setLoading(true);
     const role: TrackerRole = mode;
-    // 家庭码：直接用码查找对应订单；团队码：验证后可创建订单
-    if (role === "family") {
-      // 检查 localStorage 中是否存在该家庭码的订单
-      const ordersRaw = localStorage.getItem(STORAGE_KEYS.ORDERS_LIST);
-      const orders: Array<{ orderNo: string; familyCode: string }> = ordersRaw
-        ? JSON.parse(ordersRaw)
-        : [];
-      const order = orders.find((o) => o.familyCode === code);
-      if (!order) {
-        setError("未找到对应的服务流程，请联系引导员确认家庭码");
-        return;
-      }
+    
+    try {
+      // 家庭码：从服务器文件数据库查找对应订单
+      if (role === "family") {
+        const order = await findOrderByFamilyCode(code);
+        if (!order) {
+          setError("未找到对应的服务流程，请联系引导员确认家庭码");
+          return;
+        }
 
-      const session: TrackerSession = {
-        role,
-        code,
-        orderNo: order.orderNo,
-        loginAt: new Date().toISOString(),
-        contactName: contactName.trim(),
-      };
-      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
-      onLogin(session, order.orderNo);
-    } else {
-      // 团队成员：内测阶段任意 8 位码可通过验证
-      // 生成新订单号
-      const orderNo = `QS${Date.now()}`;
-      const session: TrackerSession = {
-        role,
-        code,
-        orderNo,
-        loginAt: new Date().toISOString(),
-        contactName: contactName.trim(),
-      };
-      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
-      onLogin(session, orderNo);
+        const session: TrackerSession = {
+          role,
+          code,
+          orderNo: order.orderNo,
+          loginAt: new Date().toISOString(),
+          contactName: contactName.trim(),
+        };
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+        onLogin(session, order.orderNo);
+      } else {
+        // 团队成员：内测阶段任意 8 位码可通过验证
+        const orderNo = `QS${Date.now()}`;
+        const session: TrackerSession = {
+          role,
+          code,
+          orderNo,
+          loginAt: new Date().toISOString(),
+          contactName: contactName.trim(),
+        };
+        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+        onLogin(session, orderNo);
+      }
+    } catch (err) {
+      setError(`登录校验失败: ${(err as Error).message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,8 +160,8 @@ export default function TrackerLogin({
             <p className="text-red-500 text-xs text-center mb-4 animate-shake">{error}</p>
           )}
 
-          <Button variant="primary" onClick={handleLogin} className="w-full">
-            进入服务流程
+          <Button variant="primary" onClick={handleLogin} className="w-full" disabled={loading}>
+            {loading ? "登录中..." : "进入服务流程"}
           </Button>
 
           {/* 家庭端说明 */}

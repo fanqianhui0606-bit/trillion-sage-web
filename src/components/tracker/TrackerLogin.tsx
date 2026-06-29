@@ -145,7 +145,7 @@ export default function TrackerLogin({
               value={code}
               onChange={(e) => handleCodeChange(e.target.value)}
               placeholder={mode === "family" ? "请输入 6 位家庭联合码" : "请输入 8 位团队成员码"}
-              maxLength={mode === "family" ? 6 : 8}
+              maxLength={20}
               className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm font-mono text-bridge-text focus:outline-none focus:border-bridge-blue transition-colors tracking-widest"
             />
           </div>

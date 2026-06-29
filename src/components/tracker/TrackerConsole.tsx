@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import GlassCard from "@/components/shared/GlassCard";
 import Button from "@/components/shared/Button";
 import type { TrackerOrder } from "@/lib/tracker-types";
@@ -8,6 +8,7 @@ import { STORAGE_KEYS, orderStorageKey } from "@/lib/tracker-types";
 import { PACKAGES } from "@/lib/tracker-packages";
 import { AGREEMENTS } from "@/lib/tracker-agreements";
 import type { PackageId } from "@/lib/tracker-types";
+import TrackerMain from "./TrackerMain";
 
 /** 生成 6 位家庭码 */
 function generateFamilyCode(): string {
@@ -34,12 +35,61 @@ function createOrder(packageId: PackageId, visitorName: string): TrackerOrder {
   };
 }
 
+export interface EnrichedOrder {
+  orderNo: string;
+  familyCode: string;
+  createdAt: string;
+  visitorName: string;
+  packageId?: PackageId;
+}
+
 export default function TrackerConsole() {
   const [visitorName, setVisitorName] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<PackageId | "">("");
   const [confirmMsg, setConfirmMsg] = useState("");
   const [error, setError] = useState("");
+  const [ordersList, setOrdersList] = useState<EnrichedOrder[]>([]);
+  const [activeOrderNo, setActiveOrderNo] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // 加载本地订单列表
+  const loadOrders = () => {
+    const ordersRaw = localStorage.getItem(STORAGE_KEYS.ORDERS_LIST);
+    if (ordersRaw) {
+      try {
+        const list = JSON.parse(ordersRaw) as Array<{ orderNo: string; familyCode: string; createdAt: string }>;
+        // 从 localStorage 补全每个订单的来访者姓名与套餐类型
+        const enriched: EnrichedOrder[] = list.map(o => {
+          const detailRaw = localStorage.getItem(orderStorageKey(o.orderNo));
+          if (detailRaw) {
+            try {
+              const detail = JSON.parse(detailRaw) as TrackerOrder;
+              return {
+                ...o,
+                visitorName: detail.visitor?.name || "未知",
+                packageId: detail.packageId
+              };
+            } catch {
+              return { ...o, visitorName: "未知" };
+            }
+          }
+          return { ...o, visitorName: "未知" };
+        });
+        
+        // 按照创建时间降序排序（最新的排在最前面）
+        enriched.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        setOrdersList(enriched);
+      } catch (e) {
+        console.error("Failed to parse orders list:", e);
+      }
+    } else {
+      setOrdersList([]);
+    }
+  };
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
 
   const handleCreateOrder = () => {
     setError("");
@@ -61,6 +111,9 @@ export default function TrackerConsole() {
     localStorage.setItem(STORAGE_KEYS.ORDERS_LIST, JSON.stringify(orders));
 
     setConfirmMsg(`订单已创建，家庭联合码：${code}（请告知家长）`);
+    setVisitorName("");
+    setSelectedPackage("");
+    loadOrders(); // 重新加载列表
   };
 
   // 导入订单数据
@@ -86,6 +139,7 @@ export default function TrackerConsole() {
           localStorage.setItem(STORAGE_KEYS.ORDERS_LIST, JSON.stringify(orders));
         }
         setConfirmMsg(`订单 ${order.orderNo} 导入成功`);
+        loadOrders(); // 重新加载列表
       } catch {
         setError("导入失败，请检查文件格式");
       }
@@ -107,6 +161,43 @@ export default function TrackerConsole() {
     URL.revokeObjectURL(url);
   };
 
+  // 删除订单
+  const handleDeleteOrder = (orderNo: string, familyCode: string) => {
+    if (!confirm(`确定要彻底删除该订单（联合码: ${familyCode}）吗？此操作不可逆。`)) return;
+    localStorage.removeItem(orderStorageKey(orderNo));
+    const ordersRaw = localStorage.getItem(STORAGE_KEYS.ORDERS_LIST);
+    if (ordersRaw) {
+      try {
+        const list = JSON.parse(ordersRaw) as Array<{ orderNo: string; familyCode: string; createdAt: string }>;
+        const filtered = list.filter(o => o.orderNo !== orderNo);
+        localStorage.setItem(STORAGE_KEYS.ORDERS_LIST, JSON.stringify(filtered));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadOrders();
+  };
+
+  // 如果处于订单流程跟进状态，则渲染 TrackerMain 页面（以 staff 身份）
+  if (activeOrderNo) {
+    return (
+      <TrackerMain
+        session={{
+          role: "staff",
+          code: "ADMIN",
+          orderNo: activeOrderNo,
+          loginAt: new Date().toISOString(),
+          contactName: "引导员",
+        }}
+        orderNo={activeOrderNo}
+        onLogout={() => {
+          setActiveOrderNo("");
+          loadOrders(); // 返回时刷新列表
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-xl mx-auto">
@@ -123,7 +214,10 @@ export default function TrackerConsole() {
               <input
                 type="text"
                 value={visitorName}
-                onChange={(e) => setVisitorName(e.target.value)}
+                onChange={(e) => {
+                  setVisitorName(e.target.value);
+                  setError("");
+                }}
                 placeholder="请输入来访者姓名"
                 className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue"
               />
@@ -134,7 +228,10 @@ export default function TrackerConsole() {
                 {(Object.keys(PACKAGES) as PackageId[]).map((id) => (
                   <button
                     key={id}
-                    onClick={() => setSelectedPackage(id)}
+                    onClick={() => {
+                      setSelectedPackage(id);
+                      setError("");
+                    }}
                     className={`p-2 rounded-lg text-xs text-left border transition-colors ${
                       selectedPackage === id
                         ? "bg-bridge-blue/15 text-bridge-blue border-bridge-blue font-semibold"
@@ -158,9 +255,53 @@ export default function TrackerConsole() {
           </div>
         </GlassCard>
 
+        {/* 订单管理列表 */}
+        <GlassCard className="p-5 mb-4">
+          <h2 className="text-sm font-bold text-bridge-blue mb-3">服务订单跟进列表</h2>
+          {ordersList.length === 0 ? (
+            <p className="text-xs text-bridge-muted text-center py-6">暂无服务订单，请在上方创建新订单</p>
+          ) : (
+            <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+              {ordersList.map((o) => (
+                <div key={o.orderNo} className="p-3 rounded-lg border border-white/40 bg-white/10 flex items-center justify-between text-xs gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-bridge-text text-sm">{o.visitorName}</span>
+                      <span className="text-[10px] bg-bridge-blue/10 text-bridge-blue px-1.5 py-0.5 rounded font-mono">
+                        {o.familyCode}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-bridge-muted mt-1">
+                      套餐：{o.packageId ? PACKAGES[o.packageId]?.name : "未知套餐"}
+                    </div>
+                    <div className="text-[10px] text-bridge-muted font-mono">
+                      建档时间：{new Date(o.createdAt).toLocaleString("zh-CN", { hour12: false })}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveOrderNo(o.orderNo)}
+                      className="px-2.5 py-1.5 text-xs font-bold text-white bg-bridge-blue hover:bg-blue-600 rounded-lg transition-colors cursor-pointer"
+                    >
+                      跟进流程
+                    </button>
+                    <button
+                      onClick={() => handleDeleteOrder(o.orderNo, o.familyCode)}
+                      className="p-1.5 text-red-500 hover:text-red-700 transition-colors"
+                      title="删除订单"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassCard>
+
         {/* 数据管理 */}
         <GlassCard className="p-5">
-          <h2 className="text-sm font-bold text-bridge-blue mb-3">数据管理</h2>
+          <h2 className="text-sm font-bold text-bridge-blue mb-3">数据备份</h2>
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" onClick={handleExportAll}>
               导出全部订单列表
@@ -177,7 +318,7 @@ export default function TrackerConsole() {
             </Button>
           </div>
           <p className="text-[10px] text-bridge-muted mt-2">
-            当前本地存储订单数：{JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS_LIST) || "[]").length}
+            当前本地存储订单数：{ordersList.length}
           </p>
         </GlassCard>
       </div>

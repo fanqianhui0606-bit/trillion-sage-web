@@ -17,7 +17,6 @@ import {
   Unsubscribe,
   Timestamp,
   serverTimestamp,
-  increment,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import type { TrackerOrder, TrackerSession } from "./tracker-types";
@@ -26,7 +25,6 @@ import type { TrackerOrder, TrackerSession } from "./tracker-types";
 // 集合路径
 // ========================
 const ORDERS_COLLECTION = "orders";
-const SESSIONS_COLLECTION = "sessions";
 
 // ========================
 // 工具函数

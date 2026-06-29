@@ -13,6 +13,41 @@
   .glass-panel {
     @apply bg-white/30 border border-white/[0.95] backdrop-blur-[12px] rounded-xl shadow-glass;
   }
+  /* 协议弹窗交互按钮 */
+  .doc-btn {
+    @apply text-xs text-slate-600 px-3 py-1.5 rounded border border-slate-200 bg-white mr-2 mb-1 cursor-pointer transition-colors select-none;
+  }
+  .doc-btn:hover:not(:disabled) {
+    @apply border-bridge-blue text-bridge-blue bg-blue-50;
+  }
+  .doc-btn--on {
+    @apply border-green-400 text-green-700 bg-green-50 font-semibold;
+  }
+  .doc-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+  .doc-btns-row {
+    @apply flex flex-wrap gap-x-2 gap-y-1 mt-2 mb-3;
+  }
+  /* 协议弹窗内嵌提示 */
+  .agreement-doc-btns {
+    @apply flex flex-wrap gap-1 mt-1;
+  }
+  .agreement-doc-hint {
+    @apply text-[10px] text-slate-500 mt-1 mb-2;
+  }
+  .agreement-auto-info {
+    @apply text-xs text-slate-600 mb-1;
+  }
+  .agreement-table {
+    @apply w-full text-xs border-collapse my-2;
+  }
+  .agreement-table th {
+    @apply bg-slate-100 text-slate-700 font-semibold px-2 py-1 text-left border border-slate-200;
+  }
+  .agreement-table td {
+    @apply px-2 py-1 border border-slate-200 text-slate-600;
+  }
 }
 
 /* Watermark — complex fixed overlay, kept as minimal custom CSS */

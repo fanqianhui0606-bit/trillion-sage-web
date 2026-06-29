@@ -34,12 +34,13 @@ export interface PackageInfo {
   id: PackageId;
   name: string;
   description: string;
-  /** 咨询次数（0 表示无咨询） */
   consultCount: number;
-  /** 是否含测验 */
   hasQuiz: boolean;
-  /** 是否含心理辅导 */
   hasCounseling: boolean;
+  /** 固定总价（元），无则为 range 首元素 */
+  price?: number;
+  priceMin?: number;
+  priceMax?: number;
 }
 
 // ========================
@@ -49,16 +50,10 @@ export type StepStatus = "pending" | "locked" | "active" | "completed" | "skippe
 
 export interface StepDefinition {
   id: string;
-  /** 阶段前缀: A / B / C */
   phase: "A" | "B" | "C";
   label: string;
   description?: string;
-  /** 完成后才解锁下一步的依赖步骤（逗号分隔 ID） */
   requires?: string;
-  /** 属于哪个子业务: consult-1 / consult-2 / ... */
-  business?: "quiz" | "consult-1" | "consult-2" | "consult-3" | "counseling";
-  /** 是否在事后确认前需先完成事前确认 */
-  postRequires?: string;
 }
 
 export interface StepState {

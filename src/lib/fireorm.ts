@@ -5,6 +5,7 @@
  */
 
 import type { TrackerOrder, TrackerSession } from "./tracker-types";
+import { getPackagePrice, getDepositAmount } from "./tracker-packages";
 
 // ========================
 // 工具函数
@@ -53,13 +54,15 @@ export async function createOrder(
   packageId: TrackerOrder["packageId"],
   visitor: TrackerOrder["visitor"]
 ): Promise<TrackerOrder> {
+  const totalPrice = getPackagePrice(packageId);
+  const depositAmount = getDepositAmount(packageId);
   const order: TrackerOrder = {
     orderNo: generateOrderNo(),
     packageId,
     createdAt: new Date().toISOString(),
     visitor,
-    deposit: { paid: false, amount: 0 },
-    fullPayment: { paid: false, amount: 0 },
+    deposit: { paid: false, amount: depositAmount },
+    fullPayment: { paid: false, amount: totalPrice },
     steps: {},
     consults: [],
   };

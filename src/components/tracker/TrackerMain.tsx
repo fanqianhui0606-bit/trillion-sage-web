@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { TrackerSession, TrackerOrder, StepDefinition, StepState } from "@/lib/tracker-types";
-import { PACKAGES, getStepsForPackage, canActivateStep } from "@/lib/tracker-packages";
+import { PACKAGES, getStepsForPackage, canActivateStep, getDepositAmount } from "@/lib/tracker-packages";
+import { getAgreementByStepId, agreementIdsForStep, getAgreementById } from "@/lib/tracker-agreements";
 import { getOrder, updateOrder, completeStep, terminateOrder } from "@/lib/fireorm";
 import StepFormAIntake from "./StepFormA";
 import StepFormB from "./StepFormB";
 import StepFormPayment, { StepFormCComplete } from "./StepFormC";
+import StepFormThanks from "./StepFormThanks";
+import StepFormGifts from "./StepFormGifts";
+import TrackerAgreementModal from "./TrackerAgreementModal";
 
 const PHASE_LABELS = { A: "来访信息", B: "服务跟进", C: "服务完成" };
 
@@ -24,6 +28,7 @@ export default function TrackerMain({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
+  const [agreementModalStep, setAgreementModalStep] = useState<string | null>(null);
 
   // 加载订单数据
   const loadOrder = useCallback(async () => {
@@ -59,6 +64,7 @@ export default function TrackerMain({
 
       await loadOrder();
       setExpandedStep(null);
+      setAgreementModalStep(null);
     } catch (err) {
       alert(`保存失败: ${(err as Error).message}`);
     }
@@ -67,11 +73,15 @@ export default function TrackerMain({
   // 点击步骤进入编辑
   const handleStepClick = (stepId: string, status: string) => {
     if (status === "locked") return;
+    // 协议步骤：打开弹窗阅读
+    if (isAgreementStep(stepId)) {
+      if (status === "completed") return; // 已完成则不可重复操作
+      setAgreementModalStep(stepId);
+      return;
+    }
     if (status === "completed") {
-      // 已完成的步骤只读展示
       setExpandedStep(expandedStep === stepId ? null : stepId);
     } else {
-      // active 状态可编辑
       setExpandedStep(expandedStep === stepId ? null : stepId);
     }
   };
@@ -111,8 +121,18 @@ export default function TrackerMain({
       "b-consult-2-pre", "b-consult-2-post",
       "b-consult-3-pre", "b-consult-3-post",
       "b-counseling",
-      "b-full-payment",
-      "c-inspection", "c-signature",
+      "b-remaining",
+      "c-inspection", "c-gifts", "c-signature", "c-thanks",
+    ].includes(stepId);
+  };
+
+  // 判断步骤是否为协议阅读
+  const isAgreementStep = (stepId: string): boolean => {
+    return [
+      "a-privacy-policy",
+      "a-service-agreement",
+      "b-quiz-knowledge",
+      "b-counseling-knowledge",
     ].includes(stepId);
   };
 
@@ -140,14 +160,14 @@ export default function TrackerMain({
           data={{ ...depositData, ...order?.deposit as Record<string, unknown> }}
           readOnly={isReadOnly}
           role={session.role}
-          price={0}
+          price={getDepositAmount(order!.packageId)}
           onSave={(data) => handleFormSave(step.id, data)}
         />
       );
     }
 
     // 全款表单
-    if (step.id === "b-full-payment") {
+    if (step.id === "b-remaining") {
       const paymentData = (stepData?.data as Record<string, unknown>) || {};
       return (
         <StepFormPayment
@@ -155,7 +175,7 @@ export default function TrackerMain({
           data={{ ...paymentData, ...order?.fullPayment as Record<string, unknown> }}
           readOnly={isReadOnly}
           role={session.role}
-          price={0}
+          price={order!.steps["a-deposit"]?.data ? (order!.steps["a-deposit"].data as { amount?: number }).amount || 0 : getDepositAmount(order!.packageId) * 9}
           onSave={(data) => handleFormSave(step.id, data)}
         />
       );
@@ -212,6 +232,29 @@ export default function TrackerMain({
           readOnly={isReadOnly}
           role={session.role}
           onSave={(data) => handleFormSave(step.id, data)}
+        />
+      );
+    }
+
+    // c-gifts 赠送产品（参考库的 c-gifts）
+    if (step.id === "c-gifts") {
+      return (
+        <StepFormGifts
+          data={stepData?.data as { text?: string } | undefined}
+          readOnly={isReadOnly}
+          role={session.role}
+          onSave={(data) => handleFormSave(step.id, data)}
+        />
+      );
+    }
+
+    // 感谢页（参考库 c-completion）
+    if (step.id === "c-thanks") {
+      return (
+        <StepFormThanks
+          visitorName={order?.visitor?.name}
+          packageName={order?.packageId ? PACKAGES[order.packageId]?.name : undefined}
+          staffName="桥梁计划团队"
         />
       );
     }
@@ -320,15 +363,36 @@ export default function TrackerMain({
                   const stepData = order.steps[step.id];
                   const hasFormContent = hasForm(step.id);
 
+                  // 协议 chip（与参考库一致：每步显示绑定的协议同意状态）
+                  const agreementChips = agreementIdsForStep(step.id).map((agId) => {
+                    const agDef = getAgreementById(agId);
+                    if (!agDef) return null;
+                    // 协议同意状态 = 对应步骤是否已标记 completed
+                    const agreed = order.steps[agDef.stepId]?.status === "completed";
+                    return (
+                      <span
+                        key={agId}
+                        className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${
+                          agreed
+                            ? "text-green-600 bg-green-50 border-green-300"
+                            : "text-slate-400 bg-white/20 border-dashed border-slate-300"
+                        }`}
+                      >
+                        {agDef.title}
+                        {agreed && " ✓"}
+                      </span>
+                    );
+                  });
+
                   return (
                     <div key={step.id}>
                       {/* 步骤卡片头部 */}
                       <div
-                        onClick={() => (hasFormContent && !isLocked) ? handleStepClick(step.id, status) : null}
-                        className={`glass-panel p-4 transition-all cursor-pointer ${
+                        onClick={() => ((hasFormContent || isAgreementStep(step.id)) && !isLocked) ? handleStepClick(step.id, status) : null}
+                        className={`glass-panel p-4 transition-all ${
                           isLocked ? "opacity-50 cursor-not-allowed" :
-                          isExpanded ? "border-bridge-blue/40 rounded-b-none" : ""
-                        } ${!hasFormContent ? "cursor-default" : ""}`}
+                          (hasFormContent || isAgreementStep(step.id)) ? "cursor-pointer hover:border-bridge-blue/30" : "cursor-default"
+                        } ${isExpanded ? "border-bridge-blue/40 rounded-b-none" : ""}`}
                       >
                         <div className="flex items-start gap-3">
                           {/* 状态图标 */}
@@ -339,7 +403,7 @@ export default function TrackerMain({
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className={`text-sm font-semibold ${isCompleted ? "text-green-700 line-through" : isActive ? "text-bridge-blue" : "text-bridge-muted"}`}>
                                 {step.label}
                               </span>
@@ -348,11 +412,16 @@ export default function TrackerMain({
                                   {isExpanded ? "收起" : "点击填写"}
                                 </span>
                               )}
+                              {isAgreementStep(step.id) && isActive && (
+                                <span className="text-[10px] text-bridge-muted">点击阅读</span>
+                              )}
                               {isActive && !isExpanded && (
                                 <span className="text-[10px] bg-bridge-blue/15 text-bridge-blue px-1.5 py-0.5 rounded font-semibold">
                                   进行中
                                 </span>
                               )}
+                              {/* 协议 chip（参考库的 rail-agreement-chip） */}
+                              {agreementChips}
                             </div>
                             {step.description && (
                               <p className="text-xs text-bridge-muted mt-0.5">{step.description}</p>
@@ -397,6 +466,25 @@ export default function TrackerMain({
           </div>
         )}
       </div>
+
+      {/* 协议弹窗 */}
+      {agreementModalStep && (() => {
+        const agreement = getAgreementByStepId(agreementModalStep);
+        if (!agreement || !order) return null;
+        const stepData = order.steps[agreementModalStep];
+        return (
+          <TrackerAgreementModal
+            agreementId={agreement.id}
+            visitor={order.visitor}
+            packageId={order.packageId}
+            orderNo={order.orderNo}
+            existingRecord={stepData?.data as { checked?: boolean; confirmedAt?: string; docChecks?: Record<string, boolean> } | undefined}
+            role={session.role}
+            onAgree={(docChecks) => handleFormSave(agreementModalStep, { agreed: true, agreedAt: new Date().toISOString(), docChecks })}
+            onCancel={() => setAgreementModalStep(null)}
+          />
+        );
+      })()}
     </div>
   );
 }

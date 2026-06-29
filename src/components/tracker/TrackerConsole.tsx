@@ -16,7 +16,12 @@ function generateFamilyCode(): string {
 }
 
 /** 创建新订单 */
-function createOrder(packageId: PackageId, visitorName: string): TrackerOrder {
+function createOrder(
+  packageId: PackageId, 
+  visitorName: string, 
+  visitorAge: string, 
+  visitorGrade: string
+): TrackerOrder {
   const now = new Date();
   // 初始化所有步骤为 pending
   const steps: Record<string, { status: "pending" }> = {};
@@ -27,7 +32,7 @@ function createOrder(packageId: PackageId, visitorName: string): TrackerOrder {
     orderNo: `QS${now.getTime()}`,
     packageId,
     createdAt: now.toISOString(),
-    visitor: { name: visitorName, age: "", grade: "" },
+    visitor: { name: visitorName, age: visitorAge, grade: visitorGrade },
     deposit: { paid: false, amount: 0 },
     fullPayment: { paid: false, amount: 0 },
     steps,
@@ -40,11 +45,15 @@ export interface EnrichedOrder {
   familyCode: string;
   createdAt: string;
   visitorName: string;
+  visitorAge?: string;
+  visitorGrade?: string;
   packageId?: PackageId;
 }
 
-export default function TrackerConsole() {
+export default function TrackerConsole({ onLogout }: { onLogout: () => void }) {
   const [visitorName, setVisitorName] = useState("");
+  const [visitorAge, setVisitorAge] = useState("");
+  const [visitorGrade, setVisitorGrade] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<PackageId | "">("");
   const [confirmMsg, setConfirmMsg] = useState("");
   const [error, setError] = useState("");
@@ -58,7 +67,7 @@ export default function TrackerConsole() {
     if (ordersRaw) {
       try {
         const list = JSON.parse(ordersRaw) as Array<{ orderNo: string; familyCode: string; createdAt: string }>;
-        // 从 localStorage 补全每个订单的来访者姓名与套餐类型
+        // 从 localStorage 补全每个订单的详细信息
         const enriched: EnrichedOrder[] = list.map(o => {
           const detailRaw = localStorage.getItem(orderStorageKey(o.orderNo));
           if (detailRaw) {
@@ -67,6 +76,8 @@ export default function TrackerConsole() {
               return {
                 ...o,
                 visitorName: detail.visitor?.name || "未知",
+                visitorAge: detail.visitor?.age || "",
+                visitorGrade: detail.visitor?.grade || "",
                 packageId: detail.packageId
               };
             } catch {
@@ -76,7 +87,7 @@ export default function TrackerConsole() {
           return { ...o, visitorName: "未知" };
         });
         
-        // 按照创建时间降序排序（最新的排在最前面）
+        // 按照创建时间降序排序
         enriched.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         setOrdersList(enriched);
       } catch (e) {
@@ -96,7 +107,12 @@ export default function TrackerConsole() {
     if (!visitorName.trim()) { setError("请输入来访者姓名"); return; }
     if (!selectedPackage) { setError("请选择套餐"); return; }
 
-    const order = createOrder(selectedPackage, visitorName.trim());
+    const order = createOrder(
+      selectedPackage, 
+      visitorName.trim(), 
+      visitorAge.trim(), 
+      visitorGrade.trim()
+    );
     const code = generateFamilyCode();
 
     // 保存订单
@@ -112,8 +128,10 @@ export default function TrackerConsole() {
 
     setConfirmMsg(`订单已创建，家庭联合码：${code}（请告知家长）`);
     setVisitorName("");
+    setVisitorAge("");
+    setVisitorGrade("");
     setSelectedPackage("");
-    loadOrders(); // 重新加载列表
+    loadOrders(); // 刷新列表
   };
 
   // 导入订单数据
@@ -139,7 +157,7 @@ export default function TrackerConsole() {
           localStorage.setItem(STORAGE_KEYS.ORDERS_LIST, JSON.stringify(orders));
         }
         setConfirmMsg(`订单 ${order.orderNo} 导入成功`);
-        loadOrders(); // 重新加载列表
+        loadOrders();
       } catch {
         setError("导入失败，请检查文件格式");
       }
@@ -201,9 +219,20 @@ export default function TrackerConsole() {
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-xl mx-auto">
-        <h1 className="text-xl font-bold text-bridge-blue font-serif mb-6 text-center">
-          引导员控制台
-        </h1>
+        
+        {/* 顶部标题栏 & 退出登录 */}
+        <div className="glass-panel p-4 mb-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-bridge-blue font-serif">引导员控制台</h1>
+            <p className="text-xs text-bridge-muted">管理服务流程与客户订单</p>
+          </div>
+          <button
+            onClick={onLogout}
+            className="px-4 py-2 text-xs text-bridge-muted hover:text-red-500 border border-white/30 rounded-lg transition-colors cursor-pointer"
+          >
+            退出登录
+          </button>
+        </div>
 
         {/* 创建订单 */}
         <GlassCard className="p-5 mb-4">
@@ -222,6 +251,31 @@ export default function TrackerConsole() {
                 className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue"
               />
             </div>
+            
+            {/* 年龄 & 年级 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-bridge-blue mb-1">年龄（选填）</label>
+                <input
+                  type="text"
+                  value={visitorAge}
+                  onChange={(e) => setVisitorAge(e.target.value)}
+                  placeholder="如: 17"
+                  className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-bridge-blue mb-1">年级（选填）</label>
+                <input
+                  type="text"
+                  value={visitorGrade}
+                  onChange={(e) => setVisitorGrade(e.target.value)}
+                  placeholder="如: 高三"
+                  className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-bridge-blue mb-1">选择套餐</label>
               <div className="grid grid-cols-2 gap-2">
@@ -273,6 +327,8 @@ export default function TrackerConsole() {
                     </div>
                     <div className="text-[10px] text-bridge-muted mt-1">
                       套餐：{o.packageId ? PACKAGES[o.packageId]?.name : "未知套餐"}
+                      {o.visitorAge && ` · ${o.visitorAge}岁`}
+                      {o.visitorGrade && ` · ${o.visitorGrade}`}
                     </div>
                     <div className="text-[10px] text-bridge-muted font-mono">
                       建档时间：{new Date(o.createdAt).toLocaleString("zh-CN", { hour12: false })}

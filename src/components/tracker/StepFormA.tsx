@@ -23,8 +23,8 @@ export default function StepFormAIntake({ data, readOnly = false, onSave }: Prop
     email: data?.email || "",
     parentName: data?.parentName || "",
     relationship: data?.relationship || "",
-    parentTitle: (data as Record<string, string>)?.parentTitle || "",
-    parentPhone: (data as Record<string, string>)?.parentPhone || "",
+    parentTitle: data?.parentTitle || "",
+    parentPhone: data?.parentPhone || "",
     ...data,
   });
 
@@ -175,7 +175,7 @@ export default function StepFormAIntake({ data, readOnly = false, onSave }: Prop
             <label className="block text-xs text-bridge-muted mb-1">家长称谓</label>
             <input
               type="text"
-              value={(form as Record<string, string>).parentTitle || ""}
+              value={form.parentTitle || ""}
               onChange={(e) => setForm((prev) => ({ ...prev, parentTitle: e.target.value }))}
               disabled={readOnly}
               className="w-full px-3 py-2 rounded-lg border border-white/20 bg-white/10 text-sm focus:outline-none focus:border-bridge-blue disabled:opacity-60"
@@ -186,7 +186,7 @@ export default function StepFormAIntake({ data, readOnly = false, onSave }: Prop
             <label className="block text-xs text-bridge-muted mb-1">家长电话</label>
             <input
               type="tel"
-              value={(form as Record<string, string>).parentPhone || ""}
+              value={form.parentPhone || ""}
               onChange={(e) => setForm((prev) => ({ ...prev, parentPhone: e.target.value }))}
               disabled={readOnly}
               className="w-full px-3 py-2 rounded-lg border border-white/20 bg-white/10 text-sm focus:outline-none focus:border-bridge-blue disabled:opacity-60"

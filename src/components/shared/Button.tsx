@@ -21,6 +21,7 @@ export default function Button({
   onClick,
   className = "",
   type = "button",
+  disabled = false,
 }: {
   children: ReactNode;
   href?: string;
@@ -28,11 +29,14 @@ export default function Button({
   onClick?: () => void;
   className?: string;
   type?: "button" | "submit";
+  disabled?: boolean;
 }) {
   const base =
     "inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer";
 
-  const classes = `${base} ${variantStyles[variant]} ${className}`;
+  const classes = `${base} ${variantStyles[variant]} ${
+    disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
+  } ${className}`;
 
   if (href) {
     return (
@@ -43,7 +47,7 @@ export default function Button({
   }
 
   return (
-    <button type={type} onClick={onClick} className={classes}>
+    <button type={type} onClick={onClick} className={classes} disabled={disabled}>
       {children}
     </button>
   );

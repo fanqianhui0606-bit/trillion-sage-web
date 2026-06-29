@@ -74,6 +74,7 @@ export interface StepState {
 // ========================
 export interface TrackerOrder {
   orderNo: string;
+  familyCode?: string;
   packageId: PackageId;
   createdAt: string;
   /** 来访信息 */
@@ -81,9 +82,19 @@ export interface TrackerOrder {
     name: string;
     age: string;
     grade: string;
+    school?: string;
+    phone?: string;
+    wechat?: string;
+    email?: string;
+    isAdult?: boolean;
     parentName?: string;
     relationship?: string;
     contactTime?: string;
+    parentTitle?: string;
+    parentPhone?: string;
+    parentWechat?: string;
+    parentEmail?: string;
+    packageId?: string;
   };
   /** 定金 */
   deposit: {

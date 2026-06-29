@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { TrackerSession, TrackerOrder, StepDefinition } from "@/lib/tracker-types";
+import type { TrackerSession, TrackerOrder, StepDefinition, StepState } from "@/lib/tracker-types";
 import { PACKAGES, getStepsForPackage, canActivateStep } from "@/lib/tracker-packages";
 import { getOrder, updateOrder, completeStep, terminateOrder } from "@/lib/fireorm";
 import StepFormAIntake from "./StepFormA";
@@ -117,7 +117,7 @@ export default function TrackerMain({
   };
 
   // 渲染表单内容
-  const renderForm = (step: StepDefinition, stepData: Record<string, unknown> | undefined, isReadOnly: boolean) => {
+  const renderForm = (step: StepDefinition, stepData: StepState | undefined, isReadOnly: boolean) => {
 
     // 来访信息表单
     if (step.id === "a-visitor-info") {

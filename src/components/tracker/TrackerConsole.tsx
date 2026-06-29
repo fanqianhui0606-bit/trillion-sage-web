@@ -36,7 +36,7 @@ export default function TrackerConsole({ onLogout }: { onLogout: () => void }) {
       const orders = await getAllOrders();
       const enriched: EnrichedOrder[] = orders.map(o => ({
         orderNo: o.orderNo,
-        familyCode: (o as Record<string, unknown>).familyCode as string || "N/A",
+        familyCode: o.familyCode || "N/A",
         createdAt: o.createdAt,
         visitorName: o.visitor?.name || "未知",
         visitorAge: o.visitor?.age,

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { TrackerSession, TrackerOrder, StepDefinition } from "@/lib/tracker-types";
-import { orderStorageKey } from "@/lib/tracker-types";
 import { PACKAGES, getStepsForPackage, canActivateStep } from "@/lib/tracker-packages";
+import { getOrder, completeStep, terminateOrder } from "@/lib/fireorm";
 
 const PHASE_LABELS = { A: "来访信息", B: "服务跟进", C: "服务完成" };
 
@@ -18,66 +18,85 @@ export default function TrackerMain({
 }) {
   const [order, setOrder] = useState<TrackerOrder | null>(null);
   const [steps, setSteps] = useState<StepDefinition[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 加载订单数据
-  const loadOrder = useCallback(() => {
-    const raw = localStorage.getItem(orderStorageKey(orderNo));
-    if (raw) {
-      const data = JSON.parse(raw) as TrackerOrder;
+  const loadOrder = useCallback(async () => {
+    try {
+      const data = await getOrder(orderNo);
       setOrder(data);
-      setSteps(getStepsForPackage(data.packageId));
+      if (data) {
+        setSteps(getStepsForPackage(data.packageId));
+      }
+      setError(null);
+    } catch (err) {
+      setError((err as Error).message);
+      console.error("Failed to load order:", err);
+    } finally {
+      setLoading(false);
     }
   }, [orderNo]);
 
   useEffect(() => {
     loadOrder();
-
-    // 跨标签页同步：监听 storage 事件
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === orderStorageKey(orderNo) && e.newValue) {
-        setOrder(JSON.parse(e.newValue));
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [loadOrder, orderNo]);
-
-  // 保存订单（同时触发其他标签页更新）
-  const saveOrder = (updated: TrackerOrder) => {
-    localStorage.setItem(orderStorageKey(orderNo), JSON.stringify(updated));
-    setOrder(updated);
-  };
+  }, [loadOrder]);
 
   // 完成步骤
-  const completeStep = (stepId: string, data?: Record<string, unknown>) => {
-    if (!order) return;
-    const updated: TrackerOrder = {
-      ...order,
-      steps: {
-        ...order.steps,
-        [stepId]: { status: "completed", data, completedAt: new Date().toISOString() },
-      },
-    };
-    saveOrder(updated);
+  const handleCompleteStep = async (stepId: string, data?: Record<string, unknown>) => {
+    try {
+      await completeStep(orderNo, stepId, data);
+      await loadOrder(); // 重新加载
+    } catch (err) {
+      alert(`操作失败: ${(err as Error).message}`);
+    }
+  };
+
+  // 终止服务
+  const handleTerminate = async () => {
+    const note = prompt("请输入终止原因：");
+    if (note === null) return;
+
+    try {
+      await terminateOrder(orderNo, note);
+      await loadOrder();
+      alert("服务已终止");
+    } catch (err) {
+      alert(`操作失败: ${(err as Error).message}`);
+    }
   };
 
   // 获取步骤状态
   const getStepStatus = (step: StepDefinition): string => {
-    if (!order) return "pending";
-    // 团队可手动标记已完成
+    if (!order) return "locked";
     if (session.role === "staff" && order.steps[step.id]?.status === "completed") {
       return "completed";
     }
-    // 自动判断
     if (order.steps[step.id]?.status === "completed") return "completed";
     if (canActivateStep(step.id, order.steps)) return "active";
     return "locked";
   };
 
-  if (!order) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-bridge-muted animate-pulse">加载中...</div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error || "订单不存在"}</p>
+          <button
+            onClick={onLogout}
+            className="px-4 py-2 text-sm text-bridge-muted hover:text-white border border-white/30 rounded-lg"
+          >
+            返回登录
+          </button>
+        </div>
       </div>
     );
   }
@@ -178,7 +197,7 @@ export default function TrackerMain({
                         {/* 操作按钮（仅 active 时显示） */}
                         {isActive && (
                           <button
-                            onClick={() => completeStep(step.id)}
+                            onClick={() => handleCompleteStep(step.id)}
                             className="px-3 py-1.5 text-xs font-bold text-white bg-bridge-blue hover:bg-bridge-blue-dark rounded-lg transition-colors flex-shrink-0"
                           >
                             标记完成
@@ -206,35 +225,10 @@ export default function TrackerMain({
             <h3 className="text-sm font-bold text-bridge-blue mb-3">引导员工具</h3>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => {
-                  if (confirm("确定要终止此服务吗？")) {
-                    const note = prompt("请输入终止原因：");
-                    if (note !== null) {
-                      const updated: TrackerOrder = { ...order, terminated: { at: new Date().toISOString(), note } };
-                      saveOrder(updated);
-                    }
-                  }
-                }}
+                onClick={handleTerminate}
                 className="px-3 py-2 text-xs font-semibold text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
               >
                 终止服务
-              </button>
-              <button
-                onClick={() => {
-                  const data = localStorage.getItem(orderStorageKey(orderNo));
-                  if (data) {
-                    const blob = new Blob([data], { type: "application/json" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `order_${orderNo}.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }
-                }}
-                className="px-3 py-2 text-xs font-semibold text-bridge-blue border border-bridge-blue/30 rounded-lg hover:bg-bridge-blue/5 transition-colors"
-              >
-                导出订单数据
               </button>
             </div>
           </div>

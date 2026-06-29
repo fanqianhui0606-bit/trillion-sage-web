@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "firebase": {
+      "command": "npx",
+      "args": ["-y", "firebase-tools", "mcp", "start"],
+      "env": {
+        "FIREBASE_TOKEN": "${FIREBASE_TOKEN}"
+      }
+    }
+  }
+}

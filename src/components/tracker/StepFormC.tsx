@@ -11,13 +11,17 @@ interface Props {
   onSave?: (data: Record<string, unknown>) => void;
 }
 
-/** A 阶段：定金/全款支付表单 */
+/** A 阶段：定金/全款支付表单。price 传入套餐总价，组件内部计算定金或尾款金额 */
 export default function StepFormPayment({ type, data, readOnly = false, role = "staff", price = 0, onSave }: Props) {
   const [paid, setPaid] = useState((data?.paid as boolean) || false);
   const [paidDate, setPaidDate] = useState((data?.paidAt as string) || "");
-  const [amount, setAmount] = useState((data?.amount as number) || (price * 0.1));
   const [transactionNo, setTransactionNo] = useState((data?.transactionNo as string) || "");
   const [receiptConfirmed, setReceiptConfirmed] = useState((data?.receiptConfirmed as boolean) || false);
+
+  const isDeposit = type === "deposit";
+  // 定金 = 总价 × 10%，尾款 = 总价 × 90%
+  const expectedAmount = isDeposit ? Math.round(price * 0.1) : Math.round(price * 0.9);
+  const [amount, setAmount] = useState((data?.amount as number) || expectedAmount);
 
   const handleSave = () => {
     onSave?.({
@@ -30,7 +34,6 @@ export default function StepFormPayment({ type, data, readOnly = false, role = "
     });
   };
 
-  const isDeposit = type === "deposit";
   const label = isDeposit ? "定金（10%）" : "全款支付";
   const hint = isDeposit
     ? "定金为合同总费用的10%，用于锁定服务档期。如客户中途放弃，定金不予退还。"
@@ -51,7 +54,7 @@ export default function StepFormPayment({ type, data, readOnly = false, role = "
           <label className="block text-xs text-bridge-muted mb-1">应付金额（¥）</label>
           <input
             type="number"
-            value={isDeposit ? price * 0.1 : price * 0.9}
+            value={expectedAmount}
             disabled
             className="w-full px-3 py-2 rounded-lg border border-white/20 bg-white/10 text-sm text-bridge-gold font-bold"
           />

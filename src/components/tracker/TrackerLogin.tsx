@@ -69,7 +69,7 @@ export default function TrackerLogin({
           loginAt: new Date().toISOString(),
           contactName: contactName.trim(),
         };
-        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+        sessionStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
         onLogin(session, order.orderNo);
       } else {
         // 团队成员：内测阶段任意 8 位码可通过验证
@@ -81,7 +81,7 @@ export default function TrackerLogin({
           loginAt: new Date().toISOString(),
           contactName: contactName.trim(),
         };
-        localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+        sessionStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
         onLogin(session, orderNo);
       }
     } catch (err) {

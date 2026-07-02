@@ -126,17 +126,17 @@ export async function terminateOrder(orderNo: string, note: string): Promise<voi
 }
 
 // ========================
-// 会话管理（localStorage 暂存）
+// 会话管理（sessionStorage，tab 级隔离）
 // ========================
 
 export function saveSession(session: TrackerSession): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem("bridge_flow_session_v1", JSON.stringify(session));
+  sessionStorage.setItem("bridge_flow_session_v1", JSON.stringify(session));
 }
 
 export function getSession(): TrackerSession | null {
   if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem("bridge_flow_session_v1");
+  const raw = sessionStorage.getItem("bridge_flow_session_v1");
   if (!raw) return null;
   try {
     return JSON.parse(raw) as TrackerSession;
@@ -147,7 +147,7 @@ export function getSession(): TrackerSession | null {
 
 export function clearSession(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("bridge_flow_session_v1");
+  sessionStorage.removeItem("bridge_flow_session_v1");
 }
 
 // ========================

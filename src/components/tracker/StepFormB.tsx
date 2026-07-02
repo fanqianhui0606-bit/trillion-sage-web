@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import majorsData from "../../../public/data/majors-intro.json";
 interface Props {
   type: "consult-pre" | "consult-post" | "quiz" | "counseling";
   consultIndex?: number; // 1, 2, 3
@@ -8,6 +9,26 @@ interface Props {
   readOnly?: boolean;
   role?: "staff" | "family";
   onSave?: (data: Record<string, unknown>) => void;
+}
+
+// 从 majors-intro.json 动态加载专业列表（理工农医相关门类）
+type MajorEntry = { code: string; name: string; category: string };
+const STSTEM_CATEGORIES = ["数学类", "物理学类", "化学类", "生物学类", "计算机类", "电子信息类", "自动化类", "机械类", "土木类", "材料类", "医学技术类", "药学类", "统计学类", "心理学类", "力学类", "电气类", "化工类", "建筑类", "环境类", "林学类", "草学类", "水产类", "动物医学类", "植物生产类", "动物生产类"];
+
+interface MajorsJson {
+  majors: Record<string, { officialName: string; level2Category: string }>;
+}
+
+function loadMajorOptions(): MajorEntry[] {
+  try {
+    const typedMajorsData = majorsData as unknown as MajorsJson;
+    return Object.entries(typedMajorsData.majors)
+      .filter(([, m]) => STSTEM_CATEGORIES.includes(m.level2Category))
+      .map(([code, m]) => ({ code, name: m.officialName, category: m.level2Category }))
+      .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+  } catch {
+    return [];
+  }
 }
 
 /** B 阶段咨询表单 */
@@ -18,7 +39,7 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
   const [preDate, setPreDate] = useState((data?.date as string) || "");
   const [preTime, setPreTime] = useState((data?.time as string) || "");
   const [preNote, setPreNote] = useState((data?.note as string) || "");
-  const [preQuestions, setPreQuestions] = useState((data?.questions as string) || ""); // 家长填写
+  const [preQuestions, setPreQuestions] = useState((data?.questions as string) || "");
 
   // 咨询事后
   const [postDuration, setPostDuration] = useState((data?.duration as string) || "");
@@ -28,12 +49,16 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
   const [postRecording, setPostRecording] = useState((data?.recording as string) || "");
   const [postMessage, setPostMessage] = useState((data?.message as string) || "");
 
-  // 测验
+  // 测验（专业列表动态加载）
   const [quizDate, setQuizDate] = useState((data?.date as string) || "");
   const [quizPdfUrl, setQuizPdfUrl] = useState((data?.pdfUrl as string) || "");
   const [quizMajors, setQuizMajors] = useState<string[]>(
     (data?.topMajors as string[]) || ["", "", "", "", ""]
   );
+  const [majorOptions, setMajorOptions] = useState<MajorEntry[]>([]);
+  useEffect(() => {
+    setMajorOptions(loadMajorOptions());
+  }, []);
 
   // 心理辅导
   const [counselDate, setCounselDate] = useState((data?.date as string) || "");
@@ -290,16 +315,13 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
 
   // ---- 测验表单 ----
   if (type === "quiz") {
-    const majorOptions = [
-      "数学与应用数学", "数学与应用数学（师范）", "统计学", "数据科学",
-      "计算机科学与技术", "软件工程", "人工智能", "信息与计算科学",
-      "物理学", "应用物理学", "光电信息科学与工程", "电子信息工程",
-      "化学", "应用化学", "化学工程与工艺", "材料化学",
-      "生物科学", "生物技术", "环境科学", "生态学",
-      "机械工程", "自动化", "电气工程及其自动化", "土木工程",
-      "金融学", "金融工程", "经济学", "国际经济与贸易",
-      "临床医学", "口腔医学", "预防医学", "药学",
-    ];
+    // 按门类分组显示专业，便于选择
+    const grouped = majorOptions.reduce<Record<string, MajorEntry[]>>((acc, m) => {
+      if (!acc[m.category]) acc[m.category] = [];
+      acc[m.category].push(m);
+      return acc;
+    }, {});
+    const sortedCategories = Object.keys(grouped).sort((a, b) => a.localeCompare(b, "zh-CN"));
 
     return (
       <div className="space-y-4">
@@ -348,8 +370,12 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
                   className="flex-1 px-3 py-1.5 rounded-lg border border-white/20 bg-white/10 text-xs focus:outline-none focus:border-bridge-blue disabled:opacity-60"
                 >
                   <option value="">选择专业</option>
-                  {majorOptions.map((m) => (
-                    <option key={m} value={m}>{m}</option>
+                  {sortedCategories.map((cat) => (
+                    <optgroup key={cat} label={cat}>
+                      {grouped[cat].map((m) => (
+                        <option key={m.code} value={m.name}>{m.name}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>

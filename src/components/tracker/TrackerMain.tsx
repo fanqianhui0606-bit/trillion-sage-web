@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { TrackerSession, TrackerOrder, StepDefinition, StepState } from "@/lib/tracker-types";
-import { PACKAGES, getStepsForPackage, canActivateStep, getDepositAmount } from "@/lib/tracker-packages";
+import { PACKAGES, getStepsForPackage, canActivateStep, getPackagePrice } from "@/lib/tracker-packages";
 import { getAgreementByStepId, agreementIdsForStep, getAgreementById } from "@/lib/tracker-agreements";
 import { getOrder, updateOrder, completeStep, terminateOrder } from "@/lib/fireorm";
 import StepFormAIntake from "./StepFormA";
@@ -160,7 +160,7 @@ export default function TrackerMain({
           data={{ ...depositData, ...order?.deposit as Record<string, unknown> }}
           readOnly={isReadOnly}
           role={session.role}
-          price={getDepositAmount(order!.packageId)}
+          price={getPackagePrice(order!.packageId)}
           onSave={(data) => handleFormSave(step.id, data)}
         />
       );
@@ -175,7 +175,7 @@ export default function TrackerMain({
           data={{ ...paymentData, ...order?.fullPayment as Record<string, unknown> }}
           readOnly={isReadOnly}
           role={session.role}
-          price={order!.steps["a-deposit"]?.data ? (order!.steps["a-deposit"].data as { amount?: number }).amount || 0 : getDepositAmount(order!.packageId) * 9}
+          price={getPackagePrice(order!.packageId)}
           onSave={(data) => handleFormSave(step.id, data)}
         />
       );

@@ -12,16 +12,16 @@ export default function TrackerPage() {
   const [orderNo, setOrderNo] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  // 检查是否有活跃会话
+  // 检查是否有活跃会话（sessionStorage 仅在当前 tab 有效，避免跨 tab 状态串扰）
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEYS.SESSION);
+    const raw = sessionStorage.getItem(STORAGE_KEYS.SESSION);
     if (raw) {
       try {
         const s = JSON.parse(raw) as TrackerSession;
         setSession(s);
         setOrderNo(s.orderNo);
       } catch {
-        localStorage.removeItem(STORAGE_KEYS.SESSION);
+        sessionStorage.removeItem(STORAGE_KEYS.SESSION);
       }
     }
     setLoading(false);
@@ -33,7 +33,7 @@ export default function TrackerPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEYS.SESSION);
+    sessionStorage.removeItem(STORAGE_KEYS.SESSION);
     setSession(null);
     setOrderNo("");
   };

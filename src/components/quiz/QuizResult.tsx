@@ -274,7 +274,7 @@ function BubbleWordCloud({
   activeMajorId: string | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 500, height: 420 });
+  const [dimensions, setDimensions] = useState({ width: 500, height: 520 });
 
 
   useEffect(() => {
@@ -282,7 +282,7 @@ function BubbleWordCloud({
       if (containerRef.current) {
         setDimensions({
           width: Math.max(containerRef.current.clientWidth, 320),
-          height: 420,
+          height: 520,
         });
       }
     };
@@ -316,10 +316,10 @@ function BubbleWordCloud({
     const t = (item.score - minScore) / span;
     const size = 11 + t * 14; // Font sizes 11px to 25px
 
-    // Enhanced high-contrast bright text color palette (Problem 5 & 10)
-    const color = ["#ffffff", "#e2e8f0", "#93c5fd", "#60a5fa", "#3b82f6"][
+    // 参考设计（full-flow.html）：浅色舞台配深色字阶，匹配度越高颜色越深
+    const color = ["#0b1220", "#1e293b", "#334155", "#475569", "#64748b"][
       Math.min(4, Math.floor((1 - t) * 4.99))
-    ] || "#ffffff";
+    ] || "#0b1220";
 
     const isActive = activeMajorId === item.majorId;
 
@@ -327,24 +327,24 @@ function BubbleWordCloud({
       <button
         key={item.majorId}
         onClick={() => onSelectMajor(item.majorId)}
-        className={`absolute select-none transition-all duration-300 font-sans cursor-pointer whitespace-nowrap px-3 py-1 rounded-full border border-transparent shadow-none bg-transparent
-          ${isActive 
-            ? 'bg-bridge-blue/35 text-white font-extrabold z-10 border-bridge-blue shadow-[0_0_15px_rgba(46,117,182,0.5)] scale-110 ring-2 ring-bridge-blue/40' 
-            : 'hover:scale-[1.08] hover:bg-slate-800/50 hover:text-white hover:border-white/10 hover:shadow-md'
-          }
+        className={`absolute select-none transition-all duration-300 font-sans cursor-pointer whitespace-nowrap px-2 py-0.5 border-none bg-transparent
+          ${isActive ? 'z-10 scale-110' : 'hover:scale-[1.1] hover:z-10'}
         `}
         style={{
           left: `${x}px`,
           top: `${y}px`,
           transform: 'translate(-50%, -50%)',
           fontSize: `${size}px`,
-          fontWeight: t > 0.4 ? 700 : 600,
-          color: isActive ? '#ffffff' : color,
+          fontWeight: isActive ? 800 : t > 0.55 ? 700 : 600,
+          color: isActive ? '#2563eb' : color,
+          textShadow: isActive
+            ? '0 0 12px rgba(37,99,235,0.35), 0 1px 0 rgba(255,255,255,0.85)'
+            : '0 1px 0 rgba(255,255,255,0.7)',
         }}
         title={`${item.majorId} · 匹配度 ${(item.score * 100).toFixed(2)}%`}
       >
         {item.majorName}
-        <span className="ml-1 text-[0.8em] font-semibold font-mono opacity-85 text-bridge-gold">
+        <span className="ml-1 text-[0.82em] font-semibold opacity-90">
           {(item.score * 100).toFixed(2)}%
         </span>
       </button>
@@ -355,7 +355,10 @@ function BubbleWordCloud({
     <div
       ref={containerRef}
       id="floatStageAllMatch"
-      className="relative min-h-[420px] w-full border border-white/10 rounded-2xl overflow-hidden bg-slate-950/40 shadow-inner flex items-center justify-center"
+      className="relative min-h-[520px] w-full border border-white/95 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center"
+      style={{
+        background: "radial-gradient(circle at 50% 42%, #ffffff 0%, #f1f5f9 55%, #dbe3ee 100%)",
+      }}
     >
       {bubbleElements}
     </div>
@@ -509,7 +512,17 @@ const PDF_STYLES = `
 // ============================================================
 // AI Summary Section
 // ============================================================
-function QuizSummarySection({ userName }: { userName: string }) {
+function QuizSummarySection({
+  userName,
+  scores,
+  matches,
+  valueTiers,
+}: {
+  userName: string;
+  scores: UserScores;
+  matches: MajorMatchResult[];
+  valueTiers: ValueOrientationTiers | null;
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string>("");
@@ -518,44 +531,42 @@ function QuizSummarySection({ userName }: { userName: string }) {
   const [compare, setCompare] = useState<{ pro: string; flash: string } | null>(null);
   const isInspect = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("edition") === "inspect";
 
-  // Load graph.json for AI summary input
   const loadSummary = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch all required data
-      const [graphRes] = await Promise.all([
+      // 图谱节点（维度标题）与四因子权重配置
+      const [graphRes, matchConfigRes] = await Promise.all([
         fetch("/data/graph.json"),
+        fetch("/data/match-config-four-factor.json"),
       ]);
 
       const graphData = await graphRes.json();
-
-      // Retrieve stored quiz result from sessionStorage (set by quiz-scoring logic)
-      const storedResult = sessionStorage.getItem("tsg_quiz_result");
-      if (!storedResult) {
-        throw new Error("未找到测验结果数据");
-      }
-
-      // Parse stored result and extract graph nodes
-      const resultData = JSON.parse(storedResult);
       const graphNodes: GraphNode[] = graphData.nodes || [];
 
-      // Build factor weights from wheel config
-      const matchConfigRes = await fetch("/data/match-config-four-factor.json");
-      const matchConfig = await matchConfigRes.json().catch(() => ({ weights: {} }));
-      const factorWeights = (matchConfig as { weights?: Record<string, number> }).weights || {};
+      const matchConfig = await matchConfigRes.json().catch(() => ({}));
+      const rawWeights = (matchConfig as { factorWeights?: Record<string, number> }).factorWeights || {};
+      const factorWeights = {
+        value: Number(rawWeights.valueOrientation ?? 1),
+        interest: Number(rawWeights.interestOrientation ?? 2),
+        habits: Number(rawWeights.thinkingHabits ?? 1),
+        ability: Number(rawWeights.qualityAbility ?? 4),
+      };
+
+      // 直接使用结果页内存中的测验结果（此前误读未写入的 sessionStorage 导致总评不可用）
+      const currentTier = valueTiers?.tiers?.find((t) => t.tier === scores.subjective.valueTier);
 
       const payload = {
         studentName: userName,
-        objectiveUser: resultData.objectiveUser || {},
-        subjectInterest: resultData.subjectInterest || {},
-        interestAmbition: resultData.scores?.subjective?.interestAmbition ?? 0,
-        practicalBenefit: resultData.scores?.subjective?.practicalBenefit ?? 0,
-        valueTier: resultData.scores?.subjective?.valueTier ?? null,
-        valueLabel: resultData.valueLabel ?? "",
-        valueBrief: resultData.valueBrief ?? "",
-        rankedMajors: resultData.matches || [],
+        objectiveUser: scores.objective || {},
+        subjectInterest: scores.subjectInterest || {},
+        interestAmbition: scores.subjective.interestAmbition ?? 0,
+        practicalBenefit: scores.subjective.practicalBenefit ?? 0,
+        valueTier: scores.subjective.valueTier ?? null,
+        valueLabel: currentTier?.label ?? "",
+        valueBrief: currentTier?.brief ?? "",
+        rankedMajors: matches || [],
         factorWeights,
         graphNodes,
         compareBoth: isInspect,
@@ -579,7 +590,7 @@ function QuizSummarySection({ userName }: { userName: string }) {
     } finally {
       setLoading(false);
     }
-  }, [userName, isInspect]);
+  }, [userName, isInspect, scores, matches, valueTiers]);
 
   useEffect(() => {
     loadSummary();
@@ -1408,7 +1419,14 @@ export default function QuizResult({
         )}
 
         {/* 五、测验总评 — AI 生成总评 (专业版) */}
-        {!isSimple && userName && <QuizSummarySection userName={userName} />}
+        {!isSimple && userName && (
+          <QuizSummarySection
+            userName={userName}
+            scores={scores}
+            matches={matches}
+            valueTiers={valueTiers}
+          />
+        )}
 
         {/* Action Buttons Panel matching .quiz-footer in GitHub */}
         <section className="glass-panel p-4 md:p-5 flex flex-wrap gap-3 items-center justify-center">

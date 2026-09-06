@@ -1,66 +1,64 @@
 import Button from "@/components/shared/Button";
 import GlassCard from "@/components/shared/GlassCard";
+import SectionTitle from "@/components/shared/SectionTitle";
 
-const PREVIEW_MAJORS = [
-  "数学与统计 · 机器学习与预测",
-  "凝聚态物理 · 半导体与量子材料",
-  "量子信息 · 量子计算飞跃",
-  "天文学 · 黑洞与深空探索",
-  "电子信息 · 芯片与信号处理",
-  "材料科学 · 下一代智能材料",
-  "应用数学 · 密码与现代数学",
-  "计算机 / AI · 人工智能底层与应用",
-  "生物技术 · 基因编辑与创新药",
+const FEATURES = [
+  {
+    title: "光环效益",
+    desc: "孩子获得和多位资深高科技人才沟通交流的机会，利于培养孩子高考目标和成长目标，致力成为像我们一样的国家高科技人才。",
+  },
+  {
+    title: "顶峰嗅觉",
+    desc: "讲座聚焦8种最具发展潜力的数理专业，该领域专业人才学长，一眼看清未来科技起飞方向。",
+  },
+  {
+    title: "鹰览视角",
+    desc: "我们使用千殊独有3+1科学模式讲解，从「学科前景」、「发展潜力」、「研途经历」三种维度辅助一个科学原理，帮助孩子获得全面鹰览视角。",
+  },
+];
+
+const QUICK_FACTS = [
+  { label: "聚焦专业", value: "8 种" },
+  { label: "营期时长", value: "8 天" },
+  { label: "招生限额", value: "40 人" },
+  { label: "开营时间", value: "2026 秋季" },
 ];
 
 export default function ProgramsPreviewSection() {
   return (
-    <section id="programs-preview" className="min-h-screen flex items-center px-6">
-      <div className="max-w-6xl mx-auto w-full">
-        <h2 className="text-3xl md:text-4xl font-bold text-bridge-text text-center leading-tight">
-          数理学科线上衔接营
-        </h2>
-        <p className="mt-3 text-center text-bridge-muted text-sm">
-          —— 响应国家号召，培养未来高科技人才 ——
-        </p>
+    <section id="programs-preview" className="min-h-screen flex items-center py-24 px-6 scroll-mt-16">
+      <div className="max-w-5xl mx-auto w-full">
+        <SectionTitle
+          title="数理线上营"
+          subtitle="聚焦8种最具发展潜力的数理专业，资深学长用3+1科学模式讲解、在线直播讲座，未来科技起飞方向一目了然。"
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-          <GlassCard className="text-center">
-            <h4 className="text-lg font-bold text-bridge-blue mb-2">985 硕博团队</h4>
-            <p className="text-bridge-muted text-sm leading-relaxed">
-              千殊本/硕/博名师授课，涵盖高校教授、国家实验室博士、中科院直博等
-            </p>
-          </GlassCard>
-          <GlassCard className="text-center">
-            <h4 className="text-lg font-bold text-bridge-blue mb-2">3+1 教学模型</h4>
-            <p className="text-bridge-muted text-sm leading-relaxed">
-              学科全景 × 发展潜力 × 职业图景 + 核心原理精讲，帮助锚定专业方向
-            </p>
-          </GlassCard>
-          <GlassCard className="text-center">
-            <h4 className="text-lg font-bold text-bridge-blue mb-2">线上直播</h4>
-            <p className="text-bridge-muted text-sm leading-relaxed">
-              腾讯会议互动直播 + 社群答疑 + 可选的 1 对 1 专业咨询
-            </p>
-          </GlassCard>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {FEATURES.map((item) => (
+            <GlassCard key={item.title} className="text-center">
+              <h3 className="text-lg font-bold text-bridge-blue mb-3">{item.title}</h3>
+              <p className="text-bridge-muted text-sm leading-relaxed">{item.desc}</p>
+            </GlassCard>
+          ))}
         </div>
 
-        <GlassCard className="mt-6">
-          <h4 className="text-base font-bold text-bridge-blue mb-3 text-center">
-            聚焦 9 个高发展潜力理工专业
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1.5">
-            {PREVIEW_MAJORS.map((m) => (
-              <p key={m} className="text-sm text-bridge-muted">
-                {m}
-              </p>
+        <GlassCard className="border border-bridge-gold/25 bg-gradient-to-r from-amber-50/20 to-transparent mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            {QUICK_FACTS.map((f) => (
+              <div key={f.label}>
+                <p className="text-xl font-bold text-bridge-gold font-mono">{f.value}</p>
+                <p className="text-xs text-bridge-muted mt-1">{f.label}</p>
+              </div>
             ))}
           </div>
         </GlassCard>
 
-        <div className="text-center mt-8">
-          <Button href="/programs" variant="primary">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button href="/programs" variant="secondary">
             了解更多
+          </Button>
+          <Button href="/downloads/programs-overview.pdf" variant="primary" download>
+            查看线上营信息
           </Button>
         </div>
       </div>

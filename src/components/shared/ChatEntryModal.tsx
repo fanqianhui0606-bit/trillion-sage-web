@@ -108,7 +108,7 @@ export default function ChatEntryModal({ isOpen, onClose }: ChatEntryModalProps)
         <div className="p-6 md:p-8">
           <div className="text-center mb-6">
             <h3 className="font-serif text-xl font-bold text-stone-850 tracking-wider">
-              思维共振聊天入口
+              灵魂聊天共振入口
             </h3>
             <p className="text-xs text-bridge-muted font-serif mt-1">
               通过专属关联码，发掘逻辑潜质与育儿共鸣

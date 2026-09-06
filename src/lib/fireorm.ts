@@ -48,7 +48,40 @@ export async function getOrder(orderNo: string): Promise<TrackerOrder | null> {
   return data.order;
 }
 
-/** 创建新订单 */
+/** 创建空白订单（姓名/套餐在进入流程后的「来访信息」步骤填写） */
+export async function createBlankOrder(meta?: {
+  createdBy?: string;
+  createdByName?: string;
+}): Promise<TrackerOrder> {
+  // 套餐占位为 1v1，进入流程后在来访信息步骤可改选并写回
+  const packageId: TrackerOrder["packageId"] = "1v1";
+  const order: TrackerOrder = {
+    orderNo: generateOrderNo(),
+    packageId,
+    createdAt: new Date().toISOString(),
+    visitor: { name: "", age: "", grade: "" },
+    deposit: { paid: false, amount: getDepositAmount(packageId) },
+    fullPayment: { paid: false, amount: getPackagePrice(packageId) },
+    steps: {},
+    consults: [],
+  };
+
+  const res = await fetch("/api/tracker", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...order,
+      familyCode: generateFamilyCode(),
+      createdBy: meta?.createdBy,
+      createdByName: meta?.createdByName,
+    }),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error);
+  return data.order;
+}
+
+/** 创建新订单（兼容旧调用：带姓名与套餐） */
 export async function createOrder(
   familyCode: string,
   packageId: TrackerOrder["packageId"],

@@ -48,12 +48,26 @@ export interface PackageInfo {
 // ========================
 export type StepStatus = "pending" | "locked" | "active" | "completed" | "skipped";
 
+/** 谁来填写：家庭端 / 引导员 / 双方 */
+export type FillRole = "visitor" | "staff" | "both";
+
 export interface StepDefinition {
   id: string;
   phase: "A" | "B" | "C";
   label: string;
   description?: string;
   requires?: string;
+  fillRole: FillRole;
+}
+
+/** 内嵌协议阅读同意记录（非独立环节） */
+export interface AgreementRecord {
+  agreed?: boolean;
+  agreedAt?: string;
+  /** 兼容旧字段 */
+  checked?: boolean;
+  confirmedAt?: string;
+  docChecks?: Record<string, boolean>;
 }
 
 export interface StepState {
@@ -105,6 +119,8 @@ export interface TrackerOrder {
   };
   /** 各步骤状态 */
   steps: Record<string, StepState>;
+  /** 协议/须知同意记录（绑定在环节内，非独立步骤） */
+  agreements?: Record<string, AgreementRecord>;
   /** 终止状态 */
   terminated?: {
     at: string;

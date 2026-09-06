@@ -47,5 +47,15 @@
     "parent_completed": false,
     "parent_authorized": false,
     "paid": true
+  },
+  "BRIDGE_ADMIN": {
+    "code": "BRIDGE_ADMIN",
+    "student_wechat_name": "Admin(学生)",
+    "parent_wechat_name": "Admin(家长)",
+    "student_completed": false,
+    "student_authorized": false,
+    "parent_completed": false,
+    "parent_authorized": false,
+    "paid": true
   }
 }

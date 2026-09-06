@@ -52,7 +52,7 @@ export default function TrackerPage() {
 
   // 团队成员 → 控制台
   if (session.role === "staff") {
-    return <TrackerConsole onLogout={handleLogout} />;
+    return <TrackerConsole session={session} onLogout={handleLogout} />;
   }
 
   // 家庭客户 → 流程跟进

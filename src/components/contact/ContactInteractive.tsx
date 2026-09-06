@@ -147,7 +147,11 @@ export default function ContactInteractive() {
                 </h3>
               </div>
               
-              <div className="space-y-4 text-xs md:text-sm font-serif text-stone-700 leading-loose">
+              <div className="space-y-4 text-xs md:text-sm text-stone-700 leading-loose">
+                <p>
+                  <strong className="text-stone-800">小助理微信：</strong>
+                  <span className="font-mono text-bridge-blue font-semibold">TrillionSage</span>
+                </p>
                 <p>
                   <strong className="text-stone-800">企业法人名称：</strong>
                   <span className="font-sans">千殊（杭州）教育咨询有限公司</span>

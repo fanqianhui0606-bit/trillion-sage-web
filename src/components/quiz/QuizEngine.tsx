@@ -9,15 +9,51 @@ import { validateActivationCode } from "@/lib/cosine-similarity";
 
 const PRO_CONTACT_TEXT = "请联系「桥梁计划」团队购买参与";
 
-export default function QuizEngine({ edition }: { edition?: string }) {
+export default function QuizEngine({
+  edition,
+  autoCode,
+  autoName,
+  returnTo,
+}: {
+  edition?: string;
+  autoCode?: string;
+  autoName?: string;
+  returnTo?: string;
+}) {
   const { state, dispatch, getUnansweredIds } = useQuizState(edition);
   const [showValidation, setShowValidation] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [code, setCode] = useState("");
+  const [userName, setUserName] = useState(autoName || "");
+  const [code, setCode] = useState(autoCode || "");
   const [formError, setFormError] = useState("");
   const topRef = useRef<HTMLDivElement>(null);
+  const autoStartedRef = useRef(false);
 
   const isSimple = (state.edition ?? "user") === "simple";
+
+  // 记住返回地址（供结果页「返回咨询流程」使用）
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (returnTo) sessionStorage.setItem("quiz_return_to", returnTo);
+  }, [returnTo]);
+
+  // 携带有效激活码与姓名时，自动开始专业版测验（仅一次）
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (state.phase !== "cover") return;
+    if (isSimple) return;
+    if (!autoName?.trim() || !autoCode?.trim()) return;
+    if (!validateActivationCode(autoCode)) return;
+    autoStartedRef.current = true;
+    const normalizedCode = autoCode
+      .trim()
+      .toUpperCase()
+      .replace(/^BRIDGE_([A-Z]{3,16})$/, "BRIDGE-$1");
+    dispatch({
+      type: "START_QUIZ_WITH_USER",
+      userName: autoName.trim(),
+      activationCode: normalizedCode,
+    });
+  }, [state.phase, isSimple, autoName, autoCode, dispatch]);
 
   // Firewall: Block Ctrl+S / Cmd+S (Problem 4)
   useEffect(() => {
@@ -70,10 +106,15 @@ export default function QuizEngine({ edition }: { edition?: string }) {
         }
       }
       setFormError("");
+      // 内测码统一规范为 BRIDGE-NAME（兼容用户误写 BRIDGE_NAME）
+      const normalizedCode = code
+        .trim()
+        .toUpperCase()
+        .replace(/^BRIDGE_([A-Z]{3,16})$/, "BRIDGE-$1");
       dispatch({
         type: "START_QUIZ_WITH_USER",
         userName: userName.trim(),
-        activationCode: isSimple ? undefined : code.trim().toUpperCase(),
+        activationCode: isSimple ? undefined : normalizedCode,
       });
     };
 
@@ -124,7 +165,7 @@ export default function QuizEngine({ edition }: { edition?: string }) {
                 <label className="block text-xs font-bold text-bridge-blue mb-1">专业版激活码 (必填)</label>
                 <input
                   type="text"
-                  placeholder="请输入 12 位专业版激活码"
+                  placeholder="请输入专业版激活码"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue font-mono transition-colors"
@@ -407,6 +448,7 @@ export default function QuizEngine({ edition }: { edition?: string }) {
         fullDimensionOrder={fullDimOrder}
         catalogReference={catalogRef}
         contactText={PRO_CONTACT_TEXT}
+        returnTo={returnTo}
         onRetry={() => dispatch({ type: "START_QUIZ" })}
         onBackToQuiz={() => dispatch({ type: "BACK_TO_QUIZ" })}
       />

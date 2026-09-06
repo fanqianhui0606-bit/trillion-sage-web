@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from "react";
 import majorsData from "../../../public/data/majors-intro.json";
+import { computeLayerAverages } from "@/lib/constants";
+import {
+  hasImportableQuizResult,
+  readQuizExport,
+  readQuizSnapshot,
+  makeQuizCodeForOrder,
+} from "@/lib/quiz-export-bridge";
+
 interface Props {
   type: "consult-pre" | "consult-post" | "quiz" | "counseling";
   consultIndex?: number; // 1, 2, 3
@@ -9,6 +17,10 @@ interface Props {
   readOnly?: boolean;
   role?: "staff" | "family";
   onSave?: (data: Record<string, unknown>) => void;
+  /** 测验环节：用于生成专业版测验码并一键跳转 */
+  packageId?: string;
+  orderNo?: string;
+  visitorName?: string;
 }
 
 // 从 majors-intro.json 动态加载专业列表（理工农医相关门类）
@@ -32,7 +44,7 @@ function loadMajorOptions(): MajorEntry[] {
 }
 
 /** B 阶段咨询表单 */
-export default function StepFormB({ type, consultIndex = 1, data, readOnly = false, role = "staff", onSave }: Props) {
+export default function StepFormB({ type, consultIndex = 1, data, readOnly = false, role = "staff", onSave, packageId, orderNo, visitorName }: Props) {
   // 咨询事前
   const [preMentor, setPreMentor] = useState((data?.mentor as string) || "");
   const [preMajor, setPreMajor] = useState((data?.major as string) || "");
@@ -56,9 +68,63 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
     (data?.topMajors as string[]) || ["", "", "", "", ""]
   );
   const [majorOptions, setMajorOptions] = useState<MajorEntry[]>([]);
+  const [hasSnapshot, setHasSnapshot] = useState(false);
+  const [importedResult, setImportedResult] = useState<Record<string, unknown> | null>(
+    (data?.importedResult as Record<string, unknown>) || null
+  );
   useEffect(() => {
     setMajorOptions(loadMajorOptions());
+    setHasSnapshot(hasImportableQuizResult());
   }, []);
+
+  /** 从数理素质测验【专业版】本地结果一键导入 */
+  const handleImportFromQuiz = () => {
+    const exportPayload = readQuizExport();
+    const snap = readQuizSnapshot();
+
+    if (!exportPayload?.top5?.length && !snap?.matches?.length) {
+      alert("未找到本机的专业版测验结果。请先在本设备完成一次「数理素质测验【专业版】」并提交（或导出 PDF）后再导入。");
+      return;
+    }
+
+    // 优先用 bridge_quiz_export_v1（与本地咨询流程表一致），否则用快照
+    const topNames: string[] = exportPayload?.top5?.length
+      ? exportPayload.top5.map((m) => m.name).filter(Boolean)
+      : (snap?.matches || []).slice(0, 5).map((m) => m.majorName);
+
+    const objective = snap?.scores?.objective || {};
+    const layerAverages = computeLayerAverages(objective)
+      .filter((l) => l.average != null)
+      .map((l) => ({ name: l.name, average: Number((l.average as number).toFixed(2)) }));
+
+    const dateFromExport = exportPayload?.generatedAt
+      ? new Date(exportPayload.generatedAt).toISOString().slice(0, 10)
+      : "";
+
+    setQuizDate((d) => d || dateFromExport || new Date().toISOString().slice(0, 10));
+    if (exportPayload?.resultLink) {
+      setQuizPdfUrl((u) => u || exportPayload.resultLink);
+    }
+    setQuizMajors([
+      ...topNames.slice(0, 5),
+      ...Array(Math.max(0, 5 - topNames.length)).fill(""),
+    ]);
+    setImportedResult({
+      importedAt: new Date().toISOString(),
+      resultLink: exportPayload?.resultLink,
+      topMajors: topNames.map((name, i) => {
+        const fromExport = exportPayload?.top5?.[i];
+        const fromSnap = snap?.matches?.[i];
+        return {
+          majorId: fromExport?.id || fromSnap?.majorId || "",
+          majorName: name,
+          matchPct: fromSnap ? `${(fromSnap.score * 100).toFixed(2)}%` : "",
+        };
+      }),
+      objectiveScores: objective,
+      layerAverages,
+    });
+  };
 
   // 心理辅导
   const [counselDate, setCounselDate] = useState((data?.date as string) || "");
@@ -103,6 +169,7 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
           pdfUrl: quizPdfUrl,
           topMajors: quizMajors.filter(Boolean),
           completedAt: new Date().toISOString(),
+          ...(importedResult ? { importedResult } : {}),
         };
         break;
       case "counseling":
@@ -323,11 +390,72 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
     }, {});
     const sortedCategories = Object.keys(grouped).sort((a, b) => a.localeCompare(b, "zh-CN"));
 
+    const importedTop = (importedResult?.topMajors as { majorName: string; matchPct: string }[]) || [];
+    const importedLayers = (importedResult?.layerAverages as { name: string; average: number }[]) || [];
+
+    const quizCode = orderNo ? makeQuizCodeForOrder(packageId || "", orderNo) : "";
+    const quizUrl = quizCode
+      ? `/quiz?edition=user&code=${encodeURIComponent(quizCode)}&name=${encodeURIComponent(
+          visitorName || ""
+        )}&return=${encodeURIComponent("/tracker")}`
+      : "";
+
     return (
       <div className="space-y-4">
         <h3 className="text-sm font-bold text-bridge-blue border-b border-white/10 pb-2">
           数理素质测验 · 结果录入
         </h3>
+
+        {/* 一键进入专业版测验（携本套餐测验码，做完可返回） */}
+        {!readOnly && quizUrl && (
+          <div className="p-3 rounded-lg border border-bridge-blue/30 bg-bridge-blue/5 space-y-2">
+            <a
+              href={quizUrl}
+              className="block w-full text-center py-2 rounded-lg font-bold text-sm text-white bg-bridge-blue hover:bg-blue-600 transition-colors no-underline"
+            >
+              一键进入专业版测验页面 →
+            </a>
+            <p className="text-xs text-bridge-muted leading-relaxed">
+              将使用本套餐测验码
+              <span className="mx-1 font-mono font-semibold text-bridge-blue">{quizCode}</span>
+              自动进入专业版测验；完成后点击结果页「返回咨询流程」即可回到本环节，再点下方按钮导入结果。
+            </p>
+          </div>
+        )}
+
+        {/* 从专业版测验直接导入 */}
+        {!readOnly && (
+          <div className="p-3 rounded-lg border border-bridge-gold/30 bg-bridge-gold/5">
+            <button
+              type="button"
+              onClick={handleImportFromQuiz}
+              className="w-full py-2 rounded-lg font-bold text-sm text-white bg-bridge-gold hover:bg-amber-600 transition-colors"
+            >
+              从数理素质测验【专业版】导入结果
+            </button>
+            <p className="text-xs text-bridge-muted mt-1.5 leading-relaxed">
+              {hasSnapshot
+                ? "已检测到本设备的专业版测验结果，点击上方按钮可自动填入测验日期与 Top5 推荐专业。"
+                : "在本设备完成一次专业版测验并提交后，即可在此一键导入结果。"}
+            </p>
+          </div>
+        )}
+
+        {importedResult && (
+          <div className="p-3 rounded-lg border border-green-400/40 bg-green-50/60 space-y-1.5">
+            <p className="text-sm font-semibold text-green-700">已导入专业版测验结果</p>
+            {importedTop.length > 0 && (
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Top5：{importedTop.map((m, i) => `${i + 1}. ${m.majorName}（${m.matchPct}）`).join("　")}
+              </p>
+            )}
+            {importedLayers.length > 0 && (
+              <p className="text-xs text-slate-600 leading-relaxed">
+                分层均分：{importedLayers.map((l) => `${l.name} ${l.average.toFixed(2)}/5`).join("；")}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -370,6 +498,10 @@ export default function StepFormB({ type, consultIndex = 1, data, readOnly = fal
                   className="flex-1 px-3 py-1.5 rounded-lg border border-white/20 bg-white/10 text-xs focus:outline-none focus:border-bridge-blue disabled:opacity-60"
                 >
                   <option value="">选择专业</option>
+                  {/* 导入的二级专业大类名不在三级目录中时，保留为可见选项 */}
+                  {quizMajors[i] && !majorOptions.some((m) => m.name === quizMajors[i]) && (
+                    <option value={quizMajors[i]}>{quizMajors[i]}（测验导入）</option>
+                  )}
                   {sortedCategories.map((cat) => (
                     <optgroup key={cat} label={cat}>
                       {grouped[cat].map((m) => (

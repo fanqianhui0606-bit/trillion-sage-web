@@ -3,9 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    /* 全站基准字号上调约一档（16px → 18px） */
+    font-size: 112.5%;
+  }
+
   body {
-    @apply text-bridge-text antialiased;
-    font-family: "Songti SC", "SimSun", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+    @apply text-bridge-text antialiased font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans;
   }
 }
 
@@ -14,39 +22,74 @@
     @apply bg-white/30 border border-white/[0.95] backdrop-blur-[12px] rounded-xl shadow-glass;
   }
   /* 协议弹窗交互按钮 */
-  .doc-btn {
-    @apply text-xs text-slate-600 px-3 py-1.5 rounded border border-slate-200 bg-white mr-2 mb-1 cursor-pointer transition-colors select-none;
+  .doc-btn,
+  .agreement-doc-btn {
+    @apply text-sm text-slate-600 px-3 py-1.5 rounded border border-slate-200 bg-white mr-2 mb-1 cursor-pointer transition-colors select-none;
   }
-  .doc-btn:hover:not(:disabled) {
+  .doc-btn:hover:not(:disabled),
+  .agreement-doc-btn:hover:not(:disabled) {
     @apply border-bridge-blue text-bridge-blue bg-blue-50;
   }
-  .doc-btn--on {
+  .doc-btn--on,
+  .agreement-doc-btn.on {
     @apply border-green-400 text-green-700 bg-green-50 font-semibold;
   }
-  .doc-btn:disabled {
+  .doc-btn:disabled,
+  .agreement-doc-btn:disabled {
     @apply opacity-50 cursor-not-allowed;
   }
   .doc-btns-row {
     @apply flex flex-wrap gap-x-2 gap-y-1 mt-2 mb-3;
   }
-  /* 协议弹窗内嵌提示 */
   .agreement-doc-btns {
-    @apply flex flex-wrap gap-1 mt-1;
+    @apply flex flex-wrap gap-1.5 mt-2 mb-2;
   }
   .agreement-doc-hint {
-    @apply text-[10px] text-slate-500 mt-1 mb-2;
+    @apply text-xs text-slate-500 mt-1 mb-2 text-left;
   }
   .agreement-auto-info {
-    @apply text-xs text-slate-600 mb-1;
+    @apply text-sm text-slate-600 mb-1.5 text-left;
   }
   .agreement-table {
-    @apply w-full text-xs border-collapse my-2;
+    @apply w-full text-sm border-collapse my-3;
   }
   .agreement-table th {
-    @apply bg-slate-100 text-slate-700 font-semibold px-2 py-1 text-left border border-slate-200;
+    @apply bg-indigo-50 text-bridge-blue font-semibold px-2.5 py-1.5 text-left border border-indigo-100;
   }
   .agreement-table td {
-    @apply px-2 py-1 border border-slate-200 text-slate-600;
+    @apply px-2.5 py-1.5 border border-slate-200 text-slate-700 text-left;
+  }
+  /* 协议正文排版 */
+  .agreement-doc h1 {
+    @apply text-xl font-bold text-bridge-blue mb-3 text-center;
+  }
+  .agreement-doc h2 {
+    @apply text-base font-bold text-bridge-blue mt-5 mb-2 pb-1 border-b border-bridge-blue/20 text-left;
+  }
+  .agreement-doc h3 {
+    @apply text-sm font-bold text-slate-700 mt-4 mb-1.5 text-left;
+  }
+  .agreement-doc h4 {
+    @apply text-sm font-semibold text-slate-600 mt-3 mb-1 text-left;
+  }
+  .agreement-doc p {
+    @apply my-2 text-left;
+  }
+  .agreement-doc ul,
+  .agreement-doc ol {
+    @apply my-2 pl-5 text-left;
+  }
+  .agreement-doc li {
+    @apply my-1;
+  }
+  .agreement-doc blockquote {
+    @apply my-3 px-3 py-2 border-l-4 border-bridge-gold bg-amber-50/60 text-left text-sm;
+  }
+  .agreement-doc hr {
+    @apply my-4 border-0 border-t border-dashed border-slate-300;
+  }
+  .agreement-doc strong {
+    @apply text-slate-900 font-semibold;
   }
 }
 

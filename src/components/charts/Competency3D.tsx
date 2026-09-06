@@ -67,8 +67,9 @@ interface EdgeLineMeta {
 // ============================================================
 
 function intensityToGlow(intensity: number) {
-  const t = Math.max(1, Math.min(5, intensity));
-  const k = Math.pow((t - 1) / 4, GLOW_POWER);
+  // 允许 0–5：低分更暗、高分更亮，拉开相邻分差的观感
+  const t = Math.max(0, Math.min(5, intensity));
+  const k = Math.pow(t / 5, GLOW_POWER);
   return {
     emissive: GLOW_EMISSIVE_MIN + k * GLOW_EMISSIVE_RANGE,
     haloOpacity: GLOW_HALO_OPACITY_MIN + k * GLOW_HALO_OPACITY_RANGE,
@@ -353,11 +354,47 @@ function Scene3DInner({
 
   // ---- Pointer handlers ----
 
+  const endDrag = useCallback(() => {
+    const nodeId = dragRef.current.nodeId;
+    if (!nodeId) return;
+
+    const elapsed = performance.now() - dragRef.current.pointerDownAt;
+    const nd = nodeDataMap.current.get(nodeId)?.current;
+    if (nd) nd.isDragging = false;
+
+    if (controlsRef.current) controlsRef.current.enabled = true;
+
+    if (elapsed < 220) {
+      setSelectedNodeId(nodeId);
+    }
+    dragRef.current.nodeId = null;
+  }, []);
+
+  // 窗口级 pointerup：避免松手时射线未命中隐形平面导致拖拽锁死、小球不回弹
+  useEffect(() => {
+    const onUp = () => endDrag();
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [endDrag]);
+
   const handlePointerDown = useCallback(
     (e: ThreeEvent<PointerEvent>, nodeId: string) => {
       if (!controlsRef.current) return;
       const node = nodeMeshMap.current.get(nodeId);
       if (!node) return;
+
+      e.stopPropagation();
+      try {
+        (e.target as unknown as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+          e.pointerId,
+        );
+      } catch {
+        /* ignore capture failures */
+      }
 
       dragRef.current.nodeId = nodeId;
       dragRef.current.pointerDownAt = performance.now();
@@ -381,22 +418,6 @@ function Scene3DInner({
     },
     [camera, pointer],
   );
-
-  const handlePointerUp = useCallback(() => {
-    const nodeId = dragRef.current.nodeId;
-    if (!nodeId) return;
-
-    const elapsed = performance.now() - dragRef.current.pointerDownAt;
-    const nd = nodeDataMap.current.get(nodeId)?.current;
-    if (nd) nd.isDragging = false;
-
-    if (controlsRef.current) controlsRef.current.enabled = true;
-
-    if (elapsed < 220) {
-      setSelectedNodeId(nodeId);
-    }
-    dragRef.current.nodeId = null;
-  }, []);
 
   const handleDoubleClick = useCallback(() => {
     const node = pickNode();
@@ -619,7 +640,7 @@ function Scene3DInner({
         const colorHex = isLocked ? "#9ca3af" : (LEVEL_COLORS[node.level] || "#4b5563");
         const profileVal = isLocked ? null : profileScores?.[node.id];
         const intensity =
-          profileVal != null ? Math.max(1, Math.min(5, profileVal)) : (isLocked ? 0 : (node.intensity ?? 3));
+          profileVal != null ? Math.max(0, Math.min(5, profileVal)) : (isLocked ? 0 : (node.intensity ?? 3));
         return (
           <NodeSphere
             key={node.id}
@@ -643,8 +664,8 @@ function Scene3DInner({
         enableZoom
       />
 
-      {/* Invisible mesh for canvas-level pointer events */}
-      <mesh visible={false} onPointerUp={handlePointerUp} onDoubleClick={handleDoubleClick}>
+      {/* 空白双击复位相机（松手结束拖拽由 window pointerup 处理） */}
+      <mesh visible={false} onDoubleClick={handleDoubleClick}>
         <planeGeometry args={[100, 100]} />
       </mesh>
     </>

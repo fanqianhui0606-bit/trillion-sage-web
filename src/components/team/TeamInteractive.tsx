@@ -1,79 +1,100 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import GlassCard from "@/components/shared/GlassCard";
+import Button from "@/components/shared/Button";
+import { TUTOR_PROFILES, pickTutorBatch, type TutorProfile } from "@/lib/tutors-data";
 
-interface Tutor {
-  school: string;
-  role: string;
-  field: string;
-  quote: string;
-  tagColor: string;
-  featured: boolean;
+const CONSULT_FLOW = [
+  { step: "01", title: "初次建档", desc: "添加小助理微信 TrillionSage，沟通选科、分数与理科方向期望，建立专属档案。" },
+  { step: "02", title: "锁定套餐", desc: "依据学情推荐最契合的咨询套餐，确认服务范围与导师排期。" },
+  { step: "03", title: "素质测验", desc: "完成数理素质测验【专业版】，生成 14 维能力画像与 Top5 专业推荐。" },
+  { step: "04", title: "导师匹配", desc: "按专业方向与性格特征匹配 985 硕博导师，提前同步测验报告。" },
+  { step: "05", title: "1v1 深度咨询", desc: "腾讯会议深度通话，解答专业内容、升学路径与行业前景。" },
+  { step: "06", title: "定制路线", desc: "导师出具个性化发展路线建议，含会议纪要与学术寄语。" },
+  { step: "07", title: "心理疏导", desc: "白银/黄金套餐可预约北大资深心理导师，缓解升学焦虑。" },
+  { step: "08", title: "长效陪伴", desc: "加入千殊专属社群，硕博学长长期在线答疑与跟踪。" },
+];
+
+const GRADE_OPTIONS = [
+  { value: "high1", label: "高中一年级（新高考选科探索中）" },
+  { value: "high2", label: "高中二年级（数理物理拔高 / 遭遇瓶颈）" },
+  { value: "high3", label: "高中三年级（高考冲刺 / 强基计划规划）" },
+  { value: "graduated", label: "高考毕业生（正处于志愿填报 / 衔接期）" },
+  { value: "college", label: "大学低年级（面临专业分流或保研焦虑）" },
+  { value: "parent", label: "家长代填（为孩子寻求长线升学规划）" },
+];
+
+function TutorCard({ tutor }: { tutor: TutorProfile }) {
+  return (
+    <GlassCard className="flex items-center gap-3 px-4 py-3 border border-white/50 hover:border-bridge-gold/40 hover:shadow-glass transition-all duration-300">
+      {tutor.badgeImage ? (
+        <span className="flex-shrink-0 w-12 h-12 rounded-full bg-white/80 border border-white flex items-center justify-center overflow-hidden">
+          <Image
+            src={tutor.badgeImage}
+            alt={`${tutor.school} 校徽`}
+            width={44}
+            height={44}
+            className="object-contain w-10 h-10"
+          />
+        </span>
+      ) : (
+        <span
+          className={`flex-shrink-0 w-12 h-12 rounded-full ${tutor.badgeColor} text-white text-[11px] font-bold flex items-center justify-center leading-none text-center px-1`}
+          aria-hidden
+        >
+          {tutor.badgeText}
+        </span>
+      )}
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="text-sm font-bold text-stone-800">{tutor.school}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 border border-stone-200 flex-shrink-0">
+            {tutor.role}
+          </span>
+        </div>
+        <p className="text-xs text-bridge-muted mt-0.5 truncate">
+          <span className="text-bridge-blue font-semibold">{tutor.surname} 学长</span> · {tutor.field}
+        </p>
+      </div>
+    </GlassCard>
+  );
 }
 
-const TUTORS: Tutor[] = [
-  { school: "北京大学", role: "博士在读", field: "凝聚态物理", quote: "探索晶格缺陷中涌现的量子实在，如同在无声的微观迷宫中寻找宏观对称性的投影。", tagColor: "bg-sky-500/10 text-sky-600 border-sky-500/20", featured: true },
-  { school: "北京大学", role: "博士毕业", field: "临床心理学", quote: "心理测评不是给人贴标签，而是在混沌的情绪场中为来访者找到第一根可以倚靠的认知锚点。", tagColor: "bg-rose-500/10 text-rose-600 border-rose-500/20", featured: true },
-  { school: "清华大学", role: "博士在读", field: "数学 / 代数几何", quote: "概形上的层与上同调，是代数几何在交换环谱上重建拓扑直觉的逻辑利刃。", tagColor: "bg-violet-500/10 text-violet-600 border-violet-500/20", featured: true },
-  { school: "清华大学", role: "博士在读", field: "化学 / 有机化学", quote: "在分子尺度上设计功能材料的电子结构，是从原子轨道对称性出发重构宏观物性的化学炼金术。", tagColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20", featured: true },
-  { school: "中科院数学所", role: "博士在读", field: "数学物理 / 计算相对论", quote: "用数值方法在时空网格上重构双黑洞合并过程，是逻辑在强弯曲时空的具象表达。", tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20", featured: true },
-  { school: "中科院数学所", role: "博士后", field: "数学物理 / 数值计算相对论", quote: "将连续物理场映射为格点离散算法，解决强引力场的数值奇异性，是算法在极端时空的极限测试。", tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20", featured: true },
-  { school: "中科院理论物理所", role: "博士在读", field: "理论物理 / 全息ADS-CFT对应", quote: "将三维空间的重力场全息投影在二维边界上，黑洞的熵可能只是边界量子纠缠的宏观表象。", tagColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20", featured: true },
-  { school: "国家天文台", role: "博士在读", field: "引力波理论 / 黑洞物理", quote: "引力波的干涉条纹，是千亿光年外黑洞并合事件跨越时空阻尼送达的引力签名。", tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20", featured: true },
-  { school: "中国科学技术大学", role: "硕士在读", field: "天文学 / 射电天体物理探测", quote: "以射电望远镜扫描银河系的边缘，是人类向无穷未知投射的一道引力问候。", tagColor: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20", featured: true },
-  { school: "爱丁堡大学", role: "硕士毕业", field: "金融科技 / 计算机", quote: "从代码到资本市场的映射，是用图灵机语言在不确定性中寻找可计算套利边界的知识转译。", tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20", featured: true },
-  { school: "麦考瑞大学 & 悉尼大学", role: "硕士毕业", field: "金融 / 会计 / 数据科学", quote: "跨学科的学习路径从来不是笔直的公路，而是在不同学科版图间反复测绘、发现最短路程的探索者之旅。", tagColor: "bg-amber-500/10 text-amber-600 border-amber-500/20", featured: true },
-];
-const FIELDS_OPTIONS = [
-  { id: "physics", label: "物理学 (理论/凝聚态/天体物理)" },
-  { id: "math", label: "数学 (纯数/应用数学/分析)" },
-  { id: "life", label: "生化分子与生命科学" },
-  { id: "cs", label: "计算机与计算科学 (算法/人工智能)" },
-  { id: "chem", label: "材料与微纳化学" },
-  { id: "inter", label: "前沿交叉学科 (如数理金融、量子计算)" },
-];
-
 export default function TeamInteractive() {
-  // View state
-  const [showAll, setShowAll] = useState(false);
-  const [expandedTutorIdx, setExpandedTutorIdx] = useState<number | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [flowOpen, setFlowOpen] = useState(false);
 
-  // Booking Form State
   const [studentName, setStudentName] = useState("");
   const [contact, setContact] = useState("");
   const [grade, setGrade] = useState("");
-  const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [concern, setConcern] = useState("");
 
-  // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitPhase, setSubmitPhase] = useState<"idle" | "simulating" | "success">("idle");
   const [appointmentId, setAppointmentId] = useState("");
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const displayTutors = TUTORS;
+  const batch = pickTutorBatch(TUTOR_PROFILES, offset, 14);
+  const leftCol = batch.slice(0, 7);
+  const rightCol = batch.slice(7, 14);
 
-  // Field selection toggle
-  const toggleField = (id: string) => {
-    setSelectedFields((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
-  };
+  const refreshTutors = () => setOffset((prev) => (prev + 7) % TUTOR_PROFILES.length);
 
-  // Generate mock appointment ID
   const generateAppointmentId = () => {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const rand = Math.floor(1000 + Math.random() * 9000);
     return `TS-${dateStr}-${rand}`;
   };
 
-  // Submit Handler calling real API endpoint
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentName.trim() || !contact.trim() || !grade || selectedFields.length === 0) {
-      alert("请填写完整的预约信息（姓名、联系方式、年级并至少选择一个学科）");
+    if (!studentName.trim() || !contact.trim() || !grade) {
+      alert("请填写完整的预约信息（称呼、联系方式、学业阶段）");
       return;
     }
 
@@ -91,7 +112,6 @@ export default function TeamInteractive() {
           studentName: studentName.trim(),
           contact: contact.trim(),
           grade,
-          selectedFields,
           concern: concern.trim(),
           appointmentId: apptId,
         }),
@@ -99,12 +119,10 @@ export default function TeamInteractive() {
 
       if (!res.ok) throw new Error("预约保存失败");
 
-      // Delay slightly to allow simulation animation
       setTimeout(() => {
         setSubmitPhase("success");
         setIsSubmitting(false);
-      }, 2500);
-
+      }, 2200);
     } catch (err) {
       console.error(apptId, err);
       alert("提交预约接口失败，请检查网络后再试");
@@ -113,60 +131,38 @@ export default function TeamInteractive() {
     }
   };
 
-  // Canvas interference wave during success/simulation
   useEffect(() => {
     if (submitPhase === "idle") return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animId: number;
+    let animId = 0;
     let w = (canvas.width = canvas.parentElement?.clientWidth || 600);
-    let h = (canvas.height = 220);
+    let h = (canvas.height = 200);
 
     const handleResize = () => {
-      if (!canvas) return;
       w = canvas.width = canvas.parentElement?.clientWidth || 600;
-      h = canvas.height = 220;
+      h = canvas.height = 200;
     };
     window.addEventListener("resize", handleResize);
 
-    const stars: { x: number; y: number; speed: number; amp: number; phase: number; r: number; color: string }[] = [];
-    for (let i = 0; i < 60; i++) {
-      stars.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        speed: 0.5 + Math.random() * 1.5,
-        amp: 5 + Math.random() * 15,
-        phase: Math.random() * Math.PI * 2,
-        r: Math.random() * 1.8 + 0.4,
-        color: Math.random() > 0.4 ? "rgba(197, 160, 89, 0.7)" : "rgba(46, 117, 182, 0.6)",
-      });
-    }
+    const stars = Array.from({ length: 60 }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      speed: 0.5 + Math.random() * 1.5,
+      amp: 5 + Math.random() * 15,
+      phase: Math.random() * Math.PI * 2,
+      r: Math.random() * 1.8 + 0.4,
+      color: Math.random() > 0.4 ? "rgba(197, 160, 89, 0.7)" : "rgba(46, 117, 182, 0.6)",
+    }));
 
     let phase = 0;
-
     const render = () => {
       ctx.fillStyle = "rgba(15, 23, 42, 0.15)";
       ctx.fillRect(0, 0, w, h);
-
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.02)";
-      ctx.lineWidth = 1;
-      for (let i = 0; i < w; i += 40) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, h);
-        ctx.stroke();
-      }
-      for (let j = 0; j < h; j += 40) {
-        ctx.beginPath();
-        ctx.moveTo(0, j);
-        ctx.lineTo(w, j);
-        ctx.stroke();
-      }
 
       phase += 0.045;
       ctx.lineWidth = 1.5;
@@ -174,7 +170,7 @@ export default function TeamInteractive() {
       ctx.strokeStyle = "rgba(197, 160, 89, 0.65)";
       ctx.beginPath();
       for (let x = 0; x < w; x++) {
-        const y = h / 2 + Math.sin(x * 0.015 + phase) * 25 + Math.sin(x * 0.005 - phase * 0.7) * 15;
+        const y = h / 2 + Math.sin(x * 0.015 + phase) * 22 + Math.sin(x * 0.005 - phase * 0.7) * 12;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -183,7 +179,7 @@ export default function TeamInteractive() {
       ctx.strokeStyle = "rgba(46, 117, 182, 0.55)";
       ctx.beginPath();
       for (let x = 0; x < w; x++) {
-        const y = h / 2 + Math.cos(x * 0.018 - phase * 0.8) * 22 + Math.sin(x * 0.008 + phase * 0.5) * 12;
+        const y = h / 2 + Math.cos(x * 0.018 - phase * 0.8) * 20 + Math.sin(x * 0.008 + phase * 0.5) * 10;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -192,10 +188,8 @@ export default function TeamInteractive() {
       for (const s of stars) {
         s.x += s.speed;
         if (s.x > w) s.x = 0;
-
-        const waveY = h / 2 + Math.sin(s.x * 0.015 + phase) * 20;
+        const waveY = h / 2 + Math.sin(s.x * 0.015 + phase) * 18;
         const currentY = waveY + Math.sin(phase * 1.5 + s.phase) * s.amp;
-
         ctx.fillStyle = s.color;
         ctx.shadowBlur = 4;
         ctx.shadowColor = s.color;
@@ -207,7 +201,6 @@ export default function TeamInteractive() {
 
       animId = requestAnimationFrame(render);
     };
-
     render();
 
     return () => {
@@ -217,109 +210,117 @@ export default function TeamInteractive() {
   }, [submitPhase]);
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-14">
+      {/* 导师名单 */}
+      <div>
+        <h3 className="text-xl font-bold text-bridge-blue text-center mb-6">导师名单</h3>
 
-      {/* ══════════════════════════════════════ */}
-      {/* 1. Tutor Roster — 单列折叠式 */}
-      {/* ══════════════════════════════════════ */}
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8 text-center">
-          <p className="text-xs text-bridge-muted font-serif tracking-widest uppercase mb-1">Tutor Roster</p>
-          <h2 className="text-xl md:text-2xl font-serif text-bridge-blue-dark font-bold tracking-wider">
-            科学导师团队
-          </h2>
-          <p className="text-xs text-bridge-muted font-serif mt-2">
-            全部导师均来自清北、中科院、海内外顶尖高校硕博团队
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          <div className="space-y-3">
+            {leftCol.map((tutor, i) => (
+              <TutorCard key={`l-${offset}-${i}`} tutor={tutor} />
+            ))}
+          </div>
+          <div className="space-y-3">
+            {rightCol.map((tutor, i) => (
+              <TutorCard key={`r-${offset}-${i}`} tutor={tutor} />
+            ))}
+          </div>
         </div>
 
-        {/* Tutor list — single column */}
-        <div className="flex flex-col gap-2.5">
-          {displayTutors.map((tutor) => {
-            const globalIdx = TUTORS.indexOf(tutor);
-            const isExpanded = expandedTutorIdx === globalIdx;
-            const fieldParts = tutor.field.split(" / ");
-            const mainField = fieldParts[0];
-            const subField = fieldParts[1] || "";
-
-            return (
-              <GlassCard
-                key={globalIdx}
-                className="border border-white/50 hover:border-bridge-gold/30 hover:shadow-sm transition-all duration-300 px-5 py-3.5 relative overflow-hidden group cursor-pointer"
-                onClick={() => setExpandedTutorIdx(isExpanded ? null : globalIdx)}
-              >
-                <div className="absolute -right-10 -bottom-10 w-20 h-20 bg-bridge-blue/5 rounded-full group-hover:bg-bridge-gold/5 transition-all duration-700 blur-xl" />
-
-                {/* Row Header */}
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <h4 className="font-serif text-sm font-bold text-stone-850 tracking-wider whitespace-nowrap">
-                      {tutor.school}
-                    </h4>
-                    <span className="text-[11px] text-bridge-blue font-serif bg-bridge-blue/5 px-2 py-0.5 rounded border border-bridge-blue/10 truncate">
-                      {mainField}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-serif border ${tutor.tagColor}`}>
-                      {tutor.role}
-                    </span>
-                    <span className={`text-stone-400 text-xs transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}>
-                      ▼
-                    </span>
-                  </div>
-                </div>
-
-                {/* Expand: sub-field + quote */}
-                {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-stone-200/40 animate-slide-down text-left select-none">
-                    {subField && (
-                      <p className="text-[10px] text-stone-500 font-serif leading-relaxed">
-                        <strong className="text-stone-700">细分研究方向：</strong>{subField}
-                      </p>
-                    )}
-                    <p className="text-xs text-stone-600 leading-relaxed font-serif pt-2.5 italic border-l-2 border-bridge-gold/30 pl-3 bg-amber-50/15 rounded-r mt-2">
-                      &ldquo;{tutor.quote}&rdquo;
-                    </p>
-                  </div>
-                )}
-              </GlassCard>
-            );
-          })}
-        </div>
-
-        {/* Expand / Collapse toggle */}
-        <div className="text-center mt-6">
+        <div className="flex flex-col items-center mt-6">
           <button
-            onClick={() => {
-              setShowAll(!showAll);
-              setExpandedTutorIdx(null);
-            }}
-            className="px-6 py-2.5 border border-bridge-gold/40 text-bridge-gold font-serif text-xs tracking-widest rounded-full hover:bg-bridge-gold/10 transition-all duration-300"
+            type="button"
+            onClick={refreshTutors}
+            className="w-11 h-11 rounded-full border-2 border-bridge-blue/30 text-bridge-blue hover:bg-bridge-blue/10 hover:border-bridge-blue hover:rotate-180 transition-all duration-500 text-lg"
+            aria-label="点击刷新查看更多讲师名单"
           >
-            {showAll ? "收起导师列表 ▲" : `展开全部硕博导师（共 ${TUTORS.length} 位）▼`}
+            ↻
           </button>
+          <p className="text-xs text-bridge-muted mt-2">点击刷新查看更多讲师名单</p>
         </div>
+
+        <p className="text-xs text-bridge-muted text-center mt-4 leading-relaxed">
+          * 为保障一线青年学者的科研精力，导师名单均作去人名化处理，资历可在咨询过程中查验。
+        </p>
       </div>
 
-      {/* ══════════════════════════════════════ */}
-      {/* 2. Booking Section (#consult) */}
-      {/* ══════════════════════════════════════ */}
-      <div id="consult" className="pt-8 scroll-mt-24">
-        <GlassCard className="border border-bridge-gold/30 shadow-[0_4px_24px_rgba(197,160,89,0.06)] bg-gradient-to-b from-amber-50/10 to-transparent p-8 md:p-12 relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-bridge-gold/15 text-bridge-gold text-[9px] font-serif tracking-widest px-4 py-1.5 uppercase rounded-bl border-l border-b border-bridge-gold/20 select-none animate-pulse">
-            1v1 星轨引航申请舱
-          </div>
+      {/* 咨询流程 */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setFlowOpen(!flowOpen)}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-xl border border-bridge-blue/25 bg-white/40 hover:bg-white/60 transition-all"
+        >
+          <span className="text-base font-bold text-bridge-blue">查看我们的咨询流程</span>
+          <span className="text-bridge-muted text-xl leading-none">{flowOpen ? "−" : "+"}</span>
+        </button>
 
-          {submitPhase === "idle" || submitPhase === "simulating" ? (
+        {flowOpen && (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up">
+            {CONSULT_FLOW.map((item) => (
+              <GlassCard key={item.step} className="relative border border-white/50">
+                <span className="text-2xl font-bold text-bridge-blue/15 absolute top-3 right-4 leading-none">
+                  {item.step}
+                </span>
+                <h4 className="text-sm font-bold text-bridge-blue mb-1.5 pr-10">{item.title}</h4>
+                <p className="text-xs text-bridge-muted leading-relaxed">{item.desc}</p>
+              </GlassCard>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 预约申请 */}
+      <div id="consult" className="scroll-mt-24">
+        <GlassCard className="border border-bridge-gold/30 shadow-[0_4px_24px_rgba(197,160,89,0.06)] bg-gradient-to-b from-amber-50/10 to-transparent p-8 md:p-12">
+          {submitPhase === "success" ? (
+            <div className="max-w-2xl mx-auto flex flex-col items-center text-center gap-6 animate-scale-in">
+              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center border border-bridge-gold/40">
+                <span className="text-2xl text-bridge-gold">✦</span>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xl md:text-2xl text-amber-900 tracking-widest font-bold">预约提交成功</h3>
+                <span className="inline-block font-mono text-xs text-bridge-gold border border-bridge-gold/30 px-3 py-1 rounded select-all font-semibold tracking-wider">
+                  预约工单单号：{appointmentId}
+                </span>
+              </div>
+
+              <div className="w-full max-w-lg bg-[#0f172a] rounded-xl overflow-hidden border border-bridge-gold/30 p-2">
+                <canvas ref={canvasRef} className="w-full block rounded-lg" />
+              </div>
+
+              <div className="bg-white/60 p-6 rounded-lg border border-stone-200/50 text-stone-700 max-w-lg text-sm leading-relaxed text-justify space-y-3">
+                <p>
+                  <strong>尊敬的 {studentName}：</strong>
+                </p>
+                <p>系统已记录您的 1v1 咨询引航申请，助理将在 1 个工作日内与您联系。</p>
+                <p className="text-amber-900 font-semibold bg-amber-500/5 p-3 rounded border border-amber-500/15">
+                  下一步：请复制您的预约单号，添加千殊小助理微信
+                  <code className="bg-white px-2 py-0.5 mx-1 rounded font-mono text-bridge-blue border border-stone-200 select-all">
+                    TrillionSage
+                  </code>
+                  ，备注称呼与单号，助理将为您建立专属对话群并排期腾讯会议。
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSubmitPhase("idle")}
+                className="px-6 py-2 border border-stone-300 hover:border-stone-500 text-stone-500 hover:text-stone-700 text-xs tracking-widest rounded transition-all bg-white/50"
+              >
+                重新填写预约
+              </button>
+            </div>
+          ) : (
             <div className="max-w-2xl mx-auto">
               <div className="text-center mb-8">
-                <h3 className="font-serif text-xl md:text-2xl text-amber-900 tracking-widest font-bold">
-                  预约 1v1 真人导师深度导航
+                <h3 className="text-xl md:text-2xl text-amber-900 tracking-widest font-bold">
+                  预约 1v1 硕博导师深度引航
                 </h3>
-                <p className="text-xs md:text-sm text-bridge-muted leading-relaxed mt-2 font-serif">
-                  破除大学数理科研与升学信息差。导师将结合您的素质报告或聊天轨迹，进行 2 次 45 分钟的深度通话。
+                <p className="text-sm text-bridge-muted leading-relaxed mt-3">
+                  破除大学数理科研与升学信息差。导师将结合您的素质测验报告，进行深度通话与路径规划。
                 </p>
               </div>
 
@@ -329,170 +330,122 @@ export default function TeamInteractive() {
                     <canvas ref={canvasRef} className="w-full block" />
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3 text-center px-4">
                       <div className="w-6 h-6 border-2 border-bridge-gold border-t-transparent rounded-full animate-spin" />
-                      <span className="font-serif text-xs text-bridge-gold tracking-widest animate-pulse">
-                        正在分析思维干涉波形，配置最契合的清北硕博导师组...
+                      <span className="text-xs text-bridge-gold tracking-widest animate-pulse">
+                        正在为您配置最契合的 985 硕博导师组…
                       </span>
                     </div>
                   </div>
-                  <p className="text-xs font-serif text-bridge-muted animate-pulse">
-                    物理星探已在匹配队列，请稍候。
-                  </p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Name input */}
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-serif text-stone-700 tracking-widest">
-                        来访学生/家长称呼 <span className="text-rose-500">*</span>
+                      <label htmlFor="appt-name" className="text-xs text-stone-700 tracking-widest">
+                        来访学生 / 家长称呼 <span className="text-rose-500">*</span>
                       </label>
                       <input
+                        id="appt-name"
                         type="text"
                         required
                         value={studentName}
                         onChange={(e) => setStudentName(e.target.value)}
                         placeholder="例：张同学 或 李妈妈"
-                        className="px-4 py-2 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm font-sans"
+                        className="px-4 py-2 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm"
                       />
                     </div>
 
-                    {/* Contact input */}
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-serif text-stone-700 tracking-widest">
+                      <label htmlFor="appt-contact" className="text-xs text-stone-700 tracking-widest">
                         联系电话 / 微信 ID <span className="text-rose-500">*</span>
                       </label>
                       <input
+                        id="appt-contact"
                         type="text"
                         required
                         value={contact}
                         onChange={(e) => setContact(e.target.value)}
-                        placeholder="微信ID优先，方便助理建群对接"
-                        className="px-4 py-2 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm font-sans"
+                        placeholder="微信 ID 优先，方便助理建群对接"
+                        className="px-4 py-2 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm"
                       />
                     </div>
                   </div>
 
-                  {/* Grade dropdown */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-serif text-stone-700 tracking-widest">
+                    <label htmlFor="appt-grade" className="text-xs text-stone-700 tracking-widest">
                       当前所处学业阶段 <span className="text-rose-500">*</span>
                     </label>
                     <select
+                      id="appt-grade"
                       required
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
-                      className="px-4 py-2 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm font-serif text-stone-700"
+                      className="px-4 py-2 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm text-stone-700"
                     >
                       <option value="">-- 请选择您的年级阶段 --</option>
-                      <option value="high1">高中一年级（新高考选科探索中）</option>
-                      <option value="high2">高中二年级（数理物理拔高/遭遇瓶颈）</option>
-                      <option value="high3">高中三年级（高考冲刺/强基计划规划）</option>
-                      <option value="graduated">高考毕业生（正处于专业志愿填报/衔接期）</option>
-                      <option value="college">大学低年级（面临专业分流或科研保研焦虑）</option>
-                      <option value="parent">家长代填（为孩子寻求长线升学规划）</option>
+                      {GRADE_OPTIONS.map((g) => (
+                        <option key={g.value} value={g.value}>
+                          {g.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
-                  {/* Fields checkboxes */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-serif text-stone-700 tracking-widest">
-                      偏好或想要对话的数理大方向（可多选） <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {FIELDS_OPTIONS.map((field) => (
-                        <button
-                          key={field.id}
-                          type="button"
-                          onClick={() => toggleField(field.id)}
-                          className={`px-4 py-2 border rounded text-left transition-all duration-300 text-xs font-serif flex items-center justify-between
-                            ${
-                              selectedFields.includes(field.id)
-                                ? "bg-amber-500/10 border-bridge-gold text-amber-950 font-bold"
-                                : "bg-white/40 border-stone-200 text-stone-600 hover:bg-white/70"
-                            }
-                          `}
-                        >
-                          <span>{field.label}</span>
-                          {selectedFields.includes(field.id) && (
-                            <span className="text-bridge-gold text-xs">✦</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Concern textarea */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-serif text-stone-700 tracking-widest">
+                    <label htmlFor="appt-concern" className="text-xs text-stone-700 tracking-widest">
                       学业现状 / 遭遇的最核心瓶颈描述（选填）
                     </label>
                     <textarea
+                      id="appt-concern"
                       value={concern}
                       onChange={(e) => setConcern(e.target.value)}
-                      placeholder="例：孩子平时做难题很有灵性，但总觉得做普通作业无聊，考试马虎。或者：对大学里的理论物理方向非常憧憬，但不太了解真实的学术环境和日常科研到底在做什么..."
+                      placeholder="例：孩子做难题很有灵性，但总觉得普通作业无聊、考试马虎；或：对理论物理方向非常憧憬，但不了解真实的科研日常。"
                       rows={3}
-                      className="px-4 py-2.5 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm font-sans"
+                      className="px-4 py-2.5 bg-white/70 border border-stone-200 rounded focus:border-bridge-gold/50 focus:outline-none text-sm"
                     />
                   </div>
 
-                  {/* Submit button */}
                   <div className="text-center pt-2">
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-8 py-3 bg-bridge-gold text-white rounded font-serif tracking-[0.2em] text-sm hover:bg-amber-600 transition-all shadow-[0_4px_16px_rgba(197,160,89,0.25)] disabled:opacity-50 cursor-pointer"
+                      className="px-8 py-3 bg-bridge-gold text-white rounded-lg tracking-[0.2em] text-sm font-semibold hover:bg-amber-600 transition-all shadow-[0_4px_16px_rgba(197,160,89,0.25)] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      提交星轨预约
+                      提交预约申请
                     </button>
                   </div>
                 </form>
               )}
             </div>
-          ) : (
-            // Success view with WeChat assistant guide
-            <div className="max-w-2xl mx-auto flex flex-col items-center text-center gap-6 animate-scale-in">
-              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center border border-bridge-gold/40 shadow-[0_0_15px_rgba(197,160,89,0.2)]">
-                <span className="text-2xl text-bridge-gold">✦</span>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-serif text-xl md:text-2xl text-amber-900 tracking-widest font-bold">
-                  星轨引航预约成功
-                </h3>
-                <span className="inline-block font-mono text-xs text-bridge-gold border border-bridge-gold/30 bg-amber-50/5 px-3 py-1 rounded select-all font-semibold tracking-wider">
-                  预约工单单号：{appointmentId}
-                </span>
-              </div>
-
-              {/* Simulation Graph */}
-              <div className="w-full max-w-lg bg-[#0f172a] rounded-xl overflow-hidden border border-bridge-gold/30 p-2">
-                <canvas ref={canvasRef} className="w-full block rounded-lg" />
-              </div>
-
-              <div className="bg-stone-50/80 p-6 rounded-lg border border-stone-200/40 text-stone-700 max-w-lg text-xs md:text-sm leading-relaxed text-justify space-y-3 font-serif">
-                <p>
-                  <strong>尊敬的 {studentName}：</strong>
-                </p>
-                <p>
-                  系统已记录您的 1v1 学术引航申请，检测到您选择偏好：【{selectedFields.map(f => FIELDS_OPTIONS.find(o => o.id === f)?.label.split(" (")[0]).join("、")}】。
-                </p>
-                <p className="text-amber-900 font-bold bg-amber-500/5 p-3 rounded border border-amber-500/15">
-                  👉 <strong>下一步对接：</strong><br />
-                  请立即复制您的预约单号，并添加主理人助理微信：<code className="bg-white px-2 py-0.5 rounded font-mono text-xs select-all text-bridge-gold border border-stone-200">13360455457</code>，备注您的称呼与单号。助理将在微信上为您建立专属对话群，并排期腾讯会议时间。
-                </p>
-              </div>
-
-              <button
-                onClick={() => setSubmitPhase("idle")}
-                className="px-6 py-2 border border-stone-300 hover:border-stone-500 text-stone-500 hover:text-stone-700 text-xs font-serif tracking-widest rounded transition-all bg-white/50 cursor-pointer"
-              >
-                重新填写预约
-              </button>
-            </div>
           )}
         </GlassCard>
       </div>
 
+      {/* 联系方式与套餐下载 */}
+      <GlassCard className="border border-white/60 p-8 text-center">
+        <p className="text-base text-stone-700">
+          如需咨询请添加千殊小助理微信：
+          <span className="font-mono font-bold text-bridge-blue ml-1 select-all">TrillionSage</span>
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+          <Button href="/downloads/gaokao-consulting-package.pdf" variant="secondary" download>
+            查看高考咨询套餐
+          </Button>
+          <Button href="/tracker" variant="accent">
+            进入咨询流程平台
+          </Button>
+        </div>
+
+        <p className="text-xs text-bridge-muted mt-6 leading-relaxed max-w-xl mx-auto">
+          与北大资深心理咨询室合作，关注孩子的成长焦虑与家庭沟通，为升学决策提供心理支持。
+        </p>
+      </GlassCard>
+
+      <div className="text-center">
+        <Link href="/" className="text-sm text-bridge-blue hover:text-bridge-blue-dark border-b border-bridge-blue/30 pb-0.5 transition-colors">
+          ← 返回首页
+        </Link>
+      </div>
     </div>
   );
 }

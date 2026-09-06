@@ -3,7 +3,7 @@
  * 套餐定义与步骤管线
  */
 
-import type { PackageInfo, StepDefinition, PackageId } from "./tracker-types";
+import type { PackageInfo, StepDefinition, PackageId, FillRole } from "./tracker-types";
 
 export const PACKAGES: Record<PackageId, PackageInfo> = {
   "1v1": {
@@ -31,7 +31,7 @@ export const PACKAGES: Record<PackageId, PackageInfo> = {
     description: "数理测评 + 1 次咨询 + 联盟心理辅导",
     consultCount: 1,
     hasQuiz: true,
-    hasCounseling: false, // 描述说有，实际不含心理辅导
+    hasCounseling: false,
     price: 1999,
   },
   silver: {
@@ -68,39 +68,66 @@ export function getDepositAmount(pkgId: PackageId): number {
   return Math.round(total * 0.1);
 }
 
-// 步骤定义（全局池，按需过滤）
+/**
+ * 步骤定义（与参考「咨询流程表」对齐）：
+ * 协议/须知内嵌在环节内，不作为独立步骤；侧栏以 chip 展示。
+ */
 export const ALL_STEPS: StepDefinition[] = [
-  // --- A 阶段（参考 a-intake → a-consent → a-deposit 的三步）---
-  { id: "a-visitor-info", phase: "A", label: "来访信息与套餐确认", description: "填写来访者姓名、年级，选择套餐" },
-  { id: "a-privacy-policy", phase: "A", label: "阅读隐私政策", requires: "a-visitor-info" },
-  // a-service-agreement 同时完成：阅读服务协议 + 来访意愿确认 + 家长意愿确认（svc_online 点击即等同于同意）
-  { id: "a-service-agreement", phase: "A", label: "阅读服务协议（含意愿确认）", requires: "a-privacy-policy" },
-  { id: "a-deposit", phase: "A", label: "定金支付确认（10%）", requires: "a-service-agreement" },
-
-  // --- B 阶段：定金后，尾款 → 测验 → 咨询 → 心理辅导，按序排列（参考无并行依赖）---
-  { id: "b-remaining", phase: "B", label: "剩余款项确认", requires: "a-deposit" },
-  { id: "b-quiz-knowledge", phase: "B", label: "阅读测验须知", requires: "a-deposit" },
+  // --- A 阶段：来访信息 → 意愿确认 → 定金 ---
   {
-    id: "b-quiz", phase: "B", label: "数理素质测验【专业版】",
-    description: "完成测验后记录结果与 Top5 推荐",
-    requires: "a-deposit",
+    id: "a-visitor-info",
+    phase: "A",
+    label: "来访信息与套餐确认",
+    description: "填写来访者信息并选择套餐（含隐私政策）",
+    fillRole: "both",
+  },
+  {
+    id: "a-service-agreement",
+    phase: "A",
+    label: "意愿确认",
+    description: "阅读服务协议并确认自愿参与",
+    requires: "a-visitor-info",
+    fillRole: "visitor",
+  },
+  {
+    id: "a-deposit",
+    phase: "A",
+    label: "定金支付确认（10%）",
+    requires: "a-service-agreement",
+    fillRole: "staff",
   },
 
-  { id: "b-consult-1-pre", phase: "B", label: "咨询1 · 拟定时间与事前确认", requires: "a-deposit" },
-  { id: "b-consult-1-post", phase: "B", label: "咨询1 · 事后确认", requires: "a-deposit" },
-  { id: "b-consult-2-pre", phase: "B", label: "咨询2 · 拟定时间与事前确认", requires: "a-deposit" },
-  { id: "b-consult-2-post", phase: "B", label: "咨询2 · 事后确认", requires: "a-deposit" },
-  { id: "b-consult-3-pre", phase: "B", label: "咨询3 · 拟定时间与事前确认", requires: "a-deposit" },
-  { id: "b-consult-3-post", phase: "B", label: "咨询3 · 事后确认", requires: "a-deposit" },
+  // --- B 阶段 ---
+  { id: "b-remaining", phase: "B", label: "剩余款项确认", requires: "a-deposit", fillRole: "staff" },
+  {
+    id: "b-quiz",
+    phase: "B",
+    label: "数理素质测验【专业版】",
+    description: "完成测验后记录结果与 Top5 推荐（含测验须知）",
+    requires: "a-deposit",
+    fillRole: "both",
+  },
 
-  { id: "b-counseling-knowledge", phase: "B", label: "阅读心理辅导须知", requires: "a-deposit" },
-  { id: "b-counseling", phase: "B", label: "联盟心理辅导", requires: "a-deposit" },
+  { id: "b-consult-1-pre", phase: "B", label: "咨询1 · 拟定时间与事前确认", requires: "a-deposit", fillRole: "both" },
+  { id: "b-consult-1-post", phase: "B", label: "咨询1 · 事后确认", requires: "a-deposit", fillRole: "both" },
+  { id: "b-consult-2-pre", phase: "B", label: "咨询2 · 拟定时间与事前确认", requires: "a-deposit", fillRole: "both" },
+  { id: "b-consult-2-post", phase: "B", label: "咨询2 · 事后确认", requires: "a-deposit", fillRole: "both" },
+  { id: "b-consult-3-pre", phase: "B", label: "咨询3 · 拟定时间与事前确认", requires: "a-deposit", fillRole: "both" },
+  { id: "b-consult-3-post", phase: "B", label: "咨询3 · 事后确认", requires: "a-deposit", fillRole: "both" },
 
-  // --- C 阶段：完成 ---
-  { id: "c-inspection", phase: "C", label: "服务完成检验", requires: "b-remaining" },
-  { id: "c-gifts", phase: "C", label: "赠送产品", requires: "c-inspection" },
-  { id: "c-signature", phase: "C", label: "服务完成确认", requires: "c-gifts" },
-  { id: "c-thanks", phase: "C", label: "感谢页", requires: "c-signature" },
+  {
+    id: "b-counseling",
+    phase: "B",
+    label: "联盟心理辅导",
+    description: "含心理辅导知情同意与服务须知",
+    requires: "a-deposit",
+    fillRole: "staff",
+  },
+
+  // --- C 阶段 ---
+  { id: "c-inspection", phase: "C", label: "服务完成检验", requires: "b-remaining", fillRole: "staff" },
+  { id: "c-gifts", phase: "C", label: "赠送产品", requires: "c-inspection", fillRole: "staff" },
+  { id: "c-signature", phase: "C", label: "服务完成确认", requires: "c-gifts", fillRole: "both" },
 ];
 
 /**
@@ -114,19 +141,19 @@ export function getStepsForPackage(packageId: PackageId): StepDefinition[] {
     if (s.phase === "A") return true;
     if (s.phase === "C") return true;
     if (s.phase === "B") {
-      if (s.id === "b-quiz" || s.id === "b-quiz-knowledge") return pkg.hasQuiz;
+      if (s.id === "b-quiz") return pkg.hasQuiz;
       if (s.id.startsWith("b-consult")) {
         const n = parseInt(s.id.match(/b-consult-(\d+)/)?.[1] || "0");
         return n <= pkg.consultCount;
       }
-      if (s.id.startsWith("b-counseling")) return pkg.hasCounseling;
+      if (s.id === "b-counseling") return pkg.hasCounseling;
       if (s.id === "b-remaining") return true;
     }
     return true;
   });
 }
 
-/** 判断步骤是否可以被激活（依赖全部满足） */
+/** 判断步骤是否可以被激活（依赖全部满足）— 未满足时可查看不可填 */
 export function canActivateStep(
   stepId: string,
   stepStates: Record<string, { status: string }>
@@ -151,15 +178,30 @@ export function isBPhaseComplete(
 
   const requiredB = ALL_STEPS.filter((s) => s.phase === "B").filter((s) => {
     if (s.id === "b-quiz" && pkg.hasQuiz) return true;
-    if (s.id === "b-quiz-knowledge" && pkg.hasQuiz) return true;
     if (s.id.startsWith("b-consult")) {
       const n = parseInt(s.id.match(/b-consult-(\d+)/)?.[1] || "0");
       return n <= pkg.consultCount;
     }
-    if (s.id.startsWith("b-counseling")) return pkg.hasCounseling;
+    if (s.id === "b-counseling" && pkg.hasCounseling) return true;
     if (s.id === "b-remaining") return true;
     return false;
   });
 
   return requiredB.every((s) => stepStates[s.id]?.status === "completed");
+}
+
+/** 填写角色展示文案（按当前登录身份适配，对齐参考「我方填写 / 家庭」） */
+export function fillRoleLabel(
+  fillRole: FillRole,
+  viewer: "family" | "staff"
+): { text: string; tone: "own" | "other" | "both" } {
+  if (fillRole === "both") return { text: "双方确认", tone: "both" };
+  if (fillRole === "visitor") {
+    return viewer === "family"
+      ? { text: "您填写", tone: "own" }
+      : { text: "家庭填写", tone: "other" };
+  }
+  return viewer === "staff"
+    ? { text: "我方填写", tone: "own" }
+    : { text: "引导员填写", tone: "other" };
 }

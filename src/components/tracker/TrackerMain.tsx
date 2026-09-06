@@ -1,18 +1,30 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import type { TrackerSession, TrackerOrder, StepDefinition, StepState } from "@/lib/tracker-types";
-import { PACKAGES, getStepsForPackage, canActivateStep, getPackagePrice } from "@/lib/tracker-packages";
-import { getAgreementByStepId, agreementIdsForStep, getAgreementById } from "@/lib/tracker-agreements";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import type { TrackerSession, TrackerOrder, StepDefinition, StepState, AgreementRecord } from "@/lib/tracker-types";
+import {
+  PACKAGES,
+  getStepsForPackage,
+  canActivateStep,
+  getPackagePrice,
+  getDepositAmount,
+  fillRoleLabel,
+} from "@/lib/tracker-packages";
+import {
+  getAgreementById,
+  agreementIdsForStep,
+  getOrderAgreementRecord,
+  isAgreementAgreed,
+} from "@/lib/tracker-agreements";
 import { getOrder, updateOrder, completeStep, terminateOrder } from "@/lib/fireorm";
 import StepFormAIntake from "./StepFormA";
+import StepFormConsent from "./StepFormConsent";
 import StepFormB from "./StepFormB";
 import StepFormPayment, { StepFormCComplete } from "./StepFormC";
-import StepFormThanks from "./StepFormThanks";
 import StepFormGifts from "./StepFormGifts";
+import StepAgreementGate from "./StepAgreementGate";
 import TrackerAgreementModal from "./TrackerAgreementModal";
-
-const PHASE_LABELS = { A: "来访信息", B: "服务跟进", C: "服务完成" };
+import TrackerFlowNav from "./TrackerFlowNav";
 
 export default function TrackerMain({
   session,
@@ -27,16 +39,26 @@ export default function TrackerMain({
   const [steps, setSteps] = useState<StepDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedStep, setExpandedStep] = useState<string | null>(null);
-  const [agreementModalStep, setAgreementModalStep] = useState<string | null>(null);
+  const [viewingStepId, setViewingStepId] = useState<string | null>(null);
+  const [agreementModalId, setAgreementModalId] = useState<string | null>(null);
 
-  // 加载订单数据
   const loadOrder = useCallback(async () => {
     try {
       const data = await getOrder(orderNo);
       setOrder(data);
       if (data) {
-        setSteps(getStepsForPackage(data.packageId));
+        const pkgSteps = getStepsForPackage(data.packageId);
+        setSteps(pkgSteps);
+        setViewingStepId((prev) => {
+          if (prev && pkgSteps.some((s) => s.id === prev)) return prev;
+          const frontier =
+            pkgSteps.find(
+              (s) =>
+                data.steps[s.id]?.status !== "completed" &&
+                canActivateStep(s.id, data.steps)
+            ) || pkgSteps[0];
+          return frontier?.id ?? null;
+        });
       }
       setError(null);
     } catch (err) {
@@ -51,46 +73,136 @@ export default function TrackerMain({
     loadOrder();
   }, [loadOrder]);
 
-  // 处理表单保存
-  const handleFormSave = async (stepId: string, formData: Record<string, unknown>) => {
+  const getStepStatus = useCallback(
+    (step: StepDefinition): "completed" | "active" | "locked" => {
+      if (!order) return "locked";
+      if (order.steps[step.id]?.status === "completed") return "completed";
+      if (canActivateStep(step.id, order.steps)) return "active";
+      return "locked";
+    },
+    [order]
+  );
+
+  const completedCount = useMemo(
+    () => steps.filter((s) => order?.steps[s.id]?.status === "completed").length,
+    [steps, order]
+  );
+
+  const allComplete = steps.length > 0 && completedCount === steps.length;
+
+  /** 保存协议同意到 order.agreements（不单独成步骤） */
+  const handleAgree = async (agreementId: string, docChecks: Record<string, boolean>) => {
+    if (!order) return;
+    const now = new Date().toISOString();
+    const next: AgreementRecord = {
+      agreed: true,
+      agreedAt: now,
+      checked: true,
+      confirmedAt: now,
+      docChecks,
+    };
+    const agreements = { ...(order.agreements || {}), [agreementId]: next };
     try {
-      // 保存表单数据到步骤
+      await updateOrder(orderNo, { agreements });
+      await loadOrder();
+      setAgreementModalId(null);
+    } catch (err) {
+      alert(`保存协议失败: ${(err as Error).message}`);
+    }
+  };
+
+  const ensureAgreementsForStep = (stepId: string): boolean => {
+    if (!order) return false;
+    const ids = agreementIdsForStep(stepId);
+    for (const id of ids) {
+      if (!isAgreementAgreed(getOrderAgreementRecord(order, id))) {
+        const def = getAgreementById(id);
+        alert(`请先阅读并同意《${def?.title || id}》`);
+        setAgreementModalId(id);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleFormSave = async (stepId: string, formData: Record<string, unknown>) => {
+    if (!ensureAgreementsForStep(stepId)) return;
+
+    try {
       await completeStep(orderNo, stepId, formData);
 
-      // 如果是来访者信息，也更新订单主体
       if (stepId === "a-visitor-info" && formData && typeof formData === "object") {
-        await updateOrder(orderNo, { visitor: formData as TrackerOrder["visitor"] });
+        const pkgId = (formData.packageId as TrackerOrder["packageId"]) || order?.packageId;
+        const visitor = { ...(formData as TrackerOrder["visitor"]) };
+        await updateOrder(orderNo, {
+          visitor,
+          ...(pkgId
+            ? {
+                packageId: pkgId,
+                deposit: {
+                  paid: order?.deposit?.paid || false,
+                  paidAt: order?.deposit?.paidAt,
+                  amount: getDepositAmount(pkgId),
+                },
+                fullPayment: {
+                  paid: order?.fullPayment?.paid || false,
+                  paidAt: order?.fullPayment?.paidAt,
+                  amount: getPackagePrice(pkgId),
+                },
+              }
+            : {}),
+        });
+      }
+
+      if (stepId === "b-quiz") {
+        await updateOrder(orderNo, {
+          quizResult: {
+            topMajors: (formData.topMajors as string[]) || [],
+            pdfUrl: (formData.pdfUrl as string) || undefined,
+            completedAt: (formData.completedAt as string) || new Date().toISOString(),
+          },
+        });
       }
 
       await loadOrder();
-      setExpandedStep(null);
-      setAgreementModalStep(null);
+
+      const idx = steps.findIndex((s) => s.id === stepId);
+      if (idx >= 0 && idx < steps.length - 1) {
+        setViewingStepId(steps[idx + 1].id);
+      }
     } catch (err) {
       alert(`保存失败: ${(err as Error).message}`);
     }
   };
 
-  // 点击步骤进入编辑
-  const handleStepClick = (stepId: string, status: string) => {
-    if (status === "locked") return;
-    // 协议步骤：打开弹窗阅读
-    if (isAgreementStep(stepId)) {
-      if (status === "completed") return; // 已完成则不可重复操作
-      setAgreementModalStep(stepId);
-      return;
-    }
-    if (status === "completed") {
-      setExpandedStep(expandedStep === stepId ? null : stepId);
-    } else {
-      setExpandedStep(expandedStep === stepId ? null : stepId);
+  const handleSelectStep = (stepId: string) => {
+    if (!order) return;
+    const step = steps.find((s) => s.id === stepId);
+    if (!step) return;
+    // 任意环节可点击查看（未解锁则为只读）
+    setViewingStepId(stepId);
+  };
+
+  const handlePrev = () => {
+    if (!viewingStepId) return;
+    const idx = steps.findIndex((s) => s.id === viewingStepId);
+    if (idx > 0) {
+      setViewingStepId(steps[idx - 1].id);
     }
   };
 
-  // 终止服务
+  const handleNext = () => {
+    if (!viewingStepId) return;
+    const idx = steps.findIndex((s) => s.id === viewingStepId);
+    if (idx < 0) return;
+    if (idx < steps.length - 1) {
+      setViewingStepId(steps[idx + 1].id);
+    }
+  };
+
   const handleTerminate = async () => {
     const note = prompt("请输入终止原因：");
     if (note === null) return;
-
     try {
       await terminateOrder(orderNo, note);
       await loadOrder();
@@ -100,64 +212,52 @@ export default function TrackerMain({
     }
   };
 
-  // 获取步骤状态
-  const getStepStatus = (step: StepDefinition): string => {
-    if (!order) return "locked";
-    if (session.role === "staff" && order.steps[step.id]?.status === "completed") {
-      return "completed";
-    }
-    if (order.steps[step.id]?.status === "completed") return "completed";
-    if (canActivateStep(step.id, order.steps)) return "active";
-    return "locked";
-  };
-
-  // 判断步骤是否包含表单
-  const hasForm = (stepId: string): boolean => {
-    return [
-      "a-visitor-info",
-      "a-deposit",
-      "b-quiz",
-      "b-consult-1-pre", "b-consult-1-post",
-      "b-consult-2-pre", "b-consult-2-post",
-      "b-consult-3-pre", "b-consult-3-post",
-      "b-counseling",
-      "b-remaining",
-      "c-inspection", "c-gifts", "c-signature", "c-thanks",
-    ].includes(stepId);
-  };
-
-  // 判断步骤是否为协议阅读
-  const isAgreementStep = (stepId: string): boolean => {
-    return [
-      "a-privacy-policy",
-      "a-service-agreement",
-      "b-quiz-knowledge",
-      "b-counseling-knowledge",
-    ].includes(stepId);
-  };
-
-  // 渲染表单内容
   const renderForm = (step: StepDefinition, stepData: StepState | undefined, isReadOnly: boolean) => {
+    const openAg = (id: string) => setAgreementModalId(id);
 
-    // 来访信息表单
     if (step.id === "a-visitor-info") {
       const visitorData = (stepData?.data as TrackerOrder["visitor"]) || order?.visitor;
       return (
         <StepFormAIntake
           data={visitorData}
+          order={order!}
+          packageId={order?.packageId}
+          role={session.role}
           readOnly={isReadOnly}
-          onSave={(data) => handleFormSave(step.id, data)}
+          onOpenAgreement={openAg}
+          onSave={(data) => handleFormSave(step.id, data as Record<string, unknown>)}
         />
       );
     }
-
-    // 定金表单
+    if (step.id === "a-service-agreement") {
+      const isAdult = !!(
+        order?.visitor?.isAdult ||
+        order?.visitor?.age === "25以上" ||
+        order?.visitor?.grade === "本科生"
+      );
+      return (
+        <StepFormConsent
+          data={stepData?.data as {
+            visitorConsent?: boolean;
+            parentConsent?: boolean;
+            visitorConsentAt?: string;
+            parentConsentAt?: string;
+          }}
+          order={order!}
+          role={session.role}
+          readOnly={isReadOnly}
+          isAdult={isAdult}
+          onOpenAgreement={openAg}
+          onSave={(data) => handleFormSave(step.id, data as Record<string, unknown>)}
+        />
+      );
+    }
     if (step.id === "a-deposit") {
       const depositData = (stepData?.data as Record<string, unknown>) || {};
       return (
         <StepFormPayment
           type="deposit"
-          data={{ ...depositData, ...order?.deposit as Record<string, unknown> }}
+          data={{ ...depositData, ...(order?.deposit as Record<string, unknown>) }}
           readOnly={isReadOnly}
           role={session.role}
           price={getPackagePrice(order!.packageId)}
@@ -165,14 +265,12 @@ export default function TrackerMain({
         />
       );
     }
-
-    // 全款表单
     if (step.id === "b-remaining") {
       const paymentData = (stepData?.data as Record<string, unknown>) || {};
       return (
         <StepFormPayment
           type="full-payment"
-          data={{ ...paymentData, ...order?.fullPayment as Record<string, unknown> }}
+          data={{ ...paymentData, ...(order?.fullPayment as Record<string, unknown>) }}
           readOnly={isReadOnly}
           role={session.role}
           price={getPackagePrice(order!.packageId)}
@@ -180,21 +278,23 @@ export default function TrackerMain({
         />
       );
     }
-
-    // 测验表单
     if (step.id === "b-quiz") {
       return (
-        <StepFormB
-          type="quiz"
-          data={stepData?.data as Record<string, unknown>}
-          readOnly={isReadOnly}
-          role={session.role}
-          onSave={(data) => handleFormSave(step.id, data)}
-        />
+        <div className="space-y-4">
+          <StepAgreementGate stepId="b-quiz" order={order!} role={session.role} onOpen={openAg} />
+          <StepFormB
+            type="quiz"
+            data={stepData?.data as Record<string, unknown>}
+            readOnly={isReadOnly}
+            role={session.role}
+            packageId={order?.packageId}
+            orderNo={order?.orderNo}
+            visitorName={order?.visitor?.name}
+            onSave={(data) => handleFormSave(step.id, data)}
+          />
+        </div>
       );
     }
-
-    // 咨询表单
     if (step.id.match(/^b-consult-(\d+)-pre$/)) {
       const idx = parseInt(step.id.match(/b-consult-(\d+)/)?.[1] || "1");
       return (
@@ -208,7 +308,6 @@ export default function TrackerMain({
         />
       );
     }
-
     if (step.id.match(/^b-consult-(\d+)-post$/)) {
       const idx = parseInt(step.id.match(/b-consult-(\d+)/)?.[1] || "1");
       return (
@@ -222,21 +321,20 @@ export default function TrackerMain({
         />
       );
     }
-
-    // 心理辅导表单
     if (step.id === "b-counseling") {
       return (
-        <StepFormB
-          type="counseling"
-          data={stepData?.data as Record<string, unknown>}
-          readOnly={isReadOnly}
-          role={session.role}
-          onSave={(data) => handleFormSave(step.id, data)}
-        />
+        <div className="space-y-4">
+          <StepAgreementGate stepId="b-counseling" order={order!} role={session.role} onOpen={openAg} />
+          <StepFormB
+            type="counseling"
+            data={stepData?.data as Record<string, unknown>}
+            readOnly={isReadOnly}
+            role={session.role}
+            onSave={(data) => handleFormSave(step.id, data)}
+          />
+        </div>
       );
     }
-
-    // c-gifts 赠送产品（参考库的 c-gifts）
     if (step.id === "c-gifts") {
       return (
         <StepFormGifts
@@ -247,31 +345,23 @@ export default function TrackerMain({
         />
       );
     }
-
-    // 感谢页（参考库 c-completion）
-    if (step.id === "c-thanks") {
+    if (step.id === "c-inspection" || step.id === "c-signature") {
+      const isFinal = step.id === "c-signature";
+      const completed = order?.steps[step.id]?.status === "completed";
       return (
-        <StepFormThanks
+        <StepFormCComplete
+          data={stepData?.data as Record<string, unknown>}
+          readOnly={isReadOnly}
+          role={session.role}
+          onSave={(data) => handleFormSave(step.id, data)}
+          isFinal={isFinal}
+          completed={completed}
           visitorName={order?.visitor?.name}
           packageName={order?.packageId ? PACKAGES[order.packageId]?.name : undefined}
           staffName="桥梁计划团队"
         />
       );
     }
-
-    // C 阶段确认表单
-    if (step.id === "c-inspection" || step.id === "c-signature") {
-      const signatureData = stepData?.data as Record<string, unknown>;
-      return (
-        <StepFormCComplete
-          data={signatureData}
-          readOnly={isReadOnly}
-          role={session.role}
-          onSave={(data) => handleFormSave(step.id, data)}
-        />
-      );
-    }
-
     return null;
   };
 
@@ -292,7 +382,7 @@ export default function TrackerMain({
             onClick={onLogout}
             className="px-4 py-2 text-sm text-bridge-muted hover:text-white border border-white/30 rounded-lg"
           >
-            返回登录
+            返回
           </button>
         </div>
       </div>
@@ -300,188 +390,222 @@ export default function TrackerMain({
   }
 
   const pkg = PACKAGES[order.packageId];
-  const completedCount = steps.filter((s) => getStepStatus(s) === "completed").length;
+  const viewingStep = steps.find((s) => s.id === viewingStepId) || null;
+  const viewingStatus = viewingStep ? getStepStatus(viewingStep) : "locked";
+  const viewingIdx = viewingStep ? steps.findIndex((s) => s.id === viewingStep.id) : -1;
+  const isTerminated = !!order.terminated;
+  // 未解锁 / 已完成 / 已终止 → 只读（可查看后续环节）
+  const formReadOnly =
+    isTerminated || viewingStatus === "completed" || viewingStatus === "locked";
+  const roleInfo = viewingStep ? fillRoleLabel(viewingStep.fillRole, session.role) : null;
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* 顶栏 */}
-        <div className="glass-panel p-4 mb-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-bridge-blue font-serif">服务流程跟进</h1>
-            <p className="text-xs text-bridge-muted">
-              {pkg.name} · 订单号 {order.orderNo}
-            </p>
-            <p className="text-xs text-bridge-muted">
-              当前：{session.role === "family" ? "家庭客户" : "引导员"} · {session.contactName}
-            </p>
-          </div>
-          <button
-            onClick={onLogout}
-            className="px-4 py-2 text-xs text-bridge-muted hover:text-bridge-blue border border-white/30 rounded-lg transition-colors"
-          >
-            退出登录
-          </button>
-        </div>
-
-        {/* 进度条 */}
-        <div className="glass-panel p-3 mb-4">
-          <div className="flex justify-between text-xs text-bridge-muted mb-2">
-            <span>流程进度</span>
-            <span>{completedCount} / {steps.length} 步</span>
-          </div>
-          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-bridge-blue to-bridge-gold rounded-full transition-all duration-500"
-              style={{ width: `${(completedCount / steps.length) * 100}%` }}
+    <div className="min-h-[calc(100vh-4rem)] pt-16">
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,3fr)] min-h-[calc(100vh-4rem)]">
+        <aside className="hidden md:flex flex-col border-r border-white/40 bg-white/30 backdrop-blur-md h-[calc(100vh-4rem)] sticky top-16 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <TrackerFlowNav
+              steps={steps}
+              order={order}
+              viewingStepId={viewingStepId}
+              onSelectStep={handleSelectStep}
+              completedCount={completedCount}
+              role={session.role}
             />
           </div>
-        </div>
+          <div className="p-2.5 border-t border-white/40 space-y-1.5 flex-shrink-0 bg-white/20">
+            {session.role === "staff" && (
+              <>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="w-full py-1.5 text-xs font-semibold text-bridge-blue border border-bridge-blue/30 rounded-lg bg-white/40 hover:bg-white/70"
+                >
+                  返回管理页
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTerminate}
+                  className="w-full py-1.5 text-xs font-semibold text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
+                >
+                  终止服务
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full py-1.5 text-xs text-bridge-muted border border-white/40 rounded-lg hover:bg-white/40"
+            >
+              退出登录
+            </button>
+          </div>
+        </aside>
 
-        {/* 步骤列表 */}
-        {(["A", "B", "C"] as const).map((phase) => {
-          const phaseSteps = steps.filter((s) => s.phase === phase);
-          if (!phaseSteps.length) return null;
+        <main className="flex flex-col min-h-[calc(100vh-4rem)] px-3 md:px-6 py-3 pb-8 w-full max-w-5xl mx-auto">
+          {isTerminated && (
+            <div className="mb-3 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+              本服务已终止
+              {order.terminated?.note ? `：${order.terminated.note}` : ""}
+            </div>
+          )}
 
-          return (
-            <div key={phase} className="mb-6">
-              {/* 阶段标题 */}
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-xs font-bold text-bridge-blue bg-bridge-blue/10 px-2 py-1 rounded">
-                  阶段 {phase}
+          {/* 简约信息条：来访者 · 身份 · 套餐 · 订单 */}
+          <div className="glass-panel px-4 py-2.5 mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <div className="text-left min-w-0">
+              <p className="text-base font-bold text-bridge-text truncate">
+                {order.visitor?.name || "（来访者姓名待填）"}
+                <span className="ml-2 text-xs font-normal text-bridge-muted">
+                  {session.role === "family"
+                    ? "家庭客户"
+                    : `我方${session.contactName ? ` · ${session.contactName}` : "引导员"}`}
                 </span>
-                <span className="text-sm font-semibold text-bridge-text">{PHASE_LABELS[phase]}</span>
-              </div>
+              </p>
+              <p className="text-xs text-bridge-muted font-mono mt-0.5 truncate">
+                订单 {order.orderNo}
+                {order.familyCode ? ` · 联合码 ${order.familyCode}` : ""}
+              </p>
+            </div>
+            <span className="inline-block px-3 py-1 rounded-lg bg-bridge-gold/10 border border-bridge-gold/30 text-sm font-bold text-bridge-text whitespace-nowrap">
+              {pkg?.name || "待选择套餐"}
+            </span>
+          </div>
 
-              <div className="space-y-3">
-                {phaseSteps.map((step) => {
-                  const status = getStepStatus(step);
-                  const isCompleted = status === "completed";
-                  const isActive = status === "active";
-                  const isLocked = status === "locked";
-                  const isExpanded = expandedStep === step.id;
-                  const stepData = order.steps[step.id];
-                  const hasFormContent = hasForm(step.id);
+          <div className="md:hidden mb-3">
+            <label className="block text-xs text-bridge-muted mb-1">当前步骤（均可查看）</label>
+            <select
+              value={viewingStepId || ""}
+              onChange={(e) => handleSelectStep(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/40 text-sm"
+            >
+              {steps.map((s) => {
+                const st = getStepStatus(s);
+                return (
+                  <option key={s.id} value={s.id}>
+                    {st === "completed" ? "✓ " : st === "active" ? "● " : "○ "}
+                    {s.label}
+                    {st === "locked" ? "（可查看）" : ""}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
 
-                  // 协议 chip（与参考库一致：每步显示绑定的协议同意状态）
-                  const agreementChips = agreementIdsForStep(step.id).map((agId) => {
-                    const agDef = getAgreementById(agId);
-                    if (!agDef) return null;
-                    // 协议同意状态 = 对应步骤是否已标记 completed
-                    const agreed = order.steps[agDef.stepId]?.status === "completed";
-                    return (
+          <div className="flex-1">
+            {viewingStep ? (
+              <div className="glass-panel p-5 md:p-7">
+                <div className="mb-5 pb-4 border-b border-white/40 text-center">
+                  <p className="text-xs text-bridge-muted">
+                    步骤 {viewingStep.phase} · 第 {viewingIdx + 1} / {steps.length} 步
+                  </p>
+                  <h2 className="text-xl md:text-2xl font-bold text-bridge-blue mt-1 text-center">
+                    {viewingStep.label}
+                  </h2>
+                  {viewingStep.description && (
+                    <p className="text-sm text-bridge-muted mt-2 text-left max-w-2xl mx-auto">
+                      {viewingStep.description}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+                    {roleInfo && (
                       <span
-                        key={agId}
-                        className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${
-                          agreed
-                            ? "text-green-600 bg-green-50 border-green-300"
-                            : "text-slate-400 bg-white/20 border-dashed border-slate-300"
+                        className={`text-xs font-semibold px-2.5 py-1 rounded ${
+                          roleInfo.tone === "own"
+                            ? "bg-amber-100 text-amber-800"
+                            : roleInfo.tone === "other"
+                              ? "bg-slate-100 text-slate-500"
+                              : "bg-indigo-100 text-indigo-700"
                         }`}
                       >
-                        {agDef.title}
-                        {agreed && " ✓"}
+                        {roleInfo.text}
                       </span>
-                    );
-                  });
+                    )}
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded font-semibold ${
+                        viewingStatus === "completed"
+                          ? "bg-green-100 text-green-700"
+                          : viewingStatus === "active"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {viewingStatus === "completed"
+                        ? "本步已完成"
+                        : viewingStatus === "active"
+                          ? "进行中"
+                          : "未到环节"}
+                    </span>
+                  </div>
+                  {viewingStatus === "locked" && (
+                    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3 text-left">
+                      该环节尚未轮到，暂不可填写。请先完成前面的环节；此处仅供预览。
+                    </p>
+                  )}
+                  {viewingStatus === "completed" && (
+                    <p className="text-sm text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-lg px-3 py-2 mt-3 text-left">
+                      本环节已保存锁定，内容不可更改。
+                    </p>
+                  )}
+                  {roleInfo?.tone === "other" && viewingStatus === "active" && (
+                    <p className="text-sm text-bridge-muted mt-3 text-left">
+                      本环节由对方操作，您可实时查看进度，无需填写。
+                    </p>
+                  )}
+                </div>
 
-                  return (
-                    <div key={step.id}>
-                      {/* 步骤卡片头部 */}
-                      <div
-                        onClick={() => ((hasFormContent || isAgreementStep(step.id)) && !isLocked) ? handleStepClick(step.id, status) : null}
-                        className={`glass-panel p-4 transition-all ${
-                          isLocked ? "opacity-50 cursor-not-allowed" :
-                          (hasFormContent || isAgreementStep(step.id)) ? "cursor-pointer hover:border-bridge-blue/30" : "cursor-default"
-                        } ${isExpanded ? "border-bridge-blue/40 rounded-b-none" : ""}`}
-                      >
-                        <div className="flex items-start gap-3">
-                          {/* 状态图标 */}
-                          <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                            ${isCompleted ? "bg-green-500 text-white" : isActive ? "bg-bridge-blue text-white ring-2 ring-bridge-blue/30" : "bg-white/30 text-bridge-muted"}`}
-                          >
-                            {isCompleted ? "✓" : phase}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`text-sm font-semibold ${isCompleted ? "text-green-700 line-through" : isActive ? "text-bridge-blue" : "text-bridge-muted"}`}>
-                                {step.label}
-                              </span>
-                              {hasFormContent && !isLocked && (
-                                <span className="text-[10px] text-bridge-muted">
-                                  {isExpanded ? "收起" : "点击填写"}
-                                </span>
-                              )}
-                              {isAgreementStep(step.id) && isActive && (
-                                <span className="text-[10px] text-bridge-muted">点击阅读</span>
-                              )}
-                              {isActive && !isExpanded && (
-                                <span className="text-[10px] bg-bridge-blue/15 text-bridge-blue px-1.5 py-0.5 rounded font-semibold">
-                                  进行中
-                                </span>
-                              )}
-                              {/* 协议 chip（参考库的 rail-agreement-chip） */}
-                              {agreementChips}
-                            </div>
-                            {step.description && (
-                              <p className="text-xs text-bridge-muted mt-0.5">{step.description}</p>
-                            )}
-                          </div>
-
-                          {/* 完成时间 */}
-                          {isCompleted && stepData?.completedAt && (
-                            <span className="text-[10px] text-bridge-muted flex-shrink-0">
-                              {new Date(stepData.completedAt).toLocaleDateString("zh-CN")}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* 展开的表单 */}
-                      {isExpanded && hasFormContent && (
-                        <div className="glass-panel -mt-[1px] pt-4 pb-4 px-4 border-t border-bridge-blue/20 rounded-b-lg">
-                          {renderForm(step, stepData, isCompleted && status === "completed")}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                <div className="text-sm md:text-base">
+                  {renderForm(viewingStep, order.steps[viewingStep.id], formReadOnly)}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            ) : (
+              <p className="text-center text-bridge-muted py-12">请从左侧选择步骤</p>
+            )}
+          </div>
 
-        {/* 团队工具栏（仅 staff） */}
-        {session.role === "staff" && (
-          <div className="glass-panel p-4 mt-6">
-            <h3 className="text-sm font-bold text-bridge-blue mb-3">引导员工具</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-col items-center gap-2">
+            <div className="flex items-center justify-center gap-4">
               <button
-                onClick={handleTerminate}
-                className="px-3 py-2 text-xs font-semibold text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                type="button"
+                onClick={handlePrev}
+                disabled={viewingIdx <= 0}
+                className="px-6 py-3 text-base font-semibold rounded-xl border border-white/50 bg-white/50 disabled:opacity-40 hover:bg-white/80 text-bridge-blue"
               >
-                终止服务
+                ← 上一步
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={viewingIdx >= steps.length - 1}
+                className="px-6 py-3 text-base font-bold rounded-xl text-white bg-bridge-blue hover:bg-blue-600 shadow-md disabled:opacity-40"
+              >
+                {viewingIdx >= steps.length - 1 ? (allComplete ? "已全部完成 ✓" : "已是最后一步") : "下一步 →"}
               </button>
             </div>
+            <p className="text-xs text-bridge-muted text-center">
+              当前进行至：{viewingStep?.label || "—"}（{Math.round((completedCount / Math.max(steps.length, 1)) * 100)}%）
+            </p>
           </div>
-        )}
+        </main>
       </div>
 
-      {/* 协议弹窗 */}
-      {agreementModalStep && (() => {
-        const agreement = getAgreementByStepId(agreementModalStep);
+      {agreementModalId && (() => {
+        const agreement = getAgreementById(agreementModalId);
         if (!agreement || !order) return null;
-        const stepData = order.steps[agreementModalStep];
+        const rec = getOrderAgreementRecord(order, agreementModalId);
         return (
           <TrackerAgreementModal
             agreementId={agreement.id}
             visitor={order.visitor}
             packageId={order.packageId}
             orderNo={order.orderNo}
-            existingRecord={stepData?.data as { checked?: boolean; confirmedAt?: string; docChecks?: Record<string, boolean> } | undefined}
+            existingRecord={{
+              checked: !!(rec?.checked || rec?.agreed),
+              confirmedAt: rec?.confirmedAt || rec?.agreedAt,
+              docChecks: rec?.docChecks,
+            }}
             role={session.role}
-            onAgree={(docChecks) => handleFormSave(agreementModalStep, { agreed: true, agreedAt: new Date().toISOString(), docChecks })}
-            onCancel={() => setAgreementModalStep(null)}
+            onAgree={(docChecks) => handleAgree(agreementModalId, docChecks)}
+            onCancel={() => setAgreementModalId(null)}
           />
         );
       })()}

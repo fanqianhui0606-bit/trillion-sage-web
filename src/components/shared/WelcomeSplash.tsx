@@ -299,7 +299,7 @@ export default function WelcomeSplash() {
       <div className="relative z-10 max-w-2xl px-8 text-center flex flex-col items-center gap-8 w-full">
         
         {/* Subtle Title Badge */}
-        <div className="text-bridge-blue-dark/70 text-xs md:text-sm tracking-[0.25em] font-serif">
+        <div className="text-bridge-blue-dark/70 text-sm md:text-base tracking-[0.25em] font-brand">
           桥梁计划 · 一份只关于你的短暂停留
         </div>
 
@@ -330,18 +330,15 @@ export default function WelcomeSplash() {
           // Greeting text display
           <div className="flex flex-col items-start gap-6 animate-fade-in w-full max-w-xl mx-auto">
             <h1
-              style={{
-                fontFamily: '"ZCOOL XiaoWei", "Noto Serif SC", "Songti SC", serif',
-                textJustify: 'inter-character'
-              }}
-              className="text-base md:text-lg text-amber-900 leading-loose tracking-wide transition-all text-justify whitespace-pre-wrap w-full"
+              style={{ textJustify: 'inter-character' }}
+              className="font-sans text-base md:text-lg text-amber-900 leading-loose tracking-wide transition-all text-justify whitespace-pre-wrap w-full"
             >
               {selectedGreeting}
             </h1>
 
             {/* Signature */}
             <div className="text-bridge-gold/80 italic text-xs md:text-sm tracking-widest text-right w-full mt-4 pr-4 font-serif">
-              —— 桥梁计划主理人
+              —— <span className="font-brand">桥梁计划</span>主理人
             </div>
             
             {/* Click to skip text during greeting */}

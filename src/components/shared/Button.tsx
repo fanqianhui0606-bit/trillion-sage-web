@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { type ReactNode } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "accent" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "accent" | "ghost" | "light-gold";
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
@@ -12,6 +12,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-bridge-gold text-white hover:bg-amber-600 shadow-md",
   ghost:
     "bg-transparent text-bridge-blue border border-bridge-blue/30 hover:bg-bridge-blue/5",
+  "light-gold":
+    "bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 text-amber-900 border border-bridge-gold/70 hover:from-amber-200 hover:via-amber-100 hover:to-amber-200 shadow-sm",
 };
 
 export default function Button({
@@ -22,6 +24,7 @@ export default function Button({
   className = "",
   type = "button",
   disabled = false,
+  download,
 }: {
   children: ReactNode;
   href?: string;
@@ -30,6 +33,7 @@ export default function Button({
   className?: string;
   type?: "button" | "submit";
   disabled?: boolean;
+  download?: boolean | string;
 }) {
   const base =
     "inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer";
@@ -37,6 +41,15 @@ export default function Button({
   const classes = `${base} ${variantStyles[variant]} ${
     disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
   } ${className}`;
+
+  // 静态资源（PDF 等）走原生 a 标签，避免被 App Router 客户端导航拦截
+  if (href && download) {
+    return (
+      <a href={href} className={classes} download={download} target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    );
+  }
 
   if (href) {
     return (

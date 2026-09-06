@@ -49,6 +49,56 @@ export const LEVEL_NODES: Record<number, readonly string[]> = {
   4: ["自学"],
 };
 
+/** 维度 → 能力层级（由 LEVEL_NODES 反推） */
+export const DIMENSION_LEVELS: Record<string, number> = Object.fromEntries(
+  Object.entries(LEVEL_NODES).flatMap(([lvl, dims]) =>
+    dims.map((d) => [d, Number(lvl)])
+  )
+);
+
+/** 结果页呈现的分层均分层级（四级为单一维度「自学」，得分即其本身） */
+export const LAYER_AVERAGE_LEVELS = [1, 2, 3] as const;
+
+export interface LayerAverage {
+  level: number;
+  name: string;
+  color: string;
+  average: number | null;
+  count: number;
+}
+
+/**
+ * 计算各能力层级的平均得分（0–5）。
+ * 锁定维度（体验版未测项）会被跳过，不参与均分。
+ */
+export function computeLayerAverages(
+  scores: Record<string, number>,
+  locked: readonly string[] = [],
+  levels: readonly number[] = LAYER_AVERAGE_LEVELS
+): LayerAverage[] {
+  const lockedSet = new Set(locked);
+  const buckets = new Map<number, number[]>();
+  for (const [dim, raw] of Object.entries(scores || {})) {
+    const lvl = DIMENSION_LEVELS[dim];
+    if (!lvl || lockedSet.has(dim)) continue;
+    const val = Number(raw);
+    if (!Number.isFinite(val)) continue;
+    if (!buckets.has(lvl)) buckets.set(lvl, []);
+    buckets.get(lvl)!.push(val);
+  }
+  return levels.map((lvl) => {
+    const arr = buckets.get(lvl) || [];
+    const average = arr.length ? arr.reduce((s, x) => s + x, 0) / arr.length : null;
+    return {
+      level: lvl,
+      name: LEVEL_LABELS[lvl] || `第${lvl}层`,
+      color: LEVEL_COLORS[lvl] || "#2563eb",
+      average,
+      count: arr.length,
+    };
+  });
+}
+
 // ============================================================
 // Simple edition defaults
 // ============================================================
@@ -101,13 +151,13 @@ export const VALUE_TIER_COUNT = 5;
 // 3D glow mapping
 // ============================================================
 
-export const GLOW_POWER = 1.35;
-export const GLOW_EMISSIVE_MIN = 0.12;
-export const GLOW_EMISSIVE_RANGE = 2.35;
-export const GLOW_HALO_OPACITY_MIN = 0.08;
-export const GLOW_HALO_OPACITY_RANGE = 0.52;
-export const GLOW_HALO_RING_BASE = 0.86;
-export const GLOW_HALO_RING_FACTOR = 0.178;
+export const GLOW_POWER = 1.85;
+export const GLOW_EMISSIVE_MIN = 0.04;
+export const GLOW_EMISSIVE_RANGE = 3.4;
+export const GLOW_HALO_OPACITY_MIN = 0.02;
+export const GLOW_HALO_OPACITY_RANGE = 0.78;
+export const GLOW_HALO_RING_BASE = 0.72;
+export const GLOW_HALO_RING_FACTOR = 0.22;
 
 // ============================================================
 // 3D spring physics

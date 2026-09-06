@@ -252,26 +252,27 @@ export function isAdminCode(code: string): boolean {
 /**
  * 校验是否为内测码
  * 格式：BRIDGE- + 英文字母名（总长不超过 20）
+ * 兼容误写：BRIDGE_TEST → 按 BRIDGE-TEST 识别
  */
 export function isBetaCode(code: string): boolean {
-  const clean = code.trim().toUpperCase();
+  const clean = code.trim().toUpperCase().replace(/^BRIDGE_([A-Z]{3,16})$/, "BRIDGE-$1");
   return /^BRIDGE-[A-Z]{3,16}$/.test(clean);
 }
 
 /**
  * 校验激活码（兼容新旧格式）
  * 1. 管理员码 BRIDGE_ADMIN*
- * 2. 内测码 BRIDGE-NAME
+ * 2. 内测码 BRIDGE-NAME（亦兼容 BRIDGE_NAME）
  * 3. 旧格式：TSG + 4位数字 + 5位校验和
  * 4. 旧管理员码 TSG_ADMIN_PAGE* (兼容)
  */
 export function validateActivationCode(code: string): boolean {
   const clean = code.trim().toUpperCase();
 
-  // 新管理员码
+  // 新管理员码（须先于内测码判断，避免 BRIDGE_ADMIN* 被误归一为内测格式）
   if (isAdminCode(clean)) return true;
 
-  // 内测码
+  // 内测码（兼容连字符 / 下划线）
   if (isBetaCode(clean)) return true;
 
   // 兼容旧管理员码

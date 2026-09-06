@@ -13,6 +13,7 @@ import { computeObjectiveScores, accumulateRawScores, normalizeTrack } from "@/l
 import { rankMajors, rankMajorsFourFactor } from "@/lib/cosine-similarity";
 import { calculatePracticalShare } from "@/lib/value-orientation";
 import { DIMENSION_ORDER, DIMENSION_CAP } from "@/lib/constants";
+import { writeQuizExportForTracker } from "@/lib/quiz-export-bridge";
 
 type Action =
   | { type: "DATA_LOADED"; bank: QuizBank; config: QuizConfig; wheel: WheelData; edition: string }
@@ -336,6 +337,14 @@ export function useQuizState(editionOverride?: string) {
       try {
         localStorage.setItem("quiz_flow_last_snapshot", JSON.stringify({ scores, matches }));
         localStorage.setItem("quiz_flow_match_scores", JSON.stringify(objectiveScores));
+        // 专业版：同步写入咨询流程导入键（对齐本地 bridge_quiz_export_v1）
+        if (!isSimp) {
+          writeQuizExportForTracker({
+            studentName: state.userName,
+            matches: matches || [],
+            isPro: true,
+          });
+        }
       } catch {
         // ignore
       }

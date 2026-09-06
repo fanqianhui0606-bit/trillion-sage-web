@@ -406,7 +406,7 @@ export default function AdminDashboardPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `千殊桥梁计划_思维共振聊天留痕_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `千殊桥梁计划_灵魂聊天共振留痕_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -844,7 +844,7 @@ export default function AdminDashboardPage() {
           <div className="space-y-6 animate-fade-in">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-white font-serif">
-                💬 思维共振聊天留痕（共 {chatRecords.length} 条）
+                💬 灵魂聊天共振留痕（共 {chatRecords.length} 条）
               </h2>
             </div>
 

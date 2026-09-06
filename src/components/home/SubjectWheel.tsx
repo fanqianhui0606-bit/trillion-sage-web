@@ -121,9 +121,10 @@ export default function SubjectWheel({ onHoverMajor }: SubjectWheelProps) {
   // 展示项：悬停优先，其次点击选中，最后一级学科
   const displayL2 = findL2(hoveredL2Id) ?? findL2(activeL2Id);
   const displayTitle = displayL2 ? displayL2.name : wheelData ? `${activeL1} · 一级学科` : DEFAULT_TITLE;
+  const childL2Names = childL2s.map((l2) => l2.name).join("、");
   const displayIntro = displayL2?.officialIntro
     ?? (wheelData
-      ? `已选中一级学科「${activeL1}」，其关联 ${childL2s.length} 个二级专业大类显示于外环。${DEFAULT_INTRO}`
+      ? `已选中内环“${activeL1}”1级学科，外环展示与大学需要学习${activeL1}的${childL2s.length}个2级学科，包括：${childL2Names}。`
       : DEFAULT_INTRO);
 
   // 高亮与当前展示二级专业关联的全部一级学科（展示 2 级 → 1 级联系）
@@ -268,10 +269,15 @@ export default function SubjectWheel({ onHoverMajor }: SubjectWheelProps) {
         </svg>
       </div>
 
-      {/* Description Panel */}
-      <div className="mt-6 w-full max-w-[380px] min-h-[110px] p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md transition-all duration-300">
+      {/* Description Panel — 固定高度，避免选中/悬停时整体转盘相对页面位移 */}
+      <div className="mt-6 w-full max-w-[380px] h-[132px] p-4 rounded-xl border border-white/10 bg-white/5 backdrop-blur-md overflow-y-auto">
         <h4 className="text-sm font-bold text-bridge-gold mb-1">{displayTitle}</h4>
-        <p className="text-xs text-bridge-muted leading-relaxed">{displayIntro}</p>
+        {displayL2 ? (
+          <p className="text-xs text-bridge-muted leading-relaxed">{displayIntro}</p>
+        ) : (
+          // 选中一级学科时，注释以灰色小字呈现
+          <p className="text-[10px] text-slate-400 leading-relaxed">{displayIntro}</p>
+        )}
         {displayL2 && (
           <p className="mt-1.5 text-[10px] text-bridge-muted/80">
             关联一级学科：{(displayL2.parents || []).join("、") || "—"}（内环已同步高亮）

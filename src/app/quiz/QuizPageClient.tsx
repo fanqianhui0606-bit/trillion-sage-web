@@ -18,13 +18,30 @@ function QuizPageInner() {
     edition = "inspect";
   }
 
+  // 来自咨询流程的一键跳转参数：激活码 / 姓名 / 返回地址
+  const autoCode = searchParams.get("code") || undefined;
+  const autoName = searchParams.get("name") || undefined;
+  const returnTo = searchParams.get("return") || undefined;
+
+  // 携带激活码时，默认进入专业版
+  if (edition === null && autoCode) {
+    edition = "user";
+  }
+
   // No edition param → show landing with two buttons
   if (edition === null) {
     return <QuizLanding />;
   }
 
   // Has edition → launch quiz directly
-  return <QuizEngine edition={edition} />;
+  return (
+    <QuizEngine
+      edition={edition}
+      autoCode={autoCode}
+      autoName={autoName}
+      returnTo={returnTo}
+    />
+  );
 }
 
 export default function QuizPageClient() {

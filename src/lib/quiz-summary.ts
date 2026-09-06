@@ -61,11 +61,13 @@ export interface QuizResultPack {
   pb: number; // practicalBenefit
   _rankedAll?: MajorMatchResult[];
   layerAverages?: { name: string; average: number | null }[];
+  /** majorId → 三级专业列表（来自 wheel-data） */
+  level2Catalog?: Record<string, { code: string; name: string }[]>;
 }
 
 /** 专业介绍数据结构 */
 export interface MajorIntroData {
-  majors: Record<string, { code: string; name: string; officialName?: string }>;
+  majors: Record<string, { code: string; name: string; officialName?: string; level2Id?: string }>;
 }
 
 /** 测验总评输入结构 */
@@ -136,13 +138,19 @@ export function buildSummaryInput(
         .map((l) => ({ name: l.name, average: Number((l.average as number).toFixed(2)) })),
     },
     topMajors: (pack._rankedAll || []).slice(0, 5).map((item, idx) => {
+      const fromWheel = pack.level2Catalog?.[item.majorId] || [];
+      const fromIntros = fromWheel.length
+        ? fromWheel
+        : Object.values(intros?.majors || {})
+            .filter((m) => (m as { level2Id?: string }).level2Id === item.majorId)
+            .map((m) => ({ code: m.code, name: m.officialName || m.name }));
       return {
         rank: idx + 1,
         code: item.majorId,
         name: item.majorName,
         matchPct: fmtPct(item.score),
         dominantFactors: dominantFactorLabels(item, factorWeights),
-        l3Catalog: [], // 简化版，暂不填充三级目录
+        l3Catalog: fromIntros.slice(0, 8),
       };
     }),
     factorWeights: factorWeights || {},
@@ -165,9 +173,10 @@ export function formatSummaryContextForPrompt(input: SummaryInput): string {
   }
 
   if (input.value) {
+    const label = (input.value.label || "").trim() || "升学与应用并重";
     lines.push("【价值导向】");
     lines.push(
-      `第 ${input.value.tier} 档：${input.value.label}；理想/抱负约 ${input.value.idealPct.toFixed(0)}%，实际/利益约 ${input.value.pracPct.toFixed(0)}%。`
+      `第 ${input.value.tier} 档：${label}；理想/抱负约 ${input.value.idealPct.toFixed(0)}%，实际/利益约 ${input.value.pracPct.toFixed(0)}%。`
     );
     if (input.value.brief) lines.push(`简评参考：${input.value.brief}`);
   }
@@ -196,6 +205,7 @@ export function formatSummaryContextForPrompt(input: SummaryInput): string {
       `${m.rank}. ${m.name}（${m.code}）综合匹配 ${m.matchPct}；主要匹配因子：${(m.dominantFactors || []).join("、") || "—"}；教育部目录专业示例：${l3}`
     );
   }
+  lines.push("（请在总评第二段中逐条换行列出以上 Top5，并写明各二级专业下设的三级本科专业名称）");
 
   return lines.join("\n");
 }
@@ -231,8 +241,9 @@ export function buildFallbackSummary(input: SummaryInput, config?: { consultCta?
     interestLine = "在学科兴趣上，你表现较为均衡，这与后续专业探索可以相互参照。";
   }
 
+  const tierLabel = (input.value?.label || "").trim() || "升学与应用并重";
   const valueLine = input.value
-    ? `价值导向上，你目前更接近第 ${input.value.tier} 档「${input.value.label}」，理想/抱负约占 ${input.value.idealPct.toFixed(0)}%，实际/利益约占 ${input.value.pracPct.toFixed(0)}%，说明你在抱负与现实考量之间有自己的平衡方式。`
+    ? `价值导向上，你目前更接近第 ${input.value.tier} 档「${tierLabel}」，理想/抱负约占 ${input.value.idealPct.toFixed(0)}%，实际/利益约占 ${input.value.pracPct.toFixed(0)}%，说明你在抱负与现实考量之间有自己的平衡方式。`
     : "";
 
   const str = (input.objective?.strengths || []).map((x) => x.title).join("、");
@@ -255,16 +266,16 @@ export function buildFallbackSummary(input: SummaryInput, config?: { consultCta?
     ["经测评，", interestLine, valueLine ? " " + valueLine : "", " ", ...objLineParts].join("")
   );
 
-  // 第二段：Top5 专业方向
+  // 第二段：Top5 专业方向（每条专业单独换行，并列出三级专业）
   const majorEntries = (input.topMajors || []).slice(0, 5);
   if (majorEntries.length > 0) {
     const majorLines: string[] = [];
     majorLines.push("结合四因子加权匹配，我们为你梳理了值得进一步了解的方向：");
     for (const m of majorEntries) {
-      const l3Names =
-        (m.l3Catalog || []).slice(0, 5).map((x) => x.name).join("、") || "相关本科专业";
+      const l3Names = (m.l3Catalog || []).map((x) => x.name).filter(Boolean);
+      const l3Text = l3Names.length > 0 ? l3Names.join("、") : "（目录内相关本科专业）";
       majorLines.push(
-        `${m.rank}.「${m.name}」（${m.code}），综合匹配值 ${m.matchPct}，包括 ${l3Names}等专业；`
+        `${m.rank}.「${m.name}」（${m.code}），综合匹配值 ${m.matchPct}，包括 ${l3Text} 等专业；`
       );
     }
 

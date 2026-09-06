@@ -5,6 +5,7 @@ import {
   buildFallbackSummary,
   normalizeSummaryText,
 } from "@/lib/quiz-summary";
+import { computeLayerAverages } from "@/lib/constants";
 
 /** DeepSeek API 调用（带超时） */
 async function callChatApi(
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
       rankedMajors,
       factorWeights,
       graphNodes,
+      level2Catalog,
       compareBoth,
     } = body;
 
@@ -94,11 +96,15 @@ export async function POST(req: NextRequest) {
         ia: interestAmbition || 0,
         pb: practicalBenefit || 0,
         _rankedAll: rankedMajors || [],
+        layerAverages: computeLayerAverages(objectiveUser || {}),
+        level2Catalog: level2Catalog || {},
       },
       graphNodes || [],
-      null, // intros 简化版不填充
+      null,
       factorWeights || {},
-      valueTier != null ? { tier: valueTier, label: valueLabel || "", brief: valueBrief || "" } : null,
+      valueTier != null
+        ? { tier: valueTier, label: (valueLabel || "").trim() || "升学与应用并重", brief: valueBrief || "" }
+        : null,
       studentName || "同学"
     );
 

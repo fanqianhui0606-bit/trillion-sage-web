@@ -57,7 +57,7 @@ public/images/       营业执照、二维码
 - bridge-gradient-top: #A5A8C7 / bridge-gradient-bottom: #EBEBEF
 - bridge-panel: rgba(255,255,255,0.3)
 - bridge-3d-bg: #0A0F18
-- 字体：Songti SC / SimSun / Noto Serif SC（宋体优先）
+- 字体：思源黑体（Noto Sans SC）；「桥梁计划」「千殊教育」用鸿雷拙书简体；测验总评用江西拙楷
 
 ## 命令
 

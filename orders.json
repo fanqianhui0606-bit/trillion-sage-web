@@ -1,0 +1,216 @@
+[
+  {
+    "orderNo": "BSMSDA37GP",
+    "packageId": "gold",
+    "createdAt": "2026-08-03T13:42:01.609Z",
+    "visitor": {
+      "name": "发财",
+      "age": "18",
+      "grade": "高三",
+      "school": "aaa",
+      "phone": "13360455457",
+      "wechat": "2222",
+      "email": "3600019220@qq.com",
+      "isAdult": true,
+      "parentName": "",
+      "relationship": "",
+      "parentTitle": "",
+      "parentPhone": "",
+      "parentWechat": "",
+      "parentEmail": "",
+      "packageId": "gold"
+    },
+    "deposit": {
+      "paid": false,
+      "amount": 480
+    },
+    "fullPayment": {
+      "paid": false,
+      "amount": 4799
+    },
+    "steps": {
+      "a-visitor-info": {
+        "status": "completed",
+        "data": {
+          "name": "发财",
+          "age": "18",
+          "grade": "高三",
+          "school": "aaa",
+          "phone": "13360455457",
+          "wechat": "2222",
+          "email": "3600019220@qq.com",
+          "isAdult": true,
+          "parentName": "",
+          "relationship": "",
+          "parentTitle": "",
+          "parentPhone": "",
+          "parentWechat": "",
+          "parentEmail": "",
+          "packageId": "gold"
+        },
+        "completedAt": "2026-08-04T01:37:35.969Z"
+      },
+      "a-service-agreement": {
+        "status": "completed",
+        "data": {
+          "visitorConsent": true,
+          "parentConsent": true,
+          "visitorConsentAt": "2026-08-04T01:39:37.084Z"
+        },
+        "completedAt": "2026-08-04T01:39:37.103Z"
+      },
+      "a-deposit": {
+        "status": "completed",
+        "data": {
+          "paid": false,
+          "amount": 0,
+          "transactionNo": "",
+          "receiptConfirmed": false
+        },
+        "completedAt": "2026-08-24T01:23:39.651Z"
+      },
+      "b-remaining": {
+        "status": "completed",
+        "data": {
+          "paid": true,
+          "paidAt": "2026-07-26",
+          "amount": 4319,
+          "transactionNo": "xxx",
+          "receiptConfirmed": true,
+          "confirmedAt": "2026-08-24T01:24:17.415Z"
+        },
+        "completedAt": "2026-08-24T01:24:17.439Z"
+      },
+      "b-quiz": {
+        "status": "completed",
+        "data": {
+          "date": "2026-08-26",
+          "pdfUrl": "https://trillionsage.com/r/mt9jxspf7443",
+          "topMajors": [
+            "地理与行星",
+            "核与兵器",
+            "物理与天文学",
+            "航空航天技术",
+            "材料与能源制造"
+          ],
+          "completedAt": "2026-08-26T03:48:56.206Z",
+          "importedResult": {
+            "importedAt": "2026-08-26T03:48:52.931Z",
+            "resultLink": "https://trillionsage.com/r/mt9jxspf7443",
+            "topMajors": [
+              {
+                "majorId": "L2m",
+                "majorName": "地理与行星",
+                "matchPct": "89.66%"
+              },
+              {
+                "majorId": "L2i",
+                "majorName": "核与兵器",
+                "matchPct": "88.04%"
+              },
+              {
+                "majorId": "L2b",
+                "majorName": "物理与天文学",
+                "matchPct": "86.14%"
+              },
+              {
+                "majorId": "L2k",
+                "majorName": "航空航天技术",
+                "matchPct": "85.89%"
+              },
+              {
+                "majorId": "L2g",
+                "majorName": "材料与能源制造",
+                "matchPct": "85.47%"
+              }
+            ],
+            "objectiveScores": {
+              "抽象": 1.564102564102564,
+              "操作": 2.0625,
+              "记忆": 1.8333333333333333,
+              "空间": 1.6,
+              "整理": 1.5382308845577213,
+              "观察": 1.4336134453781513,
+              "执行": 2.035897435897436,
+              "好奇": 2.513157894736842,
+              "计算": 3.572727272727273,
+              "推导": 2.0046620046620047,
+              "自主": 2.408163265306122,
+              "联想": 2.8376068376068377,
+              "构建": 1.7,
+              "自学": 2.4000000000000004
+            },
+            "layerAverages": [
+              {
+                "name": "一级基础能力",
+                "average": 1.85
+              },
+              {
+                "name": "二级进阶能力",
+                "average": 2.5
+              },
+              {
+                "name": "三级高级能力",
+                "average": 2.05
+              }
+            ]
+          }
+        },
+        "completedAt": "2026-08-26T03:48:56.597Z"
+      }
+    },
+    "consults": [],
+    "familyCode": "GI8AA4",
+    "updatedAt": "2026-08-26T03:48:56.634Z",
+    "agreements": {
+      "privacy": {
+        "agreed": true,
+        "agreedAt": "2026-08-04T01:37:31.958Z",
+        "checked": true,
+        "confirmedAt": "2026-08-04T01:37:31.958Z",
+        "docChecks": {
+          "privacy_online": true
+        }
+      },
+      "service": {
+        "agreed": true,
+        "agreedAt": "2026-08-04T01:39:32.509Z",
+        "checked": true,
+        "confirmedAt": "2026-08-04T01:39:32.509Z",
+        "docChecks": {
+          "svc_a11_1": true,
+          "svc_a11_any": true,
+          "svc_a11_2": true,
+          "svc_a11_3": true,
+          "svc_a15_1": true,
+          "svc_a15_all": true,
+          "svc_a15_2": true,
+          "svc_a15_4": true,
+          "svc_a15_3": true,
+          "svc_a15_5": true,
+          "svc_online": true
+        }
+      },
+      "quiz": {
+        "agreed": true,
+        "agreedAt": "2026-08-24T01:29:25.703Z",
+        "checked": true,
+        "confirmedAt": "2026-08-24T01:29:25.703Z",
+        "docChecks": {
+          "quiz_online": true
+        }
+      }
+    },
+    "quizResult": {
+      "topMajors": [
+        "地理与行星",
+        "核与兵器",
+        "物理与天文学",
+        "航空航天技术",
+        "材料与能源制造"
+      ],
+      "pdfUrl": "https://trillionsage.com/r/mt9jxspf7443",
+      "completedAt": "2026-08-26T03:48:56.206Z"
+    }
+  }
+]

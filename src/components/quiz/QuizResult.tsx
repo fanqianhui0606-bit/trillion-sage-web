@@ -5,8 +5,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Button from "@/components/shared/Button";
 import ScoreBarChart from "@/components/quiz/ScoreBarChart";
 import { formatSummaryParagraphs } from "@/lib/quiz-summary";
-import { FULL_DIMENSION_ORDER } from "@/lib/constants";
-import type { UserScores, MajorMatchResult, GraphData, CatalogReference, WheelData, GraphNode } from "@/lib/types";
+import { FULL_DIMENSION_ORDER, computeLayerAverages } from "@/lib/constants";
+import { BrandText, withBrandFonts } from "@/components/shared/BrandText";
+import type { UserScores, MajorMatchResult, GraphData, CatalogReference, WheelData, GraphNode, CompetencyVector } from "@/lib/types";
+import { writeQuizExportForTracker } from "@/lib/quiz-export-bridge";
 
 export interface ValueOrientationTier {
   tier: number;
@@ -234,10 +236,10 @@ function ValueOrientationBar({
 
   return (
     <div className="glass-panel p-4 md:p-5 mb-4">
-      <h3 className="text-base md:text-[1.05rem] font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
+      <h3 className="text-lg md:text-xl font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
         二、价值导向
       </h3>
-      <p className="text-xs text-bridge-muted leading-relaxed mb-4 text-justify">
+      <p className="text-sm text-bridge-muted leading-relaxed mb-4 text-justify">
         价值导向部分显示你关于理想/抱负与实际/利益方向的考量比较。按照你对两个方向不同程度的侧重，共分为 5 档。
       </p>
 
@@ -246,17 +248,17 @@ function ValueOrientationBar({
           <div className="h-full bg-green-500/35 border-r-2 border-white/85" style={{ width: `${idealPct}%` }} />
           <div className="h-full bg-orange-500/35" style={{ width: `${pct}%` }} />
         </div>
-        <div className="flex justify-between mt-1.5 text-xs">
+        <div className="flex justify-between mt-1.5 text-sm">
           <span className="text-green-700 font-semibold">理想/抱负 {idealPct}%</span>
           <span className="text-orange-700 font-semibold text-right">实际/利益 {pct}%</span>
         </div>
       </div>
 
-      <div className="text-xs text-slate-500 mb-2">
+      <div className="text-sm text-slate-500 mb-2">
         价值导向第 <strong className="text-slate-800">{scores.valueTier}</strong> 档 / 共 5 档
       </div>
-      <strong className="block mb-1 text-slate-800 text-sm">{label}</strong>
-      <div className="text-xs text-slate-600 leading-relaxed text-justify">
+      <strong className="block mb-1 text-slate-800 text-base">{label}</strong>
+      <div className="text-sm text-slate-600 leading-relaxed text-justify">
         {brief}
       </div>
     </div>
@@ -314,7 +316,7 @@ function BubbleWordCloud({
     const y = cy + Math.sin(ang) * dist;
 
     const t = (item.score - minScore) / span;
-    const size = 11 + t * 14; // Font sizes 11px to 25px
+    const size = 13 + t * 16; // Font sizes ~13px to 29px（全站字号上调后同步加大）
 
     // 参考设计（full-flow.html）：浅色舞台配深色字阶，匹配度越高颜色越深
     const color = ["#0b1220", "#1e293b", "#334155", "#475569", "#64748b"][
@@ -322,24 +324,37 @@ function BubbleWordCloud({
     ] || "#0b1220";
 
     const isActive = activeMajorId === item.majorId;
+    // 必须把 translate 与 scale 写在同一 transform 里：Tailwind 的 scale-* 会覆盖定位
+    const baseTransform = `translate(-50%, -50%) scale(${isActive ? 1.12 : 1})`;
+    const baseZ = isActive ? 20 : Math.max(1, Math.round(t * 12));
 
     return (
       <button
         key={item.majorId}
+        type="button"
         onClick={() => onSelectMajor(item.majorId)}
-        className={`absolute select-none transition-all duration-300 font-sans cursor-pointer whitespace-nowrap px-2 py-0.5 border-none bg-transparent
-          ${isActive ? 'z-10 scale-110' : 'hover:scale-[1.1] hover:z-10'}
-        `}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translate(-50%, -50%) scale(1.12)";
+          e.currentTarget.style.zIndex = "30";
+          e.currentTarget.style.color = "#2563eb";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = baseTransform;
+          e.currentTarget.style.zIndex = String(baseZ);
+          e.currentTarget.style.color = isActive ? "#2563eb" : color;
+        }}
+        className="absolute select-none transition-[color,text-shadow] duration-200 font-sans cursor-pointer whitespace-nowrap px-2 py-0.5 border-none bg-transparent pointer-events-auto"
         style={{
           left: `${x}px`,
           top: `${y}px`,
-          transform: 'translate(-50%, -50%)',
+          transform: baseTransform,
+          zIndex: baseZ,
           fontSize: `${size}px`,
           fontWeight: isActive ? 800 : t > 0.55 ? 700 : 600,
-          color: isActive ? '#2563eb' : color,
+          color: isActive ? "#2563eb" : color,
           textShadow: isActive
-            ? '0 0 12px rgba(37,99,235,0.35), 0 1px 0 rgba(255,255,255,0.85)'
-            : '0 1px 0 rgba(255,255,255,0.7)',
+            ? "0 0 12px rgba(37,99,235,0.35), 0 1px 0 rgba(255,255,255,0.85)"
+            : "0 1px 0 rgba(255,255,255,0.7)",
         }}
         title={`${item.majorId} · 匹配度 ${(item.score * 100).toFixed(2)}%`}
       >
@@ -382,7 +397,7 @@ const PDF_STYLES = `
     background: ${PDF_PAGE_GRADIENT};
     color: #1a1a1a;
     padding: 18px 22px 28px;
-    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
     font-weight: 500; /* Medium font weight globally for better legibility (Problem 10) */
   }
   .pdf-page-unit { width: 100%; box-sizing: border-box; }
@@ -454,7 +469,7 @@ const PDF_STYLES = `
     position: relative;
     padding: 28px 22px 44px;
     background: ${PDF_PAGE_GRADIENT};
-    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
   }
   .pdf-export-page--no-header { padding-top: 32px; }
   .pdf-export-page--no-header .pdf-page-header { display: none; }
@@ -503,6 +518,13 @@ const PDF_STYLES = `
     font-size: 10px;
     color: #94a3b8;
   }
+  .pdf-l3-item { margin: 0 0 10px; padding: 10px 12px; background: rgba(255,255,255,0.55); border: 1px solid rgba(226,232,240,0.95); border-radius: 8px; }
+  .pdf-l3-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .pdf-l3-name { font-size: 13px; font-weight: 700; color: #0f172a; flex: 1; }
+  .pdf-l3-code { font-size: 10px; font-family: ui-monospace, monospace; color: #2e75b6; white-space: nowrap; }
+  .pdf-l3-degree { font-size: 10px; color: #64748b; margin-bottom: 4px; }
+  .pdf-l3-intro { font-size: 10.5px; line-height: 1.65; color: #475569; text-align: justify; margin: 0; }
+  .pdf-summary-body, .pdf-summary-para { font-family: "SimHei", "黑体", "Heiti SC", "Noto Sans SC", "Microsoft YaHei", sans-serif; }
 `;
 
 // ============================================================
@@ -512,16 +534,86 @@ const PDF_STYLES = `
 // ============================================================
 // AI Summary Section
 // ============================================================
+const TIER_LABEL_FALLBACK: Record<number, string> = {
+  1: "更偏向科研与升学探索",
+  2: "理想导向略强，兼顾现实",
+  3: "升学与应用并重",
+  4: "应用导向略强，保留深造可能",
+  5: "更偏向就业与应用落地",
+};
+
+/** 去掉三级专业简介中的重复高校/标签套话（统一放在「专业匹配」末尾说明） */
+function cleanMajorIntro(intro: string | undefined | null): string {
+  if (!intro) return "";
+  return intro
+    .replace(
+      /不同高校的培养方案与课程侧重可能存在差异，建议结合当年招生简章与院系介绍进一步了解。?/g,
+      "",
+    )
+    .replace(/与本项目素质标签相关的常见侧重包括：[^。]*。?/g, "")
+    .trim();
+}
+
+/** 分层均分 — 按一/二/三层能力对各维度得分取平均（对齐参考设计 full-flow.html） */
+function LayerAverageRows({
+  objective,
+  lockedDimensions = [],
+}: {
+  objective: CompetencyVector;
+  lockedDimensions?: string[];
+}) {
+  const layers = computeLayerAverages(objective as Record<string, number>, lockedDimensions);
+  if (!layers.some((l) => l.average != null)) return null;
+
+  return (
+    <div className="mt-6 pt-4 border-t border-slate-900/10">
+      <p className="text-base font-bold text-bridge-blue mb-1">分层均分 · 一 / 二 / 三层能力</p>
+      <p className="text-sm text-bridge-muted leading-relaxed mb-3">
+        按一级基础、二级进阶、三级高级三层能力对各维度得分取平均，帮助你快速看清自身偏向哪一层。
+      </p>
+      <div className="space-y-3">
+        {layers.map((l) => {
+          const hasVal = l.average != null;
+          const scoreText = hasVal ? `${(l.average as number).toFixed(2)}/5` : "专业版测验中查看";
+          const widthPct = hasVal ? ((l.average as number) / 5) * 100 : 0;
+          return (
+            <div key={l.level} className="flex flex-col w-full">
+              <div className="flex justify-between items-baseline mb-1">
+                <span className="font-bold text-sm" style={{ color: l.color }}>
+                  {l.name}
+                </span>
+                <span className={`text-sm font-semibold ${hasVal ? "font-mono text-slate-500" : "text-slate-400"}`}>
+                  {scoreText}
+                </span>
+              </div>
+              <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${widthPct}%`, background: hasVal ? l.color : "#94a3b8" }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function QuizSummarySection({
   userName,
   scores,
   matches,
   valueTiers,
+  wheelData,
+  onSummaryReady,
 }: {
   userName: string;
   scores: UserScores;
   matches: MajorMatchResult[];
   valueTiers: ValueOrientationTiers | null;
+  wheelData: WheelData | null;
+  onSummaryReady?: (summary: string) => void;
 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -532,11 +624,13 @@ function QuizSummarySection({
   const isInspect = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("edition") === "inspect";
 
   const loadSummary = useCallback(async () => {
+    // 等档位配置与轮盘数据就绪，避免总评出现「第 3 档「」」和空三级专业列表
+    if (!valueTiers || !wheelData) return;
+
     try {
       setLoading(true);
       setError(null);
 
-      // 图谱节点（维度标题）与四因子权重配置
       const [graphRes, matchConfigRes] = await Promise.all([
         fetch("/data/graph.json"),
         fetch("/data/match-config-four-factor.json"),
@@ -554,8 +648,15 @@ function QuizSummarySection({
         ability: Number(rawWeights.qualityAbility ?? 4),
       };
 
-      // 直接使用结果页内存中的测验结果（此前误读未写入的 sessionStorage 导致总评不可用）
-      const currentTier = valueTiers?.tiers?.find((t) => t.tier === scores.subjective.valueTier);
+      const tierNo = scores.subjective.valueTier ?? 3;
+      const currentTier = valueTiers.tiers?.find((t) => t.tier === tierNo);
+      const valueLabel =
+        (currentTier?.label || "").trim() || TIER_LABEL_FALLBACK[tierNo] || "升学与应用并重";
+
+      const level2Catalog: Record<string, { code: string; name: string }[]> = {};
+      for (const l2 of wheelData.level2 || []) {
+        level2Catalog[l2.id] = (l2.level3 || []).map((x) => ({ code: x.code, name: x.name }));
+      }
 
       const payload = {
         studentName: userName,
@@ -563,12 +664,13 @@ function QuizSummarySection({
         subjectInterest: scores.subjectInterest || {},
         interestAmbition: scores.subjective.interestAmbition ?? 0,
         practicalBenefit: scores.subjective.practicalBenefit ?? 0,
-        valueTier: scores.subjective.valueTier ?? null,
-        valueLabel: currentTier?.label ?? "",
+        valueTier: tierNo,
+        valueLabel,
         valueBrief: currentTier?.brief ?? "",
         rankedMajors: matches || [],
         factorWeights,
         graphNodes,
+        level2Catalog,
         compareBoth: isInspect,
       };
 
@@ -582,15 +684,17 @@ function QuizSummarySection({
       if (!res.ok) throw new Error(data.error || "请求失败");
 
       setSummary(data.summary);
+      onSummaryReady?.(data.summary || "");
       setSource(data.source || "fallback");
       setSourceLabel(data.sourceLabel || "本地规则模板");
       if (isInspect && data.compare) setCompare(data.compare);
     } catch (e) {
       setError(e instanceof Error ? e.message : "加载失败");
+      onSummaryReady?.("");
     } finally {
       setLoading(false);
     }
-  }, [userName, isInspect, scores, matches, valueTiers]);
+  }, [userName, isInspect, scores, matches, valueTiers, wheelData, onSummaryReady]);
 
   useEffect(() => {
     loadSummary();
@@ -598,7 +702,7 @@ function QuizSummarySection({
 
   return (
     <div className="glass-panel p-4 md:p-5 mb-4">
-      <h3 className="text-base md:text-[1.05rem] font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
+      <h3 className="text-lg md:text-xl font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-sans">
         五、测验总评
       </h3>
 
@@ -606,42 +710,41 @@ function QuizSummarySection({
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="inline-block w-6 h-6 border-2 border-bridge-blue border-t-transparent rounded-full animate-spin mb-2" />
-            <p className="text-xs text-bridge-muted">正在生成总评...</p>
+            <p className="text-sm text-bridge-muted">正在生成总评...</p>
           </div>
         </div>
       ) : error ? (
-        <p className="text-xs text-red-500 text-center py-4">{error}</p>
+        <p className="text-sm text-red-500 text-center py-4">{error}</p>
       ) : isInspect && compare ? (
         // Inspect mode: side-by-side comparison
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={`p-4 rounded-xl border-2 ${source === "deepseek-v4-pro" ? "border-bridge-blue ring-2 ring-bridge-blue/30" : "border-white/10"} bg-white/20`}>
-            <div className="text-xs font-bold text-bridge-blue mb-2">DeepSeek V4 Pro</div>
-            <div className="space-y-3 text-xs text-bridge-text leading-relaxed">
+            <div className="text-sm font-bold text-bridge-blue mb-2">DeepSeek V4 Pro</div>
+            <div className="space-y-3 text-sm text-bridge-text leading-relaxed font-sans" style={{ fontFamily: '"SimHei", "黑体", "Heiti SC", "Noto Sans SC", sans-serif' }}>
               {formatSummaryParagraphs(compare.pro).map((p, i) => (
-                <p key={i}>{p}</p>
+                <p key={i}>{withBrandFonts(p)}</p>
               ))}
             </div>
           </div>
           <div className={`p-4 rounded-xl border-2 ${source === "deepseek-v4-flash" ? "border-bridge-gold ring-2 ring-bridge-gold/30" : "border-white/10"} bg-white/20`}>
-            <div className="text-xs font-bold text-bridge-gold mb-2">DeepSeek V4 Flash</div>
-            <div className="space-y-3 text-xs text-bridge-text leading-relaxed">
+            <div className="text-sm font-bold text-bridge-gold mb-2">DeepSeek V4 Flash</div>
+            <div className="space-y-3 text-sm text-bridge-text leading-relaxed font-sans" style={{ fontFamily: '"SimHei", "黑体", "Heiti SC", "Noto Sans SC", sans-serif' }}>
               {formatSummaryParagraphs(compare.flash).map((p, i) => (
-                <p key={i}>{p}</p>
+                <p key={i}>{withBrandFonts(p)}</p>
               ))}
             </div>
           </div>
         </div>
       ) : (
-        // Normal mode: show single summary
-        <div className="space-y-3 text-xs text-bridge-text leading-relaxed">
+        <div className="space-y-3 text-sm text-bridge-text leading-relaxed font-sans" style={{ fontFamily: '"SimHei", "黑体", "Heiti SC", "Noto Sans SC", sans-serif' }}>
           {formatSummaryParagraphs(summary).map((p, i) => (
-            <p key={i} className="text-justify">{p}</p>
+            <p key={i} className="text-justify">{withBrandFonts(p)}</p>
           ))}
         </div>
       )}
 
       {sourceLabel && !loading && !error && (
-        <p className="text-[10px] text-slate-400 text-right mt-3">
+        <p className="text-xs text-slate-400 text-right mt-3">
           当前正文来源：{sourceLabel}
         </p>
       )}
@@ -659,6 +762,7 @@ export default function QuizResult({
   fullDimensionOrder,
   catalogReference,
   contactText = "请联系「桥梁计划」团队购买参与",
+  returnTo,
   onRetry,
   onBackToQuiz,
 }: {
@@ -671,6 +775,8 @@ export default function QuizResult({
   fullDimensionOrder?: string[];
   catalogReference?: CatalogReference;
   contactText?: string;
+  /** 来自咨询流程时的返回地址，存在则展示「返回咨询流程」按钮 */
+  returnTo?: string;
   onRetry: () => void;
   onBackToQuiz?: () => void;
 }) {
@@ -678,12 +784,18 @@ export default function QuizResult({
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [showProOverlay, setShowProOverlay] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingL3, setIsExportingL3] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [summaryForPdf, setSummaryForPdf] = useState("");
 
   // Loaded metadata
   const [valueTiers, setValueTiers] = useState<ValueOrientationTiers | null>(null);
   const [wheelData, setWheelData] = useState<WheelData | null>(null);
   const [majorsIntro, setMajorsIntro] = useState<MajorsIntroMap | null>(null);
+
+  const handleSummaryReady = useCallback((text: string) => {
+    setSummaryForPdf(text);
+  }, []);
 
   const top5 = matches.slice(0, 5);
   const lockedSet = new Set(lockedDimensions);
@@ -766,6 +878,10 @@ export default function QuizResult({
 
   // --- PDF Export Core Function ---
   const handlePdfExport = async () => {
+    if (!isSimple && !summaryForPdf.trim()) {
+      alert("测验总评仍在生成中，请稍候再导出，以便 PDF 包含「五、测验总评」。");
+      return;
+    }
     try {
       setIsExporting(true);
       
@@ -884,11 +1000,50 @@ export default function QuizResult({
           `;
         }).join("");
 
+        // 分层均分（与结果页 LayerAverageRows 一致）
+        const layerRows = computeLayerAverages(
+          scores.objective as Record<string, number>,
+          lockedDimensions
+        )
+          .map((l) => {
+            const hasVal = l.average != null;
+            const scoreText = hasVal ? `${(l.average as number).toFixed(2)}/5` : "专业版测验中查看";
+            const w = hasVal ? ((l.average as number) / 5) * 100 : 0;
+            return `
+              <div class="pdf-dim-row">
+                <div class="pdf-dim-head">
+                  <span class="pdf-dim-name" style="color:${l.color}">${esc(l.name)}</span>
+                  <span class="pdf-dim-score">${esc(scoreText)}</span>
+                </div>
+                <div class="pdf-track"><div class="pdf-fill" style="width:${w}%;background:${hasVal ? l.color : "#94a3b8"}"></div></div>
+              </div>
+            `;
+          })
+          .join("");
+
         return `
           <div class="pdf-page-unit pdf-block" data-section="objective">
             <h2>${esc(title)}</h2>
             <p class="pdf-intro">${esc(intro)}</p>
             ${rows}
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(148,163,184,0.35)">
+              <p class="pdf-tier-label">分层均分 · 一 / 二 / 三层能力</p>
+              <p class="pdf-intro" style="margin-bottom:6px">按一级基础、二级进阶、三级高级三层能力对各维度得分取平均，帮助你快速看清自身偏向哪一层。</p>
+              ${layerRows}
+            </div>
+          </div>
+        `;
+      };
+
+      const buildSummaryHtml = () => {
+        if (isSimple || !summaryForPdf) return "";
+        const paras = formatSummaryParagraphs(summaryForPdf)
+          .map((p) => `<p class="pdf-summary-para">${esc(p)}</p>`)
+          .join("");
+        return `
+          <div class="pdf-page-unit pdf-block" data-section="summary">
+            <h2>五、测验总评</h2>
+            <div class="pdf-summary-body">${paras || `<p class="pdf-summary-para">${esc(summaryForPdf)}</p>`}</div>
           </div>
         `;
       };
@@ -1001,6 +1156,7 @@ export default function QuizResult({
           ${buildValueHtml()}
           ${buildObjectiveHtml()}
           ${buildMatchHtml()}
+          ${buildSummaryHtml()}
           ${buildTailHtml()}
         </div>
       `;
@@ -1026,13 +1182,14 @@ export default function QuizResult({
       const value = pick('[data-section="value"]');
       const objective = pick('[data-section="objective"]');
       const match = pick('[data-section="match"]');
+      const summarySec = pick('[data-section="summary"]');
       const tail = pick(".pdf-tail");
 
       const pageGroups = !isSimple
         ? [
             [cover, preface, interest, value].filter(Boolean),
             [objective].filter(Boolean),
-            [match, tail].filter(Boolean),
+            [match, summarySec, tail].filter(Boolean),
           ]
         : [
             [cover, preface, objective].filter(Boolean),
@@ -1116,6 +1273,15 @@ export default function QuizResult({
       const cleanName = String(userName || "测验结果").trim().replace(/[\\/:*?"<>|]/g, "_").slice(0, 40) || "测验结果";
       pdf.save(`${cleanName}_桥梁计划_数理素质测验结果.pdf`);
 
+      // 专业版：导出 PDF 时写入咨询流程导入键（对齐本地 full-flow.html）
+      if (!isSimple) {
+        writeQuizExportForTracker({
+          studentName: userName,
+          matches: matches || [],
+          isPro: true,
+        });
+      }
+
       host.remove();
     } catch (err) {
       console.error("PDF export failed", err);
@@ -1125,13 +1291,189 @@ export default function QuizResult({
     }
   };
 
+  /** 导出当前选中二级专业下的三级本科专业目录 PDF（千殊品牌背景） */
+  const handleL3PdfExport = async () => {
+    if (!activeMajorWithL3?.level3?.length) {
+      alert("当前二级专业下暂无三级专业可导出。");
+      return;
+    }
+    try {
+      setIsExportingL3(true);
+      await loadScript("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
+      await loadScript("https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js");
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const html2canvas = (window as any).html2canvas;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { jsPDF } = (window as any).jspdf;
+      if (!html2canvas || !jsPDF) throw new Error("PDF components load failed.");
+
+      const esc = (s: string | number | undefined | null) => String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+      const generatedAt = new Date().toLocaleString("zh-CN", { hour12: false });
+      const l2 = activeMajorWithL3;
+      const l3Items = (l2.level3 || []).map((l3) => {
+        const info = majorsIntro?.[l3.code];
+        return {
+          code: l3.code,
+          name: info?.officialName || l3.name,
+          degree: info?.degreeTypes || "—",
+          intro: cleanMajorIntro(info?.intro),
+        };
+      });
+
+      const buildL3ItemsHtml = (items: typeof l3Items) =>
+        items
+          .map(
+            (item) => `
+          <div class="pdf-l3-item">
+            <div class="pdf-l3-head">
+              <span class="pdf-l3-name">${esc(item.name)}</span>
+              <span class="pdf-l3-code">${esc(item.code)}</span>
+            </div>
+            <div class="pdf-l3-degree">学位门类：${esc(item.degree)}</div>
+            ${item.intro ? `<p class="pdf-l3-intro">${esc(item.intro)}</p>` : ""}
+          </div>`
+          )
+          .join("");
+
+      const buildL2IntroBlock = () => `
+        <div class="pdf-page-unit pdf-block" data-section="l2intro">
+          <h2>${esc(l2.majorName)}（${esc(l2.majorId)}）</h2>
+          <p class="pdf-intro">综合匹配 ${esc((l2.score * 100).toFixed(2))}% · 关联一级学科：${esc(l2.parents?.join("、") || "—")}</p>
+          <p class="pdf-intro">${esc(l2.officialIntro || "暂无该二级专业大类介绍。")}</p>
+          <p class="pdf-intro" style="margin-bottom:0">以下列出该二级专业大类下设的本科专业（参考教育部最新本科专业目录），供进一步探索与对照。</p>
+        </div>`;
+
+      const L3_PER_PAGE = 5;
+      const l3Chunks: typeof l3Items[] = [];
+      for (let i = 0; i < l3Items.length; i += L3_PER_PAGE) {
+        l3Chunks.push(l3Items.slice(i, i + L3_PER_PAGE));
+      }
+
+      const buildL3ChunkBlock = (items: typeof l3Items, pageNo: number, total: number) => `
+        <div class="pdf-page-unit pdf-block" data-section="l3list">
+          <h2>下设本科专业名单${total > 1 ? `（${pageNo}/${total}）` : ""}</h2>
+          ${buildL3ItemsHtml(items)}
+        </div>`;
+
+      const buildL3Tail = () => `
+        <div class="pdf-page-unit pdf-tail">
+          <p class="pdf-foot">本目录由桥梁计划数理素质测验生成，仅供参考。不同高校培养方案可能存在差异，请结合当年招生简章进一步了解。</p>
+        </div>`;
+
+      const host = document.createElement("div");
+      host.style.cssText = `position:fixed;left:0;top:0;width:${PDF_REPORT_WIDTH}px;z-index:-9999;opacity:0;pointer-events:none;`;
+      host.innerHTML = `
+        <div class="pdf-root" id="pdfL3Root">
+          <style>${PDF_STYLES}</style>
+          <div class="pdf-page-unit pdf-cover">
+            <img class="pdf-logo" src="${BRAND_LOGO_SRC}" alt="千殊教育" crossorigin="anonymous" />
+            <p class="co">— 千殊教育 TrillionSage —</p>
+            <h1>桥梁计划 · 三级专业目录</h1>
+            <p class="sub">${esc(l2.majorName)} · ${esc(l2.majorId)}</p>
+            <p class="name">${esc(userName)}</p>
+            <p class="date">生成时间：${esc(generatedAt)}</p>
+          </div>
+          ${buildL2IntroBlock()}
+          ${l3Chunks.map((chunk, i) => buildL3ChunkBlock(chunk, i + 1, l3Chunks.length)).join("")}
+          ${buildL3Tail()}
+        </div>`;
+      document.body.appendChild(host);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((document as any).fonts?.ready) await (document as any).fonts.ready;
+      await new Promise((r) => setTimeout(r, 400));
+
+      const rootEl = host.querySelector(".pdf-root") as HTMLDivElement;
+      const cover = rootEl.querySelector(".pdf-cover");
+      const l2intro = rootEl.querySelector('[data-section="l2intro"]');
+      const l3blocks = Array.from(rootEl.querySelectorAll('[data-section="l3list"]'));
+      const tail = rootEl.querySelector(".pdf-tail");
+      const pageGroups = [
+        [cover, l2intro].filter(Boolean),
+        ...l3blocks.map((b) => [b]),
+        [tail].filter(Boolean),
+      ].filter((g) => g.length > 0);
+
+      const PAGE_W_MM = 210;
+      const PAGE_H_MM = 297;
+      const PDF_PAGE_HEIGHT_PX = Math.round(PDF_REPORT_WIDTH * (PAGE_H_MM / PAGE_W_MM));
+      const totalPages = pageGroups.length;
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) pdf.addPage();
+        pdf.setFillColor(235, 235, 239);
+        pdf.rect(0, 0, PAGE_W_MM, PAGE_H_MM, "F");
+
+        const hideHeader = i === 0;
+        const captureHost = document.createElement("div");
+        captureHost.style.cssText = "position:fixed;left:-12000px;top:0;z-index:-1;opacity:0;pointer-events:none;";
+        captureHost.innerHTML = `
+          <style>${PDF_STYLES}</style>
+          <style>.pdf-export-page--capture { min-height: ${PDF_PAGE_HEIGHT_PX}px !important; height: auto !important; }</style>
+          <div class="pdf-export-page pdf-export-page--capture${hideHeader ? " pdf-export-page--no-header" : ""}">
+            <img class="pdf-page-watermark" src="${BRAND_LOGO_SRC}" alt="" crossorigin="anonymous" />
+            <div class="pdf-page-header">千殊教育 TrillionSage</div>
+            <div class="pdf-page-body"></div>
+            <div class="pdf-page-footer">第${i + 1}页/共${totalPages}页</div>
+          </div>`;
+        const bodyEl = captureHost.querySelector(".pdf-page-body")!;
+        for (const u of pageGroups[i]) {
+          bodyEl.appendChild((u as Element).cloneNode(true));
+        }
+        document.body.appendChild(captureHost);
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const pageEl = captureHost.querySelector(".pdf-export-page") as HTMLDivElement;
+        const captureHeightPx = Math.max(pageEl.offsetHeight, pageEl.scrollHeight, PDF_PAGE_HEIGHT_PX);
+        const canvas = await html2canvas(pageEl, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: PDF_PAGE_BG,
+          logging: false,
+          width: PDF_REPORT_WIDTH,
+          height: captureHeightPx,
+          windowWidth: PDF_REPORT_WIDTH,
+          windowHeight: captureHeightPx,
+        });
+        captureHost.remove();
+
+        let drawW = PAGE_W_MM;
+        let drawH = (captureHeightPx / PDF_REPORT_WIDTH) * PAGE_W_MM;
+        if (drawH > PAGE_H_MM) {
+          const ratio = PAGE_H_MM / drawH;
+          drawW *= ratio;
+          drawH = PAGE_H_MM;
+        }
+        pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", (PAGE_W_MM - drawW) / 2, 0, drawW, drawH);
+      }
+
+      const cleanUser = String(userName || "用户").trim().replace(/[\\/:*?"<>|]/g, "_").slice(0, 20) || "用户";
+      const cleanL2 = String(l2.majorName || l2.majorId).replace(/[\\/:*?"<>|]/g, "_").slice(0, 20);
+      pdf.save(`${cleanUser}_${cleanL2}_三级专业目录.pdf`);
+      host.remove();
+    } catch (err) {
+      console.error("L3 PDF export failed", err);
+      alert("三级专业目录 PDF 导出失败，请重试。");
+    } finally {
+      setIsExportingL3(false);
+    }
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-6">
       <div className="max-w-3xl mx-auto">
         
         {/* Brand Header — Aligned with .bridge-header in GitHub full-flow.html */}
         <header className="text-center pb-6 text-bridge-text">
-          <p className="text-[0.72rem] text-bridge-muted tracking-wider mb-0.5">— 千殊教育 TrillionSage —</p>
+          <p className="text-sm text-bridge-muted tracking-wider mb-0.5">
+            — <BrandText>千殊教育</BrandText> TrillionSage —
+          </p>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-2 mb-4">
             <div className="relative flex items-center justify-center p-2 rounded-full bg-white/40 border border-white/[0.95] backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.7)] w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1142,8 +1484,8 @@ export default function QuizResult({
               />
             </div>
             <div className="text-center md:text-left">
-              <h1 className="text-2xl md:text-3xl font-bold text-bridge-blue tracking-wide">桥梁计划</h1>
-              <div className="flex gap-4 mt-2 text-xs text-bridge-muted justify-center md:justify-start">
+              <h1 className="text-3xl md:text-4xl font-bold text-bridge-blue tracking-wide font-brand">桥梁计划</h1>
+              <div className="flex gap-4 mt-2 text-sm text-bridge-muted justify-center md:justify-start">
                 <span>姓名: {userName}</span>
                 <span>激活码: {activationCode}</span>
               </div>
@@ -1164,14 +1506,14 @@ export default function QuizResult({
               </span>
             )}
           </div>
-          <p className="text-[0.82rem] italic text-bridge-text mt-4">—— 响应国家号召，培养未来高科技人才 ——</p>
+          <p className="text-sm italic text-bridge-text mt-4">—— 响应国家号召，培养未来高科技人才 ——</p>
           <hr className="my-5 max-w-xl mx-auto h-[1px] bg-white/90 border-none" />
         </header>
 
         {/* Outer panel matching #result.panel in GitHub */}
         <section id="result" className="glass-panel p-4 md:p-6 mb-4">
           <div className="flex items-center justify-center mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-bridge-blue text-center tracking-wide font-serif">
+            <h2 className="text-2xl md:text-3xl font-bold text-bridge-blue text-center tracking-wide font-sans">
               测验结果
             </h2>
           </div>
@@ -1179,10 +1521,10 @@ export default function QuizResult({
           {/* Section 1: Interest Radar Chart — Pro version only */}
           {!isSimple && scores.subjectInterest && (
             <div className="glass-panel p-4 md:p-5 mb-4">
-              <h3 className="text-base md:text-[1.05rem] font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
+              <h3 className="text-lg md:text-xl font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
                 一、兴趣导向
               </h3>
-              <p className="text-xs text-bridge-muted leading-relaxed mb-4 text-justify">
+              <p className="text-sm text-bridge-muted leading-relaxed mb-4 text-justify">
                 兴趣导向部分来自你在数学、物理、化学、生物、计算机五门学科上的兴趣自评。雷达图帮助你看清此刻更被哪些学科吸引。
               </p>
               <InterestRadarChart scores={scores.subjectInterest} />
@@ -1194,17 +1536,17 @@ export default function QuizResult({
 
           {/* Section 3: Objective Competency Scores */}
           <div className="glass-panel p-4 md:p-5 mb-4">
-            <h3 className="text-base md:text-[1.05rem] font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
+            <h3 className="text-lg md:text-xl font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
               {isSimple ? "一、数理素质" : "三、数理素质"}
             </h3>
-            <p className="text-xs text-bridge-muted leading-relaxed mb-4 text-justify">
+            <p className="text-sm text-bridge-muted leading-relaxed mb-4 text-justify">
               {isSimple 
-                ? "数理素质部分从 14 维数理素质出发对你从“思维习惯”和“能力程度”两方面综合检验后的结果进行呈现。14维数理素质由“桥梁计划”学长团从所有数理工学科的学习和实践中需要的基本素养中提炼而来，按照自低至高分为4层。体验版从中选取了核心 8 项数理素质呈现，未纳入的 6 维可在专业版测验中查看。"
-                : "数理素质部分从 14 维数理素质出发对你从“思维习惯”和“素质能力”两方面综合检验后的结果进行呈现。14维数理素质由“桥梁计划”学长团从所有数理工学科的学习和实践中需要的基本素养中提炼而来，按照自低至高分为4层。"}
+                ? withBrandFonts("数理素质部分从 14 维数理素质出发对你从“思维习惯”和“能力程度”两方面综合检验后的结果进行呈现。14维数理素质由“桥梁计划”学长团从所有数理工学科的学习和实践中需要的基本素养中提炼而来，按照自低至高分为4层。体验版从中选取了核心 8 项数理素质呈现，未纳入的 6 维可在专业版测验中查看。")
+                : withBrandFonts("数理素质部分从 14 维数理素质出发对你从“思维习惯”和“素质能力”两方面综合检验后的结果进行呈现。14维数理素质由“桥梁计划”学长团从所有数理工学科的学习和实践中需要的基本素养中提炼而来，按照自低至高分为4层。")}
             </p>
 
             {isSimple && (
-              <div className="mb-4 p-3 rounded-lg bg-bridge-blue/5 border border-bridge-blue/20 text-xs text-bridge-muted leading-relaxed">
+              <div className="mb-4 p-3 rounded-lg bg-bridge-blue/5 border border-bridge-blue/20 text-sm text-bridge-muted leading-relaxed">
                 当前为 <strong>体验版 · 8 维</strong> 测验结果；记忆、整理、联想、好奇、自学、构建共 6 维未纳入本版测验。
               </div>
             )}
@@ -1216,8 +1558,11 @@ export default function QuizResult({
               lockedPlaceholder="专业版测验中查看"
             />
 
+            {/* 分层均分（一/二/三层能力平均得分） */}
+            <LayerAverageRows objective={scores.objective} lockedDimensions={lockedDimensions} />
+
             {/* 3D guide description */}
-            <div className="mt-6 p-3 rounded-lg border border-white/95 bg-white/30 text-xs text-bridge-text leading-relaxed">
+            <div className="mt-6 p-3 rounded-lg border border-white/95 bg-white/30 text-sm text-bridge-text leading-relaxed">
               <p className="font-bold text-bridge-blue mb-1">3D 素质图景说明：</p>
               <p>右图为你的数理核心素质在三维空间中的拓扑关联网络：</p>
               <ul className="list-disc pl-4 mt-1 space-y-1">
@@ -1251,23 +1596,17 @@ export default function QuizResult({
 
           {/* Section 4: Recommendations & Matches */}
           <div className="glass-panel p-4 md:p-5">
-            <h3 className="text-base md:text-[1.05rem] font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
+            <h3 className="text-lg md:text-xl font-bold text-bridge-blue border-b-2 border-bridge-blue/25 pb-2 mb-3 font-serif">
               {isSimple ? "二、推荐专业" : "四、专业匹配"}
             </h3>
 
-            <p className="text-xs text-bridge-muted leading-relaxed mb-4 text-justify">
+            <p className="text-sm text-bridge-muted leading-relaxed mb-4 text-justify">
               {isSimple 
                 ? "该部分依据 8 维数理素质与全部 17 个理工专业画像计算匹配程度，展示以下 Top5 的专业，点击可查看介绍与三级专业列表。结果仅供参考，不代表唯一正确答案。"
                 : "专业匹配部分参考最新教育部本科专业目录，从价值导向、兴趣导向、思维习惯与素质能力四方向全面与全部理工专业画像比对，显示你对于这些专业的大学学习、工作实践中的综合匹配程度。匹配程度越高，表示与当前画像越接近。结果仅供参考，不代表唯一正确答案。"}
             </p>
 
-            <p className="text-[0.78rem] text-slate-500 leading-relaxed mb-3">
-              {isSimple
-                ? "Top5 二级专业 · 仅依据数理素质匹配"
-                : "综合匹配 = 价值导向×1 + 兴趣导向×2 + 思维习惯×1 + 素质能力×4（各因子 0–1 归一后加权；对照旧算法见 models/match-recommend/匹配算法说明.md）。"}
-            </p>
-
-            <p className="text-xs font-bold text-bridge-blue mb-2.5">
+            <p className="text-sm font-bold text-bridge-blue mb-2.5">
               {isSimple ? "请点击栏中专业，查看更多信息" : "点击图中专业查看更多信息"}
             </p>
 
@@ -1309,9 +1648,9 @@ export default function QuizResult({
 
             {/* Shared detail container below bubble / list selection */}
             {activeMajorWithL3 ? (
-              <div className="mt-4 p-4 rounded-xl border border-white/95 bg-white/35 shadow-sm text-xs">
+              <div className="mt-4 p-4 rounded-xl border border-white/95 bg-white/35 shadow-sm text-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-900/5 pb-2 mb-2 gap-1.5">
-                  <h4 className="text-sm font-bold text-bridge-blue font-serif">
+                  <h4 className="text-base font-bold text-bridge-blue font-sans">
                     {activeMajorWithL3.majorName}（{activeMajorWithL3.majorId}）
                   </h4>
                   <span className="text-orange-700 font-bold font-sans">
@@ -1319,10 +1658,10 @@ export default function QuizResult({
                   </span>
                 </div>
                 
-                <p className="text-xs text-bridge-muted leading-relaxed text-justify mb-3 whitespace-pre-line">
+                <p className="text-sm text-bridge-muted leading-relaxed text-justify mb-3 whitespace-pre-line">
                   {activeMajorWithL3.officialIntro || "暂无该二级专业大类介绍。"}
                   {"\n"}
-                  <span className="text-[10px] text-slate-500 font-sans block mt-1.5">
+                  <span className="text-xs text-slate-500 font-sans block mt-1.5">
                     关联一级学科：{activeMajorWithL3.parents?.join("、") || "—"}
                   </span>
                 </p>
@@ -1334,8 +1673,8 @@ export default function QuizResult({
                  activeMajorWithL3.habitsSim != null && 
                  activeMajorWithL3.abilitySim != null && (
                   <div className="mb-3 pt-2.5 border-t border-slate-900/5">
-                    <span className="text-[10px] text-slate-500 font-bold block mb-1">各因子匹配度：</span>
-                    <span className="text-[11px] text-slate-600 font-sans">
+                    <span className="text-xs text-slate-500 font-bold block mb-1">各因子匹配度：</span>
+                    <span className="text-sm text-slate-600 font-sans">
                       价值 {(activeMajorWithL3.valueSim * 100).toFixed(2)}% · 
                       兴趣 {(activeMajorWithL3.interestSim * 100).toFixed(2)}% · 
                       习惯 {(activeMajorWithL3.habitsSim * 100).toFixed(2)}% · 
@@ -1347,22 +1686,32 @@ export default function QuizResult({
                 {/* Level 3 majors list */}
                 {activeMajorWithL3.level3 && activeMajorWithL3.level3.length > 0 && (
                   <div className="mt-3 pt-2.5 border-t border-slate-900/5">
-                    <h5 className="text-[11px] font-bold text-bridge-blue mb-2 uppercase tracking-wider">下设本科专业名单</h5>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                      <h5 className="text-sm font-bold text-bridge-blue uppercase tracking-wider">下设本科专业名单</h5>
+                      <button
+                        type="button"
+                        onClick={handleL3PdfExport}
+                        disabled={isExportingL3}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-bridge-blue hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isExportingL3 ? "正在导出…" : "导出此专业下相关3级专业"}
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1">
                       {activeMajorWithL3.level3.map((l3) => {
                         const info = majorsIntro?.[l3.code];
                         const title = info?.officialName || l3.name;
                         const degree = info?.degreeTypes || "—";
                         return (
-                          <div key={l3.code} className="p-3 rounded-lg border border-white/95 bg-white/30 hover:bg-white/40 transition-colors text-xs">
+                          <div key={l3.code} className="p-3 rounded-lg border border-white/95 bg-white/30 hover:bg-white/40 transition-colors text-sm">
                             <div className="flex justify-between items-start mb-1 gap-1">
-                              <span className="font-bold text-slate-800">{title}</span>
-                              <span className="font-mono px-1.5 py-0.5 rounded bg-bridge-blue/10 text-bridge-blue text-[10px] flex-shrink-0">{l3.code}</span>
+                              <span className="font-bold text-slate-800 text-base">{title}</span>
+                              <span className="font-mono px-1.5 py-0.5 rounded bg-bridge-blue/10 text-bridge-blue text-xs flex-shrink-0">{l3.code}</span>
                             </div>
-                            <span className="text-[10px] text-slate-500 block mb-1">学位门类：{degree}</span>
-                            {info?.intro && (
-                              <p className="text-[10.5px] text-slate-600 leading-relaxed text-justify mt-1.5 pt-1.5 border-t border-slate-900/5">
-                                {info.intro}
+                            <span className="text-xs text-slate-500 block mb-1">学位门类：{degree}</span>
+                            {cleanMajorIntro(info?.intro) && (
+                              <p className="text-sm text-slate-600 leading-relaxed text-justify mt-1.5 pt-1.5 border-t border-slate-900/5">
+                                {cleanMajorIntro(info?.intro)}
                               </p>
                             )}
                           </div>
@@ -1373,14 +1722,19 @@ export default function QuizResult({
                 )}
               </div>
             ) : (
-              <p className="text-xs text-center text-bridge-muted/60 py-4 italic bg-white/20 rounded-xl border border-white/5">
+              <p className="text-sm text-center text-bridge-muted/60 py-4 italic bg-white/20 rounded-xl border border-white/5">
                 — 点击上方{isSimple ? "专业列表" : "专业气泡"}，探索专业详细解读及本科专业目录 —
               </p>
             )}
 
+            {/* 统一说明：原三级卡片内重复套话，集中放在本部分末尾一次展示 */}
+            <div className="mt-4 p-3 rounded-lg border border-white/10 bg-white/20 text-sm text-bridge-muted leading-relaxed text-justify">
+              不同高校的培养方案与课程侧重可能存在差异，建议结合当年招生简章与院系介绍进一步了解。
+            </div>
+
             {/* Simple Catalog Footer */}
             {isSimple && catalogReference && (
-              <div className="mt-4 p-3 rounded-lg border border-white/10 bg-white/20 text-xs text-bridge-muted leading-relaxed">
+              <div className="mt-4 p-3 rounded-lg border border-white/10 bg-white/20 text-sm text-bridge-muted leading-relaxed">
                 <div className="font-semibold">{catalogReference.label}</div>
                 {catalogReference.links.length > 0 && (
                   <ul className="mt-1.5 pl-4 list-disc space-y-1">
@@ -1412,8 +1766,8 @@ export default function QuizResult({
             >
               数理素质检测【专业版】
             </button>
-            <p className="mt-3 text-xs text-bridge-muted leading-relaxed text-justify">
-              专业版在体验版 <strong>8 维</strong> 测验基础上，提供 <strong>14 维全面</strong>数理素养评估（含记忆、整理、联想、好奇、自学、构建等），并支持查看<strong>全部理工科专业</strong>的匹配程度。
+            <p className="mt-3 text-sm text-bridge-muted leading-relaxed text-justify">
+              专业版提供 14 维全面数理素养评估，从四个方向（兴趣、价值、习惯、能力）综合匹配所有理工科专业，给孩子最全面的专业推荐。
             </p>
           </div>
         )}
@@ -1425,6 +1779,8 @@ export default function QuizResult({
             scores={scores}
             matches={matches}
             valueTiers={valueTiers}
+            wheelData={wheelData}
+            onSummaryReady={handleSummaryReady}
           />
         )}
 
@@ -1448,6 +1804,15 @@ export default function QuizResult({
           >
             重新测验
           </button>
+
+          {returnTo && (
+            <a
+              href={returnTo}
+              className="bg-bridge-gold hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm transition-colors cursor-pointer no-underline inline-flex items-center"
+            >
+              返回咨询流程 →
+            </a>
+          )}
 
           {onBackToQuiz && (
             <button
@@ -1485,13 +1850,17 @@ export default function QuizResult({
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/logo.jpg" alt="千殊教育" className="h-10 mx-auto mb-3 object-contain rounded" />
-            <h4 className="text-lg font-bold text-bridge-blue font-serif">开通「桥梁计划」数理测评专业版</h4>
-            <p className="text-xs text-bridge-muted leading-relaxed mt-2 text-justify">
+            <h4 className="text-xl font-bold text-bridge-blue font-sans">
+              开通「<BrandText>桥梁计划</BrandText>」数理测评专业版
+            </h4>
+            <p className="text-sm text-bridge-muted leading-relaxed mt-2 text-justify">
               本测验由千殊硕博团队深耕打造。解锁专业版后，您将获得包含：兴趣自评雷达图、理想与现实价值档位报告、14维雷达素质图谱、三维能力素质关联网络模型、全部17个理工方向的四因子匹配度排名及对应的三级专业培养方案与招生目录清单。
             </p>
             <div className="my-5 p-4 rounded-xl bg-white/5 border border-white/5">
-              <span className="text-xs text-bridge-muted block mb-1">专业版激活服务咨询</span>
-              <strong className="text-sm text-bridge-gold">请联系「桥梁计划」老师获取激活码</strong>
+              <span className="text-sm text-bridge-muted block mb-1">专业版激活服务咨询</span>
+              <strong className="text-base text-bridge-gold">
+                请联系「<BrandText>桥梁计划</BrandText>」老师获取激活码
+              </strong>
             </div>
             <div className="flex justify-center gap-3">
               <Button href="/programs" variant="primary" onClick={() => setShowProOverlay(false)}>

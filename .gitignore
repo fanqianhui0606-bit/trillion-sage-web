@@ -43,3 +43,9 @@ next-env.d.ts
 
 # generated webfonts (copied by postinstall / prebuild)
 /public/fonts/
+!/public/fonts/bangshu/
+!/public/fonts/bangshu/**
+!/public/fonts/feiyun/
+!/public/fonts/feiyun/**
+!/public/fonts/kuaikan/
+!/public/fonts/kuaikan/**

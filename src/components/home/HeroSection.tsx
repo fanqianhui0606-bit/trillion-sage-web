@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Button from "@/components/shared/Button";
 import type { GraphData, CompetencyVector } from "@/lib/types";
 import SubjectWheel from "@/components/home/SubjectWheel";
+import { navigateHomeSection } from "@/lib/home-sections";
 
 const Competency3D = dynamic(
   () => import("@/components/charts/Competency3D"),
@@ -58,27 +59,43 @@ export default function HeroSection() {
 
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[calc(100vh-6rem)] px-6 max-w-7xl mx-auto">
         <div className="lg:col-span-4 flex flex-col justify-center py-6">
-          <p className="text-base text-bridge-muted tracking-widest mb-2 font-brand">
+          <p className="text-sm text-bridge-muted tracking-widest mb-2 font-brand">
             千殊教育 · TrillionSage
           </p>
           <h1 className="text-5xl md:text-7xl font-bold text-bridge-blue tracking-wide leading-tight font-brand">
             桥梁计划
           </h1>
-          <p className="mt-4 text-xl md:text-2xl text-bridge-muted max-w-xl leading-relaxed font-sans">
+          <p className="mt-4 text-base md:text-lg text-bridge-muted max-w-xl leading-relaxed font-sans">
             专业985理工硕博团队助力千万学子
           </p>
           <hr className="w-48 mt-6 border-0 h-px bg-gradient-to-r from-transparent via-bridge-gold to-transparent" />
           <div className="grid grid-cols-2 gap-3 mt-8 max-w-md">
-            <Button href="/#quiz-teaser" variant="primary">
+            <Button
+              href="/#quiz-teaser"
+              variant="primary"
+              onClick={() => navigateHomeSection("quiz-teaser")}
+            >
               数理素质测验
             </Button>
-            <Button href="/#chat-teaser" variant="secondary">
+            <Button
+              href="/#chat-teaser"
+              variant="secondary"
+              onClick={() => navigateHomeSection("chat-teaser")}
+            >
               灵魂聊天共振
             </Button>
-            <Button href="/#consultation" variant="accent">
+            <Button
+              href="/#consultation"
+              variant="accent"
+              onClick={() => navigateHomeSection("consultation")}
+            >
               1v1咨询引航
             </Button>
-            <Button href="/#programs-preview" variant="light-gold">
+            <Button
+              href="/#programs-preview"
+              variant="accent"
+              onClick={() => navigateHomeSection("programs-preview")}
+            >
               数理线上营
             </Button>
           </div>

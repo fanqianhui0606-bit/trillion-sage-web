@@ -40,8 +40,28 @@ const config: Config = {
           "system-ui",
           "sans-serif",
         ],
-        // 鸿雷拙书简体 — 「桥梁计划」「千殊教育」
+        // 鸿雷拙书简体 — 网站标题（千殊教育 / 桥梁计划）
         brand: [
+          "HongLeiZhuoShu",
+          "Noto Sans SC",
+          "sans-serif",
+        ],
+        // 快看世界体 — 四大板块标题
+        kuaikan: [
+          "KuaiKanShiJieTi",
+          "Noto Sans SC",
+          "sans-serif",
+        ],
+        // 云峰飞云体 — 保留兼容
+        feiyun: [
+          "YunFengFeiYunTi",
+          "HongLeiZhuoShu",
+          "Noto Sans SC",
+          "sans-serif",
+        ],
+        // 仓耳周珂正大榜书 — 保留兼容
+        bangshu: [
+          "CangErZhouKeZhengDaBangShu",
           "HongLeiZhuoShu",
           "Noto Sans SC",
           "sans-serif",

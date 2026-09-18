@@ -7,6 +7,7 @@ import "@fontsource/noto-sans-sc/chinese-simplified-500.css";
 import "@fontsource/noto-sans-sc/chinese-simplified-700.css";
 import "@/styles/honglei.font.css";
 import "@/styles/jxzk.font.css";
+import "@/styles/kuaikan.font.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

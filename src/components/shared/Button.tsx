@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { type ReactNode } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "accent" | "ghost" | "light-gold";
+type ButtonVariant = "primary" | "secondary" | "accent" | "ghost" | "light-gold" | "brick";
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
@@ -14,6 +14,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-transparent text-bridge-blue border border-bridge-blue/30 hover:bg-bridge-blue/5",
   "light-gold":
     "bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 text-amber-900 border border-bridge-gold/70 hover:from-amber-200 hover:via-amber-100 hover:to-amber-200 shadow-sm",
+  brick:
+    "bg-[#A0522D] text-white hover:bg-[#8B4513] shadow-md",
 };
 
 export default function Button({
@@ -53,7 +55,16 @@ export default function Button({
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link
+        href={href}
+        className={classes}
+        onClick={(e) => {
+          if (onClick) {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+      >
         {children}
       </Link>
     );

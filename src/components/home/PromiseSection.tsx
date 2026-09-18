@@ -18,7 +18,7 @@ const PROMISES = [
 
 export default function PromiseSection() {
   return (
-    <section id="promise" className="min-h-screen flex items-center py-24 px-6 scroll-mt-16">
+    <section id="promise" className="flex items-center py-16 px-6 scroll-mt-16">
       <div className="max-w-5xl mx-auto w-full">
         <SectionTitle
           title="千殊承诺"
@@ -27,7 +27,7 @@ export default function PromiseSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {PROMISES.map((item) => (
             <GlassCard key={item.title} className="text-center">
-              <h3 className="text-lg font-bold text-bridge-blue mb-3">{item.title}</h3>
+              <h3 className="text-lg font-bold text-bridge-blue mb-3 font-sans">{item.title}</h3>
               <p className="text-bridge-muted text-sm leading-relaxed">{item.desc}</p>
             </GlassCard>
           ))}

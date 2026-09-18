@@ -12,7 +12,9 @@ export default function QuizTeaserSection() {
       <div className="max-w-6xl mx-auto w-full">
         <SectionTitle
           title="数理素质测验"
-          subtitle="千殊团队3名核心主创领衔30+专业硕博生共同开发，多个理工专业覆盖，准确率高达90%。从 4 个方向对 14 个独立维度上进行全面专业的思维天赋与认知边界探测，用千殊独有「学科-专业-素养」体系，匹配最新教育部本科专业目录。"
+          subtitle={
+            "千殊团队30+专业硕博生共同开发，准确率高达90%。\n匹配最新教育部本科专业目录，从14维数理素质中解析出最适合你的理工专业。"
+          }
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">

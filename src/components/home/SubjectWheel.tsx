@@ -238,11 +238,11 @@ export default function SubjectWheel({ onHoverMajor }: SubjectWheelProps) {
             );
           })}
 
-          {/* 3. 中心圆指示区 (r = 50) */}
+          {/* 3. 中心圆指示区 */}
           <circle
             cx={cx}
             cy={cy}
-            r="50"
+            r="58"
             fill="rgba(10, 15, 24, 0.85)"
             stroke="rgba(255,255,255,0.35)"
             strokeWidth="1.5"
@@ -250,17 +250,17 @@ export default function SubjectWheel({ onHoverMajor }: SubjectWheelProps) {
 
           <text
             x={cx}
-            y={displayL2 && displayL2.name.length > 5 ? cy - 4 : cy + 4}
+            y={displayL2 && displayL2.name.length > 5 ? cy - 8 : cy + 6}
             textAnchor="middle"
             alignmentBaseline="middle"
             fill="#ffffff"
-            fontSize={displayL2 ? 11 : 12}
+            fontSize={displayL2 ? 18 : 20}
             className="font-bold pointer-events-none"
           >
             {displayL2 && displayL2.name.length > 5 ? (
               <>
                 <tspan x={cx} dy="0">{displayL2.name.slice(0, 5)}</tspan>
-                <tspan x={cx} dy="13">{displayL2.name.slice(5)}</tspan>
+                <tspan x={cx} dy="20">{displayL2.name.slice(5)}</tspan>
               </>
             ) : (
               displayTitle.length > 8 ? activeL1 : displayTitle

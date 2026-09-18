@@ -36,6 +36,20 @@ export default function QuizEngine({
     if (returnTo) sessionStorage.setItem("quiz_return_to", returnTo);
   }, [returnTo]);
 
+  // 体验版：无门槛，加载完成后直接进入答题
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (state.phase !== "cover") return;
+    if (!isSimple) return;
+    if (!state.bank) return;
+    autoStartedRef.current = true;
+    dispatch({
+      type: "START_QUIZ_WITH_USER",
+      userName: autoName?.trim() || "体验用户",
+      activationCode: undefined,
+    });
+  }, [state.phase, state.bank, isSimple, autoName, dispatch]);
+
   // 携带有效激活码与姓名时，自动开始专业版测验（仅一次）
   useEffect(() => {
     if (autoStartedRef.current) return;
@@ -95,15 +109,22 @@ export default function QuizEngine({
     const timeEstimate = isSimple ? "5 分钟" : "15 分钟";
 
     const handleStart = () => {
+      if (isSimple) {
+        setFormError("");
+        dispatch({
+          type: "START_QUIZ_WITH_USER",
+          userName: userName.trim() || "体验用户",
+          activationCode: undefined,
+        });
+        return;
+      }
       if (!userName.trim()) {
         setFormError("请输入您的姓名");
         return;
       }
-      if (!isSimple) {
-        if (!validateActivationCode(code)) {
-          setFormError("激活码无效或格式错误");
-          return;
-        }
+      if (!validateActivationCode(code)) {
+        setFormError("激活码无效或格式错误");
+        return;
       }
       setFormError("");
       // 内测码统一规范为 BRIDGE-NAME（兼容用户误写 BRIDGE_NAME）
@@ -114,7 +135,7 @@ export default function QuizEngine({
       dispatch({
         type: "START_QUIZ_WITH_USER",
         userName: userName.trim(),
-        activationCode: isSimple ? undefined : normalizedCode,
+        activationCode: normalizedCode,
       });
     };
 
@@ -137,45 +158,45 @@ export default function QuizEngine({
               <p className="text-bridge-muted text-sm leading-relaxed mb-2">
                 由 <strong>985 理工硕博学长团</strong> 制作，涵盖 {dimCount} 项数理素质维度。
               </p>
-              <p className="text-bridge-muted text-sm leading-relaxed mb-4">
+              <p className="text-bridge-muted text-sm leading-relaxed mb-8">
                 参考 <strong>2026 年教育部最新本科专业目录</strong>，为你推荐最匹配的理工专业方向。
               </p>
+              <p className="text-xs text-bridge-muted mb-6">免费体验 · 无需填写任何信息</p>
             </>
           ) : (
-            <p className="text-bridge-muted text-sm leading-relaxed mb-6">
-              涵盖 {dimCount} 项数理素质维度，完成后生成 3D 素质图景与专业推荐。
-              请如实作答，答案无对错之分。
-            </p>
-          )}
+            <>
+              <p className="text-bridge-muted text-sm leading-relaxed mb-6">
+                涵盖 {dimCount} 项数理素质维度，完成后生成 3D 素质图景与专业推荐。
+                请如实作答，答案无对错之分。
+              </p>
 
-          {/* User registration form */}
-          <div className="max-w-sm mx-auto mb-8 text-left space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-bridge-blue mb-1">您的姓名 / 昵称 (必填)</label>
-              <input
-                type="text"
-                placeholder="请输入您的姓名"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue transition-colors"
-              />
-            </div>
-            {!isSimple && (
-              <div>
-                <label className="block text-xs font-bold text-bridge-blue mb-1">专业版激活码 (必填)</label>
-                <input
-                  type="text"
-                  placeholder="请输入专业版激活码"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue font-mono transition-colors"
-                />
+              <div className="max-w-sm mx-auto mb-8 text-left space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-bridge-blue mb-1">您的姓名 / 昵称 (必填)</label>
+                  <input
+                    type="text"
+                    placeholder="请输入您的姓名"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-bridge-blue mb-1">专业版激活码 (必填)</label>
+                  <input
+                    type="text"
+                    placeholder="请输入专业版激活码"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-white/50 bg-white/20 text-sm text-bridge-text focus:outline-none focus:border-bridge-blue font-mono transition-colors"
+                  />
+                </div>
+                {formError && (
+                  <p className="text-red-500 text-xs text-center font-semibold mt-2 animate-shake">{formError}</p>
+                )}
               </div>
-            )}
-            {formError && (
-              <p className="text-red-500 text-xs text-center font-semibold mt-2 animate-shake">{formError}</p>
-            )}
-          </div>
+            </>
+          )}
 
           <Button variant="primary" onClick={handleStart}>
             开始测验
